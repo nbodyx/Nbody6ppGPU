@@ -1,0 +1,157 @@
+#
+# Makefile for NBODY6++ June 2003 R.Sp., Changed by Long Wang on Aug 20, 2014
+#
+# Please use:
+#    make
+#    make install
+#
+# Extra Tools
+#    dump_btoa   (A small routine for transfering between unformatted 
+#                fort.1/2 and formatted dump.dat. dump.dat is very 
+#                useful when you want to restart the simulation in a
+#                different system)
+
+FC = @FC@
+CXX = @CXX@
+CC = @CC@
+NVCC = @NVCC@
+
+RESULT = nbody6++@RESULT@
+#FFLAGS = -O3 -fbounds-check -fbacktrace -fPIC -mcmodel=large -Wall
+MPI_FLAGS = -D PARALLEL -D PUREMPI
+GPU_FLAGS = -D GPU
+SIMD_FLAGS = -D SIMD
+HDF5_FLAGS = -D H5OUTPUT
+
+FFLAGS = @FCFLAGS@
+CXXFLAGS = @CXXFLAGS@
+CUFLAGS = @CUFLAGS@
+LDFLAGS = -o $(RESULT)
+
+MPI_FSOURCES= energy_mpi.f fpoly1_mpi.f fpoly2_mpi.f
+GPU_FSOURCES= phicor.f util_gpu.f regcor_gpu.f fpoly0.f
+HDF5_FSOURCES= custom_output.f
+
+IRRAVX_OBJECTS=irr.avx.o
+IRRSSE_OBJECTS=irr.sse.o
+AVX_OBJECTS=reg.avx.o pot.avx.o irr.avx.o
+SSE_OBJECTS=reg.sse.o pot.sse.o irr.sse.o
+CUDA_OBJECTS = gpunb.velocity.o gpupot.gpu.o
+#CUDAOBJECTS = gpunb.gpu.o gpupot.gpu.o gpupot.mdot.o
+#CUDAOBJECTS = gpunb.velocity.o gpupot.gpu.o gpupot.mdot.o
+#CUDAOBJECTS = gpunb.gpu.o gpupot.gpu.o
+EXTRATOOLS=nb6++dumpb2a libinitial.so libnb6out3.so nb6++snapshot
+
+EXTRASRC=@EXTRASRC@
+EXTRAOBJ=@EXTRAOBJ@
+
+#VISITFLAGS = -DVISIT
+#VISITLD = -L ./lvisit -llvisit_nbody -L/work/Tuc/spurzem/visit/visit/lvisit/lib -llvisit -L/work/Tuc/spurzem/visit/visit/visit20/lib -lvisit
+
+#VPATH= ../src/Chain:../src/Nchain:../src/Init:../src/Main:../src/Cloud:../src/GPU:../src/SE:../src/SIMD:../src/Tidal:../src/Tlist:../src/Tools:../src/Ellan:../src/KS:../src/Output:../src/HIR:../include
+VPATH= ../src/Main:../src/Tools:../include
+
+INC = params.h common6.h timing.h commonc.h common2.h kspars.h
+
+SOURCE = ${EXTRASRC} nbody6.f file_init.f ellan.f eigenvalue.f indexx.f \
+adjust.f assess.f bindat.f binev.f binout.f binpop.f block.f bodies.f \
+brake.f brake2.f brake3.f bsetid.f chaos0.f chaos.f \
+check.f checkl.f chrect.f clint.f cloud.f cloud0.f \
+cmbody.f cmcorr.f cmfirr.f cmfreg.f coal.f comenv.f core.f corerd.f \
+cputim.f data.f decide.f deform.f degen.f delay.f \
+dgcore.f dtchck.f eccmod.f ecirc.f edot.f efac2.f efac3.f \
+expel.f escape.f events.f expand.f fclose.f \
+fcloud.f fcorr.f fdisk.f fhalo.f ficorr.f findj.f findm.f \
+flyby.f fnuc.f fpcorr.f fpert.f fpoly1.f fpoly2.f  \
+gcinit.f gcint.f giant.f giant3.f gntage.f grrad.f hcorr.f \
+hiarch.f hicirc.f hidat.f higrow.f himax.f himod.f \
+hipop.f hirect.f histab.f hivel.f hmdot.f hmdot2.f hotsys.f \
+hrdiag.f hrplot.f hut.f hut2.f iblock.f imf.f imfbd.f imf2.f \
+impact.f induce.f input.f insert.f instar.f intgrt.f \
+jacobi.f kick.f kick2.f ksapo.f kscorr.f \
+ksin2.f ksinit.f ksint.f kslist.f ksmod.f ksperi.f kspert.f \
+kspoly.f kspred.f ksrect.f ksreg.f ksres.f ksres2.f ksterm.f \
+kstide.f lagr.f lagr2.f levels.f magbrk.f matrix.f mdot.f merge.f \
+merge2.f mix.f mloss.f mlwind.f modify.f mrenv.f mydump.f \
+nbint.f nblist.f nbpot.f nbrem.f nbrest.f \
+newtev.f nstab.f offset.f orbit.f output.f peri.f permit.f \
+pfac.f poti.f proto_star.f qtides.f ran2.f regint.f \
+remove.f rename_ks.f reset.f reset2.f resolv.f rkint.f rl.f roche.f \
+rpmax.f rpmax2.f rpmin.f scale.f search.f setup.f short.f shrink.f \
+sort1.f spiral.f stability.f star.f start.f stepk.f steps.f stumpf.f \
+subint.f synch.f tcirc.f tides.f tides2.f \
+tides3.f touch.f tpert.f trdot.f trdot2.f trflow.f tstab.f tstep.f \
+units.f unpert.f update.f verify.f xtrnl0.f xtrnld.f xtrnlf.f xtrnlp.f \
+xtrnlv.f xvpred.f zare.f zcnsts.f zero.f zfuncs.f \
+triple.f derqp3.f difsy3.f erel3.f extend.f qpmod3.f stabl3.f \
+stablz.f start3.f subsys.f tperi.f trans3.f \
+quad.f derqp4.f difsy4.f endreg.f erel4.f ichain.f newreg.f newsys.f \
+qpmod4.f rchain.f rsort.f stabl4.f start4.f status.f trans4.f \
+cfuncs.f chain.f chstab.f const.f cstab2.f cstab3.f cstab4.f cstab5.f \
+derqp.f difsy1.f erel.f hpsort.f inclin.f invert.f ksphys.f physks.f \
+qforce.f qpmod.f r2sort.f recoil.f redraw.f select.f slow.f stablc.f \
+swcond.f switch.f transk.f transq.f transx.f vector.f xtf.f \
+ycopy.f ysave.f \
+absorb.f chaos2.f chdata.f chfind.f chfirr.f chinit.f chlist.f chmod_chain.f \
+chpot.f chterm.f expel2.f fchain.f ghost.f giant2.f kcpert.f \
+reduce.f reinit.f renew.f setsys.f tchain.f xcpred.f xtpert.f \
+xbpredall.f jpred.f jpred_int.f fpoly1_ks.f fpoly2_ks.f cmfirr_cor.f cmfirr_ucor.f \
+kcpert_cor.f ksparmpi.f remove_ks.f nbint_cor.f string_left.f \
+sort_tlist.f next_tlist.f shrink_tlist.f repair_tlist.f remove_tlist.f \
+add_tlist.f exchange_tlist.f replace_tlist.f delay_store_tlist.f \
+delay_add_tlist.f delay_remove_tlist.f rmesc_tlist.f shift_tlist.f k_step.f \
+imbhinit.f bhplot.f energy.f
+
+.SUFFIXES : .o .F
+
+OBJECTS = $(SOURCE:.f=.o)
+
+TARGET: $(RESULT) @EXTRARESULT@
+
+$(RESULT): $(OBJECTS) $(EXTRAOBJ)
+	$(FC) $(FFLAGS) $(LDFLAGS) $(OBJECTS) $(EXTRAOBJ)  @LIBS@
+
+libinitial.so: initial.h initial.cpp
+	$(CXX) -shared $(CXXFLAGS) ../src/Tools/initial.cpp -o libinitial.so
+
+libnb6out3.so: nb6out3.h nb6out3.cxx
+	$(CXX) -shared $(CXXFLAGS) ../src/Tools/nb6out3.cxx -o libnb6out3.so
+
+nb6++dumpb2a: dump_btoa.f 
+	$(FC) $(FFLAGS) $^ -o nb6++dumpb2a
+
+nb6++snapshot: libinitial.so libnb6out3.so snapshot.cpp
+	$(CXX) $(CXXFLAGS) ../src/Tools/snapshot.cpp -L./ -lnb6out3 -linitial -o nb6++snapshot
+
+$(OBJECTS): $(INC)
+
+irr.avx.o: irr.avx.cpp
+	$(CXX) $(CXXFLAGS) $^ -c -o $@
+
+reg.avx.o: reg.avx.cpp
+	$(CXX) $(CXXFLAGS) $^ -c -o $@
+
+pot.avx.o: pot.avx.cpp
+	$(CXX) $(CXXFLAGS) $^ -c -o $@
+
+irr.sse.o: irr.sse.cpp
+	$(CXX) $(CXXFLAGS) $^ -c -o $@
+
+reg.sse.o: reg.sse.cpp
+	$(CXX) $(CXXFLAGS) $^ -c -o $@
+
+pot.sse.o: pot.sse.cpp
+	$(CXX) $(CXXFLAGS) $^ -c -o $@
+
+gpunb.velocity.o: gpunb.velocity.cu
+	$(NVCC) -c $(CUFLAGS) -Xcompiler "$(CXXFLAGS)"  $^
+
+gpunb.gpu.o: gpunb.gpu.cu
+	$(NVCC) -c $(CUFLAGS) -Xcompiler "$(CXXFLAGS)"  $^
+
+gpupot.gpu.o: gpupot.gpu.cu
+	$(NVCC) -c $(CUFLAGS) -Xcompiler "$(CXXFLAGS)"  $^
+
+gpupot.mdot.o: gpupot.mdot.cu
+	$(NVCC) -c $(CUFLAGS) -Xcompiler "$(CXXFLAGS)"  $^
+

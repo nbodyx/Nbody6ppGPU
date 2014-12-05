@@ -14,19 +14,19 @@ EXTRASRC=
 EXTRAOBJ=
 
 #Save environment
-AC_ARG_ENABLE([local-env],
-   [AS_HELP_STRING([--enable-local-env],
-        [Use local environment listed in last part instead of configure])],
-   [],
-   [enable_local_env=no])
+##AC_ARG_ENABLE([local-env],
+##   [AS_HELP_STRING([--enable-local-env],
+##        [Use local environment listed in last part instead of configure])],
+##   [],
+##   [enable_local_env=no])
 
-AS_IF([test "x$enable_local_env" != xno ],
-     [AS_IF([test "x$FC" != x], [local_fc=$FC])
-      AS_IF([test "x$FCFLAGS" != x], [local_fcflags=$FCFLAGS])
-      AS_IF([test "x$CXXFLAGS" != x], [local_cxxflags=$CXXFLAGS])],
-    [local_fc=
-     local_fcflags=
-     local_cxxflags=])
+##AS_IF([test "x$enable_local_env" != xno ],
+##     [AS_IF([test "x$FC" != x], [local_fc=$FC])
+##      AS_IF([test "x$FCFLAGS" != x], [local_fcflags=$FCFLAGS])
+##      AS_IF([test "x$CXXFLAGS" != x], [local_cxxflags=$CXXFLAGS])],
+##    [local_fc=
+##     local_fcflags=
+##     local_cxxflags=])
 
 #Features controls
 AC_ARG_ENABLE([mpi],
@@ -61,14 +61,14 @@ AC_ARG_ENABLE([gpu],
 
 AC_ARG_ENABLE([simd],
      [AS_HELP_STRING([--enable-simd=ARG],
-         [Intel CPU SIMD instruction set acceleration for force and potential, avaiable arguments --> sse: Streaming SIMD Extensions; --> avx: Advanced Vector Extensions; --> no: switch off SIMD; (default is avx)])],
+         [Intel CPU SIMD instruction set acceleration for force and potential, avaiable arguments --> sse: Streaming SIMD Extensions; --> avx: Advanced Vector Extensions; --> no: switch off SIMD; (default is autodetecting)])],
      [ case "${enableval}" in
        avx) enable_simd=avx ;;
        sse) enable_simd=sse ;;
        no) enable_simd=no  ;;
        *) AC_MSG_ERROR(bad value ${enableval} for --enable-simd) ;;
        esac],
-     [enable_simd=avx])
+     [enable_simd=test])
 
 AC_ARG_ENABLE([hdf5],
      [AS_HELP_STRING([--enable-hdf5],
@@ -85,7 +85,26 @@ AC_ARG_ENABLE([tools],
 
 # Checks for programs.
 # Fortran part
+
 AC_LANG([Fortran])
+
+local_fc=$FC
+local_fcflags=$FCFLAGS
+local_fflags=$FFLAGS
+
+AC_PROG_FC
+fc_check=$FC
+FC=$local_fc
+
+# Checks for MPI and HDF5 support
+AS_IF([test "x$enable_mpi" != xno],
+     [AS_IF([test "x$enable_hdf5" != xno],
+       [AC_CHECK_PROG([FC], [h5pfc], [h5pfc], [none])],
+       [AC_CHECK_PROG([FC], [mpif77], [mpif77], [none])])],
+     [AS_IF([test "x$enable_hdf5" != xno],
+      [AC_CHECK_PROG([FC], [h5fc], [h5fc], [none])],
+      FC=$fc_check)
+      local_fcflags=$local_fcflags' -I../extra_inc/nompi'])
 
 AS_IF([test "x$enable_debug" != xno],
      [
@@ -112,32 +131,7 @@ AX_CHECK_COMPILE_FLAG([-mcmodel=$enable_mcmodel],
 AC_OPENMP
 FCFLAGS=$FCFLAGS' '$OPENMP_FCFLAGS
 
-AS_IF([test "x$enable_simd" != xno],
-      [FCFLAGS=$FCFLAGS' ${SIMD_FLAGS}'])
-
 FCFLAGS=$FCFLAGS' -I../include'
-
-# Checks for MPI and HDF5 support
-
-FC=$local_fc
-AS_IF([test "x$enable_mpi" != xno],
-     [AS_IF([test "x$enable_hdf5" != xno],
-       [AC_CHECK_PROG([FC], [h5pfc], [h5pfc], [none])],
-       [AC_CHECK_PROG([FC], [mpif77], [mpif77], [none])])
-      FCFLAGS=$FCFLAGS' $(MPI_FLAGS)'
-      EXTRASRC=$EXTRASRC' $(MPI_FSOURCES)'
-      RESULT=$RESULT'.mpi'
-     ],
-     [AS_IF([test "x$enable_hdf5" != xno],
-      [AC_CHECK_PROG([FC], [h5fc], [h5fc], [none])],
-      [AC_PROG_FC])
-      FCFLAGS=$FCFLAGS' -I../extra_inc'])
-
-# HDF5 format
-AS_IF([test "x$enable_hdf5" != xno],
-       [FCFLAGS=$FCFLAGS' $(HDF5_FLAGS)'
-        EXTRASRC=$EXTRASRC' $(HDF5_FSOURCES)'
-        RESULT=$RESULT'.hdf5'])
 
 # Check FC
 AS_IF([test "x$FC" == xnone],
@@ -160,14 +154,16 @@ AS_IF([test "x$FC" == xnone],
 
 #C++ part
 AC_LANG([C++])
+local_cxxflags=$CXXFLAGS
 AC_PROG_CXX
 AC_PROG_CC
 
 AC_CHECK_LIB([stdc++],[main],[LIBS=$LIBS' -lstdc++'])
 
-AS_IF([test "x$enable_debug" != xno],
-      [CXXFLAGS=$local_cxxflags" -g"],
-      [CXXFLAGS=$local_cxxflags" -O3"])
+#AS_IF([test "x$enable_debug" != xno],
+#      [CXXFLAGS=$local_cxxflags" -O2"],
+#      [CXXFLAGS=$local_cxxflags" -O3"])
+CXXFLAGS=$local_cxxflags" -O3"
 
 AC_OPENMP
 CXXFLAGS=$CXXFLAGS' '$OPENMP_CXXFLAGS
@@ -192,23 +188,60 @@ AX_CHECK_COMPILE_FLAG([-mcmodel=$enable_mcmodel],
        [$CXX compiler option -mcmodel=$enable_mcmodel is not avaiable])])
 
 # SIMD part
-AS_IF([test "x$enable_simd" != xno],
+AS_IF([test "x$OPENMP_CXXFLAGS" != x],
+   [AS_IF([test "x$enable_simd" == xtest],
+       [c_simd_check="avx"]
        [AC_CHECK_FILE(["/proc/cpuinfo"],
          [AC_PROG_GREP
-          SIMD_CHECK=`grep -c $enable_simd /proc/cpuinfo`],
-	 SIMD_CHECK=-1)
-       AC_MSG_CHECKING([whether current CPU support $enable_simd])
-       AS_IF([test "$SIMD_CHECK" -lt 0],
+          SIMD_CHECK=`grep -c $c_simd_check /proc/cpuinfo`],
+          SIMD_CHECK=-1)
+         AC_MSG_CHECKING([whether current CPU support $c_simd_check])
+         AS_IF([test "$SIMD_CHECK" -lt 0],
              [AC_MSG_RESULT([unknown])],
              [test "$SIMD_CHECK" -gt 0],
              [AC_MSG_RESULT([yes])],
              [AC_MSG_RESULT([no])])
-       AX_CHECK_COMPILE_FLAG([-m$enable_simd],
-         [CXXFLAGS=$CXXFLAGS" -m"$enable_simd
-          RESULT=$RESULT"."$enable_simd
-         ],
-         [AC_MSG_FAILURE(
-           [$CXX compiler option -m$enable_simd is not avaiable])])])
+         AX_CHECK_COMPILE_FLAG([-m$c_simd_check],
+           [CXXFLAGS=$CXXFLAGS" -m"$c_simd_check
+            RESULT=$RESULT"."$c_simd_check
+	    enable_simd=$c_simd_check
+           ],
+           [c_simd_check="sse"]
+           [AC_CHECK_FILE(["/proc/cpuinfo"],
+              [AC_PROG_GREP
+               SIMD_CHECK=`grep -c $c_simd_check /proc/cpuinfo`],
+               SIMD_CHECK=-1)
+            AC_MSG_CHECKING([whether current CPU support $c_simd_check])
+            AS_IF([test "$SIMD_CHECK" -lt 0],
+                  [AC_MSG_RESULT([unknown])],
+                  [test "$SIMD_CHECK" -gt 0],
+                  [AC_MSG_RESULT([yes])],
+                  [AC_MSG_RESULT([no])])
+            AX_CHECK_COMPILE_FLAG([-m$c_simd_check],
+              [CXXFLAGS=$CXXFLAGS" -m"$c_simd_check
+               RESULT=$RESULT"."$c_simd_check
+	       enable_simd=$c_simd_check
+              ],
+              [enable_simd=no])])],
+        [AS_IF([test "x$enable_simd" != xno],
+               [AC_CHECK_FILE(["/proc/cpuinfo"],
+                  [AC_PROG_GREP
+                   SIMD_CHECK=`grep -c $enable_simd /proc/cpuinfo`],
+                   SIMD_CHECK=-1)
+                AC_MSG_CHECKING([whether current CPU support $enable_simd])
+                AS_IF([test "$SIMD_CHECK" -lt 0],
+                      [AC_MSG_RESULT([unknown])],
+                      [test "$SIMD_CHECK" -gt 0],
+                      [AC_MSG_RESULT([yes])],
+                      [AC_MSG_RESULT([no])])
+                AX_CHECK_COMPILE_FLAG([-m$enable_simd],
+                  [CXXFLAGS=$CXXFLAGS" -m"$enable_simd
+                   RESULT=$RESULT"."$enable_simd
+                  ],
+                  [AC_MSG_FAILURE(
+                     [$CXX compiler option -m$enable_simd is not avaiable])])])])],
+     enable_simd=no
+     SIMD_CHECK=-2)
 
 # FIXME: Replace `main' with a function in `-llvisit':
 # AC_CHECK_LIB([lvisit], [main])
@@ -218,7 +251,7 @@ AS_IF([test "x$enable_simd" != xno],
 # AC_CHECK_LIB([visit], [main])
 
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h string.h strings.h sys/time.h unistd.h omp_lib.h])
+AC_CHECK_HEADERS([stdlib.h string.h strings.h sys/time.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -271,21 +304,39 @@ AS_IF([test "x$enable_gpu" != xno],
               [CUFLAGS=$CUFLAGS" -I $cuda_prefix/samples/common/inc"],
               [AC_CHECK_FILE(["$cuda_sdk_prefix/common/inc/helper_cuda.h"],
                     [CUFLAGS=$CUFLAGS" -I $cuda_sdk_prefix/common/inc"],
-                    [CUFLAGS=$CUFLAGS" -I ../extra_inc"])])],
+                    [CUFLAGS=$CUFLAGS" -I ../extra_inc/cuda"])])],
          [AC_CHECK_FILE(["$cuda_prefix/cuda_sdk/common/inc/cutil.h"],
               [CUFLAGS=$CUFLAGS" -I $cuda_prefix/cuda_sdk/common/inc"],
               [AC_CHECK_FILE(["$cuda_sdk_prefix/common/inc/cutil.h"],
                     [CUFLAGS=$CUFLAGS" -I $cuda_prefix/common/inc"],
-                    [CUFLAGS=$CUFLAGS" -I ../extra_inc"])])])
+                    [CUFLAGS=$CUFLAGS" -I ../extra_inc/cuda"])])])
       FCFLAGS=$FCFLAGS' $(GPU_FLAGS)'
       EXTRASRC=$EXTRASRC' $(GPU_FSOURCES)'
-      EXTRAOBJ=$EXTRAOBJ' $(CUDA_OBJECTS)'
+      AS_IF([test "x$OPENMP_CXXFLAGS" != x ],
+           EXTRAOBJ=$EXTRAOBJ' $(CUDA_OBJECTS)', 
+           EXTRAOBJ=$EXTRAOBJ' $(CUDA_OBJECTS_SINGLE)')
       LDFLAGS=$LDFLAGS' -L'$CUDA_PREFIX
       dnl AX_CHECK_COMPILE_FLAG([-Xcompiler],[],
       dnl    [AC_MSG_FAILURE(
       dnl       [Current nvcc do not support -Xcompiler])])
      ])
 
+#FLAGS
+
+# MPI FLAGS
+AS_IF([test "x$enable_mpi" != xno],
+      FCFLAGS=$FCFLAGS' $(MPI_FLAGS)'
+      EXTRASRC=$EXTRASRC' $(MPI_FSOURCES)'
+      RESULT=$RESULT'.mpi')
+
+#SIMD
+AS_IF([test "x$enable_simd" != xno],
+      [FCFLAGS=$FCFLAGS' ${SIMD_FLAGS}']
+      [CXXCOMP=`echo x$CXX|grep -c icc`]
+      [AS_IF([test $CXXCOMP -gt 0],
+         CXXFLAGS=$CXXFLAGS' $(INTEL_FLAGS)')])
+
+#GPU
 AS_IF([test "x$enable_simd" == xavx],
       [AS_IF([test "x$enable_gpu" != xno],
              EXTRAOBJ=$EXTRAOBJ' ${IRRAVX_OBJECTS}',
@@ -298,6 +349,21 @@ AS_IF([test "x$enable_simd" == xavx],
              EXTRAOBJ=$EXTRAOBJ' ${SSE_OBJECTS}'
              EXTRASRC=$EXTRASRC' $(GPU_FSOURCES)'
              FCFLAGS=$FCFLAGS' $(GPU_FLAGS)')])
+
+#OMP
+AS_IF([test "x$OPENMP_FCFLAGS" != x ],
+      FCFLAGS=$FCFLAGS' ${OMP_FLAGS}',
+      FCFLAGS=$FCFLAGS' -I../extra_inc/noomp')
+
+AS_IF([test "x$OPENMP_CXXFLAGS" != x ],
+      CXXFLAGS=$CXXFLAGS' ${OMP_FLAGS}',
+      CXXFLAGS=$CXXFLAGS' -I ../extra_inc/noomp')
+
+# HDF5 format
+AS_IF([test "x$enable_hdf5" != xno],
+       [FCFLAGS=$FCFLAGS' $(HDF5_FLAGS)'
+        EXTRASRC=$EXTRASRC' $(HDF5_FSOURCES)'
+        RESULT=$RESULT'.hdf5'])
 
 # params.h
 AC_ARG_WITH([par], 
@@ -447,10 +513,13 @@ AC_MSG_NOTICE([     Using MPI:      $enable_mpi])
 AC_MSG_NOTICE([     Using GPU:      $enable_gpu])
 AC_MSG_NOTICE([     CUDA version:   $CUDA_VERSION])
 AC_MSG_NOTICE([     Using SIMD:     $enable_simd])
-AS_IF([test "$SIMD_CHECK" -lt 0],
-  [AC_MSG_WARN([      No /proc/cpuinfo found, cannot comfirm whether current CPU support SIMD])],
-      [test "$SIMD_CHECK" == 0],
-  [AC_MSG_WARN([      SIMD option used now is not supported in current CPU])])
+AS_IF([test "x$enable_simd" != xno],
+  [AS_IF([test "$SIMD_CHECK" == -1],
+      [AC_MSG_WARN([      No /proc/cpuinfo found, cannot comfirm whether current CPU support SIMD])],
+        [test "$SIMD_CHECK" == 0],
+      [AC_MSG_WARN([      SIMD option used now is not supported in current CPU])])],
+        [test "$SIMD_CHECK" == -2],
+      [AC_MSG_WARN([      SIMD is suppressed since OpenMP is switched off])])
 AC_MSG_NOTICE([     mcmodel:        $enable_mcmodel])
 AC_MSG_NOTICE([     OpenMP option:  $OPENMP_FCFLAGS])
 AC_MSG_NOTICE([     Debug mode:     $enable_debug])

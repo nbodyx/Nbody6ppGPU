@@ -136,12 +136,11 @@
       I6 = INT(TSCALE*TTOT)
 *
       IF(rank.EQ.0)THEN
-      WRITE (6,40)  rank,
-     &     TTOT, N, NNB, NPAIRS, NMERGE, MULT, NS, NSTEPI, NSTEPB,
-     &              NSTEPR, NSTEPU, ERROR, BE(3)
-   40 FORMAT (//,I3,' T =',F7.1,'  N =',I8,'  <NB> =',I5,'  KS =',I7,
-     &       '  NM =',I2,' MM =',I2,' NS =',I8,' NSTEPS =',
-     &          I11,2I10,I11,'  DE =',E15.6,'  E =',F17.6)
+      WRITE (6,40) TTOT, N, NNB, NPAIRS, NMERGE, MULT, NS, NSTEPI,
+     &         NSTEPB,NSTEPR, NSTEPU, ERROR, BE(3)
+   40 FORMAT (//,' TIME[NB] ',1P,E15.6,0P,'  N ',I8,'  <NB> ',I5,
+     &     '  NPAIRS ',I7,'  NMERGE ',I5,' MULT ',I4,' NS ',I8,
+     &     '  NSTEP(I,B,R,U) ',4I13,'  DE ',E15.6,'  E ',F17.6)
       END IF
 *
       IF (KZ(21).GT.0) THEN
@@ -165,7 +164,7 @@
       IF(rank.EQ.0)THEN
       WRITE (6,50)
    50 FORMAT (/,'    <R>  RTIDE  RDENS   RC      NC   MC   RHOD   RHOM',
-     &          '  CMAX   <Cn>  Ir/R    UN    NP    RCM    VCM',
+     &          '  CMAX   <Cn>  Ir/R      UN      NP    RCM    VCM',
      &          '         AZ     EB/E   EM/E   TCR     T6  NESC',
      &                   '  VRMS')
 *
@@ -173,61 +172,68 @@
      &              CNNB, COST, IUNP, NP, CMR(4), CMRDOT(4), AZ, EB, EM,
      &              TCR, I6, NESC, VRMS
    55 FORMAT (' #1',F5.2,F6.1,F7.2,F6.2,I7,F7.3,F6.0,F7.0,F6.0,F6.1,
-     &                   F6.2,2I6,F9.3,F8.4,F11.6,2F7.3,F6.2,2I6,F6.1)
+     &                   F6.2,2I8,F9.3,F8.4,F11.6,2F7.3,F6.2,2I6,F6.1)
 *
       WRITE (6,60)
-   60 FORMAT (/,7X,'NNPRED    NBCORR  NBFULL  NBVOID ',
-     &         '    NICONV  NBSMIN  NBDIS  NBDIS2  NCMDER  NBDER',
-     &           '  NFAST  NBFAST    NBLOCK  NBLCKR  NIRRF  NBPRED    ',
-     &           '  NBFLUX NIRECT  NRRECT  NURECT')
-      WRITE (6,65)  NNPRED, NBCORR, NBFULL, NBVOID, NICONV,
-     &              NBSMIN, NBDIS, NBDIS2, NCMDER, NBDER, NFAST,
-     &              NBFAST, NBLOCK, NBLCKR, NIRRF, NBPRED, NBFLUX, 
-     &              NIRECT, NRRECT, NURECT
+   60 FORMAT (/,7X,'   NIRRF      NBCORR  NNPRED  NBFULL  NBVOID ',
+     &     '  NICONV  NLSMIN NBSMIN   NBDIS  NBDIS2  NCMDER  ',
+     &     'NFAST NBFAST      NBLOCK      NBLCKR    NBFLUX')
+      WRITE (6,65)  NIRRF, NBCORR, NNPRED, NBFULL, NBVOID, NICONV,
+     &              NLSMIN, NBSMIN, NBDIS, NBDIS2, NCMDER,  NFAST,
+     &              NBFAST, NBLOCK, NBLCKR,  NBFLUX
 *
-   65 FORMAT (' #2',I10,I10,2I8,I10,I8,I7,2I8,2I7,I8,2I10,3I11,3I8)
+   65 FORMAT (' #2',2I12,9I8,2I7,2I12,I10)
 *
       WRITE (6,70)
-   70 FORMAT (/,5X,'NKSTRY  NKSREG  NKSHYP     NKSPER  NPRECT  NEWKS ',
-     &           '  NKSMOD  NTTRY  NTRIP  NQUAD  NCHAIN  NMERG',
-     &           '  NEWHI  NSTEPT  NSTEPQ  NSTEPC')
-      WRITE (6,75)  NKSTRY, NKSREG,  NKSHYP, NKSPER, NPRECT, NEWKS,
+   70 FORMAT (/,5X,'   NKSTRY     NKSREG     NKSHYP     NKSPER  ',
+     &     'NKSMOD   NTTRY   NTRIP    NQUAD  NCHAIN   ',
+     &     '  NMERG   NEWHI  NSTEPT  NSTEPQ  NSTEPC')
+      WRITE (6,75)  NKSTRY, NKSREG,  NKSHYP, NKSPER,
      &              NKSMOD, NTTRY, NTRIP, NQUAD, NCHAIN, NMERG, NEWHI,
      &              NSTEPT, NSTEPQ, NSTEPC
-   75 FORMAT (' #3',3I8,I11,3I8,3I7,I8,I7,3I8,2I10)
+   75 FORMAT (' #3',3I11,I11,3I8,3I9,I8,I8,3I8,2I10)
       END IF
 
 *     Output global features and counters into global.30
       IF(rank.eq.0) then
-         IF(kstart.eq.1.and.time.eq.0.0) then
-         write (30,*) 'TIME[NB} TIME[Myr] TCR[Myr] DE BE(3) RHF[PC] ',
-     &           'RTIDE[PC] RDENS[PC] RC[PC]  RHOD[PC] RHOM[PC] ',
-     &           'MC[M*] CMAX <Cn> Ir/R  RCM VCM AZ EB/E EM/E ',
-     &           'VRMS ',
-     &           'N NS NC NESC <NB> NSTEPI NSTEPB NSTEPR NSTEPU ',
-     &           'NKS NUPKS NPKS NM MULT NNPRED NBCORR NBFULL NBVOID ',
-     &           'NICONV NBSMIN NBDIS NBDIS2 NCMDER NBDER ',
-     &           'NFAST NBFAST NBLOCK NBLCKR NIRRF NBPRED ',
-     &           'NBFLUX NIRECT NRRECT NURECT NKSTRY NKSREG NKSHYP ',
-     &           'NKSPER NPRECT NEWKS ',
-     &           'NKSMOD NTTRY NTRIP NQUAD NCHAIN NMERG ',
-     &           'NEWHI NSTEPT NSTEPQ NSTEPC'
+         IF(kstart.eq.1.and.ttot.eq.0.0) then
+         write (30,76) 
+ 76      format('TIME[NB} TIME[Myr] TCR[Myr] DE BE(3) ',
+     &           'RSCALE[PC] RTIDE[PC] RDENS[PC] RC[PC]  RHOD[PC] ',
+     &           'RHOM[PC] MC[M*] CMAX <Cn> Ir/R RCM VCM AZ ',
+     &           'EB/E EM/E VRMS ',
+     &           'N NS NPAIRS NUPKS NPKS NMERGE MULT <NB> NC NESC ',
+     &           'NSTEPI NSTEPB NSTEPR NSTEPU NSTEPT NSTEPQ NSTEPC ',
+     &           'NBLOCK NBLCKR NNPRED ',
+     &           'NIRRF NBCORR NBFLUX NBFULL NBVOID NICONV NLSMIN ',
+     &           'NBSMIN NBDIS NBDIS2 NCMDER ',
+     &           'NFAST NBFAST ',
+     &           'NKSTRY NKSREG NKSHYP NKSPER NKSMOD',
+     &           'NTTRY NTRIP NQUAD NCHAIN NMERG NEWHI')
          END IF
-         write (30,*) TTOT,TTOT*TSTAR,TCR*TSTAR,ERROR,BE(3),RSCALE*RBAR,
-     &        RTIDE*RBAR,RD*RBAR,RC*RBAR,RHOD*RBAR,RHOM*RBAR,ZMC*RBAR,
-     &        CMAX,CNNB,IUNP,CMR(4),CMRDOT(4),AZ,EB,EM,VRMS,N,NS,NC,NESC
-     &        ,NNB,NSTEPI,NSTEPB,NSTEPR,NSTEPU,NPAIRS,IUNP,NP,NMERGE,
-     &        MULT,NNPRED,NBCORR,NBFULL,NBVOID,NICONV,NBSMIN,NBDIS,
-     &        NBDIS2,NCMDER,NBDER,NFAST,NBFAST,NBLOCK,NBLCKR,NIRRF,
-     &        NBPRED,NBFLUX,NIRECT,NRRECT,NURECT,NKSTRY,NKSREG,NKSHYP,
-     &        NKSPER,NPRECT,NEWKS,NKSMOD,NTTRY,NTRIP,NQUAD,NCHAIN,NMERG,
-     &        NEWHI,NSTEPT,NSTEPQ,NSTEPC
+         write (30,77) TTOT,TTOT*TSTAR,TCR*TSTAR,ERROR,BE(3),
+     &        RSCALE*RBAR,RTIDE*RBAR,RD*RBAR,RC*RBAR,RHOD*RBAR,
+     &        RHOM*RBAR,ZMC*RBAR,CMAX,CNNB,COST,CMR(4),CMRDOT(4),AZ,
+     &        EB,EM,VRMS,
+     &        N,NS,NPAIRS,IUNP,NP,NMERGE,MULT,NNB,NC,NESC,
+     &        NSTEPI,NSTEPB,NSTEPR,NSTEPU,NSTEPT,NSTEPQ,NSTEPC,
+     &        NBLOCK,NBLCKR,NNPRED,
+     &        NIRRF,NBCORR,NBFLUX,NBFULL,NBVOID,NICONV,NLSMIN,NBSMIN,
+     &        NBDIS,NBDIS2,NCMDER,
+     &        NFAST,NBFAST,
+     &        NKSTRY,NKSREG,NKSHYP,NKSPER,NKSMOD,
+     &        NTTRY,NTRIP,NQUAD,NCHAIN,NMERG,NEWHI
+ 77      format(21E26.17,44I12)
+         call flush(30)
       END IF
 *
 *       Check output for mass loss or tidal capture.
       IF (KZ(19).GT.0.OR.KZ(27).GT.0) THEN
           CALL EVENTS
       END IF
+
+*     Reset counter to zero
+      call counter_reset
 
 *     Obtain half-mass radii for two groups (NAME <= NZERO/5 & > NZERO/5). 
       IF (KZ(7).GE.6) THEN
@@ -258,28 +264,28 @@
       RMAX = 0.0
 *
 *       Check integer overflows (2^{32} or 2.1 billion).
-      IF (NSTEPI.GT.2000000000.OR.NSTEPI.LT.0) THEN
-          NSTEPI = 0
-          NIRECT = NIRECT + 1
-      END IF
-      IF (NSTEPR.GT.2000000000.OR.NSTEPR.LT.0) THEN
-          NSTEPR = 0
-          NRRECT = NRRECT + 1
-      END IF
-      IF (NSTEPU.GT.2000000000.OR.NSTEPU.LT.0) THEN
-          NSTEPU = 0
-          NURECT = NURECT + 1
-      END IF
-      IF (NBPRED.GT.2000000000.OR.NBPRED.LT.0) THEN
-          NBPRED = 0
-      END IF
-      IF (NBFLUX.GT.2000000000.OR.NBFLUX.LT.0) THEN
-          NBFLUX = 0
-          NBRECT = NBRECT + 1
-      END IF
-      IF (NBCORR.GT.2000000000.OR.NBCORR.LT.0) THEN
-          NBCORR = 0
-      END IF
+C      IF (NSTEPI.GT.2000000000.OR.NSTEPI.LT.0) THEN
+C          NSTEPI = 0
+C          NIRECT = NIRECT + 1
+C      END IF
+C      IF (NSTEPR.GT.2000000000.OR.NSTEPR.LT.0) THEN
+C          NSTEPR = 0
+C          NRRECT = NRRECT + 1
+C      END IF
+C      IF (NSTEPU.GT.2000000000.OR.NSTEPU.LT.0) THEN
+C          NSTEPU = 0
+C          NURECT = NURECT + 1
+C      END IF
+C      IF (NBPRED.GT.2000000000.OR.NBPRED.LT.0) THEN
+C          NBPRED = 0
+C      END IF
+C      IF (NBFLUX.GT.2000000000.OR.NBFLUX.LT.0) THEN
+C          NBFLUX = 0
+C          NBRECT = NBRECT + 1
+C      END IF
+C      IF (NBCORR.GT.2000000000.OR.NBCORR.LT.0) THEN
+C          NBCORR = 0
+C      END IF
 *     IF (NBLOCK.GT.2000000000.OR.NBLOCK.LT.0) THEN
 *         NBLOCK = 0
 *     END IF
@@ -329,8 +335,13 @@ c$$$              END IF
       DO 80 IPAIR = 1,NPAIRS
           RHO(2*IPAIR-1) = RHO(N+IPAIR)
           RHO(2*IPAIR) = RHO(N+IPAIR)
- 80   CONTINUE 
 *
+*       Include prediction of unperturbed binaries (except ghosts).
+          IF (LIST(1,2*IPAIR-1).EQ.0.AND.BODY(N+IPAIR).GT.0.0D0) THEN
+             CALL RESOLV(IPAIR,1)
+          END IF
+ 80    CONTINUE
+
 *       Convert masses, coordinates & velocities to single precision.
       DO 90 I = 1,NTOT
           BODYS(I) = REAL(BODY(I))
@@ -491,10 +502,21 @@ c$$$     &           nmerge,name(j1),name(j2),name(icm)
          call string_left(TCHAR,TTOT,DELTAT)
          write(OUTFILE,118) TCHAR
  118     format('conf.3_',A20)
+#ifdef H5OUTPUT
+         IF(KZ(46).GT.0) THEN
+            if(rank.eq.0.AND.TTOT.GT.0.0D0) THEN
+               call custom_update_file(TTOT,DELTAT)
+            END IF
+         END IF
+#endif
          OPEN (UNIT=3,STATUS='UNKNOWN',FORM='UNFORMATTED',FILE=OUTFILE)
          
          WRITE (3)  NTOT, MODEL, NRUN, NK
          WRITE (3)  (AS(K),K=1,NK),
+C         DO J = 1, NTOT
+C            WRITE (3,*) BODYS(J)*ZMBAR,XS(1:3,J)*RBAR,VS(1:3,J)*VSTAR,
+C     &           NAME(J)
+C         END DO
      &         (BODYS(J),J=1,NTOT),(RHOS(J),J=1,NTOT),(XNS(J),J=1,NTOT),
      &         ((XS(K,J),K=1,3),J=1,NTOT), ((VS(K,J),K=1,3),J=1,NTOT),
      &         (PHI(J),J=1,NTOT),(NAME(J),J=1,NTOT)

@@ -7,9 +7,12 @@
       INCLUDE 'common6.h'
       INCLUDE 'timing.h'
       INCLUDE 'omp_lib.h'
+      COMMON/POTDEN/  RHO(NMAX),XNDBL(NMAX),PHIDBL(NMAX)
       PARAMETER (NIMAX=1024)
-      REAL*8   H2I(NIMAX),GPUACC(3,NIMAX),GPUJRK(3,NIMAX),GPUPHI(NIMAX),
-     &         DTR(NIMAX)
+      REAL*8   GPUACC(3,NIMAX),GPUJRK(3,NIMAX)
+#ifdef GPU
+      REAL*8   H2I(NIMAX),GPUPHI(NIMAX),DTR(NIMAX)
+#endif
       REAL*8   DV(3)
       INTEGER  LISTGP(LMAX,NIMAX)
       SAVE  LISTGP
@@ -17,15 +20,22 @@
 #ifdef PARALLEL
       integer inum(NIMAX),ista(NIMAX)
 #endif
+#ifndef GPU
+      integer IREG(NMAX)
+#endif
 *
 *
+#ifdef GPU
 *       Open the GPU libraries on new run (note nnbmax = NN is printed).
-      NN = N + 10
+      NN = NTOT + 10
       CALL GPUNB_OPEN(NN,rank)
+#endif
 
       M_FLAG = 0
+      NB_FLAG = 0
 *     Use mass ratio as neighbor member criterion
       IF(KZ(39).EQ.2.OR.KZ(39).EQ.3) M_FLAG = 1
+      IF(KZ(39).EQ.0.OR.KZ(39).EQ.2) NB_FLAG = 1
 
 *     Set larger value for GPUIRR (note further possible increase of NTOT).
 *      NNN = N + 10
@@ -33,8 +43,10 @@
 *
 *       Set provisional neighbour radius and regular time-step for GPUNB.
 !$omp parallel do private(I,K,RI2)
-      DO 10 I = 1,N
-*          IREG(I) = I
+      DO 10 I = IFIRST,NTOT
+#ifndef GPU
+          IREG(I-IFIRST+1) = I
+#endif
           T0(I) = 0.0
 *       Modify neighbour radius according to NBLIST procedure.
           RI2 = X(1,I)**2 + X(2,I)**2 + X(3,I)**2
@@ -57,17 +69,20 @@
 *   15 CONTINUE
 **!$omp end parallel do
 *
+      NN = NTOT - IFIRST + 1
 *
+#ifdef GPU
 *       Send all single particles to the GPU.
-      CALL GPUNB_SEND(N,BODY(IFIRST),X(1,IFIRST),XDOT(1,IFIRST))
+      CALL GPUNB_SEND(NN,BODY(IFIRST),X(1,IFIRST),XDOT(1,IFIRST))
 *
 *       Define maximum GPU neighbour number and initialize counters.
       NBMAX = MIN(NNBMAX + 150,LMAX-5)
       NOFL2 = 0
+#endif
 *
 *       Loop over all particles split into NIMAX blocks.
 #ifdef PARALLEL
-      nl = n
+      nl = nn
       inl = nl/isize
       jsize = isize*inl
       idiff = nl - jsize
@@ -86,15 +101,16 @@
 #else
       JNEXT = 0
       istart = 1
-      iend = n
-#endif      
+      iend = NN
+#endif 
       DO 100 II = istart,iend,NIMAX
          NI = MIN(iend-JNEXT,NIMAX)
 *       Copy neighbour radius, STEPR and state vector for each block.
+#ifdef GPU
 *!$omp parallel do private(LL, I)
           DO 30 LL = 1,NI
-              I = JNEXT + LL
-              IF(KZ(39).EQ.2.OR.KZ(39).EQ.3) THEN
+              I = JNEXT + LL + IFIRST - 1
+              IF(M_FLAG.EQ.1) THEN
 *     Use mass ratio as neighbor member criterion
                  H2I(LL) = RS(I)**2/BODYM
               ELSE 
@@ -105,7 +121,7 @@
 *!$omp end parallel do
 *
 *       Evaluate forces, first derivatives and neighbour lists for new block.
- 31       I = JNEXT + 1
+ 31       I = JNEXT + IFIRST
           CALL GPUNB_REGF(NI,H2I,DTR,X(1,I),XDOT(1,I),GPUACC,GPUJRK,
      &         GPUPHI,LMAX,NNBMAX,LISTGP,M_FLAG)
 *       Check neighbour lists for overflow or zero membership (NNB = 1).
@@ -114,7 +130,7 @@
               NNB = LISTGP(1,LL)
 *       Repeat last block with reduced RS(I) on NNB < 2 (at end of loop).
               IF (NNB.LT.2) THEN
-                  I = JNEXT + LL
+                  I = JNEXT + LL + IFIRST - 1
                   RI2 = (X(1,I)-RDENS(1))**2 + (X(2,I)-RDENS(2))**2 +
      &                                         (X(3,I)-RDENS(3))**2
                   IF (NNB.LT.0) THEN
@@ -124,7 +140,7 @@
      &                    'RI[NB] ',I11,I8,I7,2F8.3)
                      CALL FLUSH(41)
 *     For smooth density system, use NNBOPT/NNB to estimate the neighbor radius
-                     IF(KZ(39).EQ.0.OR.KZ(39).EQ.2) THEN
+                     IF(NB_FLAG.EQ.1) THEN
                         IF(-NNB.GT.NNBOPT) THEN
                           RS(I)=(-FLOAT(NNBOPT)/FLOAT(NNB))**0.333*RS(I)
                         ELSE
@@ -141,7 +157,7 @@
                      CALL FLUSH(41)
                      RS(I) = 1.5*RS(I)
                   END IF
-                  IF(KZ(39).EQ.2.OR.KZ(39).EQ.3) THEN
+                  IF(M_FLAG.EQ.1) THEN
 *     Use mass ratio as neighbor member criterion
                      H2I(LL) = RS(I)**2/BODYM
                   ELSE
@@ -154,14 +170,14 @@
 *
 *       Repeat the last block for rare exceptions (NNB < 0 and = 1).
           IF (NOFL2.GT.0) THEN
-              NOFL2 = 0
-              GO TO 31
-           END IF
+             NOFL2 = 0
+             GO TO 31
+          END IF
 *
 *      Copy regular force and neighbour list from GPU.
 !$omp parallel do private(LL, I, ITEMP, NNB, L1, L)
           DO 70 LL = 1,NI
-              I = JNEXT + LL
+              I = JNEXT + LL + IFIRST - 1
               DO 55 K = 1,3
                   FR(K,I) = GPUACC(K,LL)
                   D1R(K,I) = GPUJRK(K,LL)
@@ -184,11 +200,58 @@
    70     CONTINUE
 !$omp end parallel do
 *
+#else
+*     OpemMP version of regular force, fdot, potential and neighbor list
+          IOFF = JNEXT + 1
+*     --11/30/14 16:46-lwang-debug--------------------------------------*
+***** Note:------------------------------------------------------------**
+c$$$          print*,rank,'IOFF',IOFF,'NI',NI,'IS',ISTART,'IE',IEND,
+c$$$     &         'IREG',IREG(IOFF:IOFF+2),'JNEXT',JNEXT
+*     --11/30/14 16:46-lwang-end----------------------------------------*
+          CALL regint(IOFF,NI,IREG,IFIRST,NTOT,X,XDOT,BODY,STEPR,BODYM,
+     &         M_FLAG,NB_FLAG,NNBOPT,RS,GPUACC,GPUJRK,LISTGP,PHIDBL)
+*     Check for zero neighbor
+          NINEW = NI
+ 42       NICHECK = NINEW
+          NINEW = 0
+          DO LL = 1, NICHECK
+             I = IREG(LL+IOFF-1)
+             NNB = LISTGP(1,LL) + 1
+             IF(NNB.EQ.1) THEN
+                RI2 = (X(1,I)-RDENS(1))**2 + (X(2,I)-RDENS(2))**2 +
+     &               (X(3,I)-RDENS(3))**2
+                WRITE (41,41)  LL, I, NAME(I), LISTGP(1,LL),
+     &               RS(I), SQRT(RI2)
+ 41             FORMAT (' ZERO NB!  L I NAME NB RS ri ',
+     &               3I11,I5,2F8.3)
+                CALL FLUSH(41)
+                RS(I) = 1.5*RS(I)
+                IREG(NINEW+IOFF) = I
+                NINEW = NINEW + 1
+             ELSE
+                FR(1:3,I) = GPUACC(1:3,LL)
+                D1R(1:3,I) = GPUJRK(1:3,LL)
+                LIST(1:NNB,I) = LISTGP(1:NNB,LL)
+             END IF
+          END DO
+          IF (NINEW.GT.0) THEN
+*     --11/30/14 16:46-lwang-debug--------------------------------------*
+***** Note:------------------------------------------------------------**
+c$$$             print*,rank,'IOFF',IOFF,'NINEW',NINEW,
+c$$$     &            'IREG',IREG(IOFF:2+IOFF)
+*     --11/30/14 16:46-lwang-end----------------------------------------*
+             CALL regint(IOFF,NINEW,IREG,IFIRST,NTOT,X,XDOT,BODY,STEPR,
+     &            BODYM,M_FLAG,NB_FLAG,NNBOPT,RS,GPUACC,GPUJRK,LISTGP,
+     &            PHIDBL)
+             GO TO 42
+          END IF
+#endif
+
 *       Evaluate current irregular forces
 !$omp parallel do private(LL,I,NNB,L,K,A1,A2,A3,DV,RIJ2,DR2I,
 !$omp& DR3I,DRDV)
           DO 334 LL = 1,NI
-             I = JNEXT + LL
+             I = JNEXT + LL + IFIRST - 1
              FI(1:3,I) = 0
              D1(1:3,I) = 0
              NNB = LIST(1,I) + 1
@@ -221,7 +284,7 @@
 
 *       Check option for external force.
       IF (KZ(14).GT.0) THEN
-          CALL XTRNLD(istart,iend,1)
+          CALL XTRNLD(istart+ifirst-1,iend+ifirst-1,1)
       END IF
 *
 *
@@ -236,11 +299,11 @@
       irank = rank - ir
       if(irank.lt.0)irank=irank+isize
 *
-      istsen=ista(irank+1)
+      istsen=ista(irank+1)+ifirst-1
       icnt = inum(irank+1)
 
       if(irank.eq.0)irank=isize
-      istrec = ista(irank)
+      istrec = ista(irank)+ifirst-1
       icnt2 = inum(irank)
 
 c$$$      print*, 'rank ',rank,' istsen ',istsen,' istrec-1 ',istrec-1,
@@ -294,7 +357,7 @@ c$$$     &     ' after fi(1) ',fi(1,istsen), ' fi(e) ',fi(1,istrec)
       
 *     Form total force & force derivative and extra variables for XVPRED.
 !$omp parallel do private(I,K)
-      DO 110 I = 1,N
+      DO 110 I = IFIRST,NTOT
           DO 105 K = 1,3
               F(K,I) = FI(K,I) + FR(K,I)
               FDOT(K,I) = D1(K,I) + D1R(K,I)
@@ -307,8 +370,10 @@ c$$$     &     ' after fi(1) ',fi(1,istsen), ' fi(e) ',fi(1,istrec)
 !$omp end parallel do
 *
 
+#ifdef GPU
 *       Close the GPU libraries (limits change in INTGRT).
       CALL GPUNB_CLOSE
+#endif
 *      CALL GPUIRR_CLOSE
 *
       RETURN

@@ -146,12 +146,15 @@ C              JCOMP1 = JCOMP1 - 1
           VREL(K,IMERGE) = X0DOT(K,ICOMP) - X0DOT(K,JCOMP)
           X(K,ICOMP) = (BODY(ICOMP)*X(K,ICOMP) + BODY(JCOMP)*X(K,JCOMP))
      &                                      /(BODY(ICOMP) + BODY(JCOMP))
+          X0(K,ICOMP) = X(K,ICOMP)
           X0DOT(K,ICOMP) = (BODY(ICOMP)*X0DOT(K,ICOMP) +
      &                      BODY(JCOMP)*X0DOT(K,JCOMP))/
      &                                       (BODY(ICOMP) + BODY(JCOMP))
+          XDOT(K,ICOMP) = X0DOT(K,ICOMP)
 *       Initialize primary velocity of JCOMP1 (needed in KSREG & KSINIT).
           X0DOT(K,JCOMP1) = XDOT(K,JCOMP1)
    30 CONTINUE
+      T0(JCOMP1) = TIME
 *
 *       Form new c.m. body & associated ghost of zero mass and neighbours.
       BODY(ICOMP) = BODY(ICOMP) + BODY(JCOMP)

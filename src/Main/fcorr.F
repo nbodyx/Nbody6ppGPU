@@ -81,7 +81,11 @@ c$$$      END DO
 !$omp& RDVDOT,A3,A4,A5,A6,A7,A,K)
 !$omp& reduction(+:POTJ)
       DO 40 J = IFIRST,NTOT
+#ifdef SIMD
           IF (J.EQ.I) GO TO 35
+#else
+          IF (J.EQ.I) GO TO 40
+#endif
           RIJ2 = 0.0D0
           RIJDOT = 0.0D0
           RDVDOT = 0.0D0
@@ -140,7 +144,11 @@ c$$$     &            't',time,'XDOT',XDOT(1,J)
 c$$$             call flush(6)
 c$$$          end if
 *     --03/19/14 22:48-lwang-end----------------------------------------*
+#ifdef SIMD
                   GO TO 35
+#else
+                  GO TO 40
+#endif
               END IF
    25     CONTINUE      
           DO 30 K = 1,3

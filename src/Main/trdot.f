@@ -38,7 +38,7 @@
          dtr = tm - age
       elseif(kw.ge.10)then
 C         dtm = 1.0d+02
-         dtm = sqrt(10.0/lum)
+         dtm = sqrt(0.1/lum)
          dtr = dtm
       elseif(kw.eq.2)then
          dtm = pts1*(tscls(1) - tm)
@@ -68,7 +68,7 @@ C         dtm = 1.0d+02
          endif
 *     --09/27/13 23:37-lwang-improvements-------------------------------*
 ***** Note: dtm did not necessary become small-------------------------**
-*         dtm = MIN(dtm,0.005d0)
+         dtm = MIN(dtm,0.005d0)
 *     --09/27/13 23:37-lwang-end----------------------------------------*
          dtr = tn - age
       elseif(kw.eq.7)then

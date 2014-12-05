@@ -1,4 +1,3 @@
-#define __USE_GNU
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -6,6 +5,7 @@
 #include <unistd.h>
 #include <omp.h>
 #include "vector3.h"
+#include "simd_define.h"
 
 #define NNBMAX 600
 
@@ -24,14 +24,6 @@ static double get_wtime(){
 	return 0.0;
 }
 #endif
-
-typedef float  v4sf __attribute__((vector_size(16)));
-typedef double v2df __attribute__((vector_size(16)));
-typedef float  v8sf __attribute__((vector_size(32)));
-typedef double v4df __attribute__((vector_size(32)));
-
-#define REP4(x) {x,x,x,x}
-#define REP8(x) {x,x,x,x,x,x,x,x}
 
 static inline v8sf rsqrt_NR(const v8sf x){
 	const v8sf y = __builtin_ia32_rsqrtps256(x);
@@ -244,11 +236,15 @@ struct Pred8{ // almost an array of structures
 struct Force{
 	v8sf ax, ay, az;
 	v8sf jx, jy, jz;
+	v8sf vnnb;
 
 	void clear(){
 		const v8sf zero = REP8(0.0f);
 		ax = ay = az = zero;
 		jx = jy = jz = zero;
+
+		v4df tmp = {HUGE, HUGE, HUGE, HUGE};
+		vnnb = (v8sf)tmp;
 	}
 	static double reduce(const v8sf v){
 		const v4df d0 = __builtin_ia32_cvtps2pd256(
@@ -259,9 +255,30 @@ struct Force{
 		const v4df dh = __builtin_ia32_haddpd256(dd, dd);
 		const v2df sum = __builtin_ia32_vextractf128_pd256(dh, 0)
 		               + __builtin_ia32_vextractf128_pd256(dh, 1);
+#ifdef __USE_INTEL
+        double p;
+        _mm_store_sd(&p, sum);
+        return p;
+#else
 		return __builtin_ia32_vec_ext_v2df(sum, 0);
+#endif
 	}
-	void write(double *acc, double *jrk) const{
+
+	int reduce_nnb() const{
+		v2df min = __builtin_ia32_minpd(
+				__builtin_ia32_vextractf128_pd256((v4df)vnnb, 0),
+				__builtin_ia32_vextractf128_pd256((v4df)vnnb, 1));
+		min = __builtin_ia32_minpd(min,
+				__builtin_ia32_unpckhpd(min, min));
+		union{
+			v2df v;
+			int  i;
+		} mem;
+		mem.v = min;
+		return mem.i;
+	}
+
+  void write(double *acc, double *jrk, int &nnbid) const{
 
 		const double a0 = reduce(ax);
 		const double a1 = reduce(ay);
@@ -269,14 +286,17 @@ struct Force{
 		const double j0 = reduce(jx);
 		const double j1 = reduce(jy);
 		const double j2 = reduce(jz);
+		const int    ii = reduce_nnb() + 1;
+        
 		acc[0] = a0;
 		acc[1] = a1;
 		acc[2] = a2;
 		jrk[0] = j0;
 		jrk[1] = j1;
 		jrk[2] = j2;
+		nnbid  = ii;
 	}
-	void calc_and_accum(const Pred8 &pi, const Pred8 &pj){
+    void calc_and_accum(const Pred8 &pi, const Pred8 &pj, const v8sf idx){
 		const v8sf dx = (pj.xH - pi.xH) + (pj.xL - pi.xL);
 		const v8sf dy = (pj.yH - pi.yH) + (pj.yL - pi.yL);
 		const v8sf dz = (pj.zH - pi.zH) + (pj.zL - pi.zL);
@@ -293,6 +313,11 @@ struct Force{
 		const v8sf alpha  = c1 * rinv2 * rv;
 		const v8sf mrinv3 = pj.m * rinv * rinv2;
 
+		const v8sf r2_idx0 = __builtin_ia32_unpcklps256(idx, r2);
+		const v8sf r2_idx1 = __builtin_ia32_unpckhps256(idx, r2);
+		vnnb = (v8sf)__builtin_ia32_minpd256((v4df)vnnb, (v4df)r2_idx0);
+		vnnb = (v8sf)__builtin_ia32_minpd256((v4df)vnnb, (v4df)r2_idx1);
+
 		ax += mrinv3 * dx;
 		ay += mrinv3 * dy;
 		az += mrinv3 * dz;
@@ -305,7 +330,7 @@ struct Force{
 
 struct NBlist{
 	enum{ NB_MAX = NNBMAX };
-	int pad[3];
+	int pad[7];
 	int nnb;
 	int nb[NB_MAX];
 
@@ -428,19 +453,35 @@ static void irr_simd_set_list(
 	assert(nnb <= NBlist::NB_MAX);
 	list[addr].nnb = nnb;
 
+#ifdef __USE_INTEL
+     const int one4[4] = REP4(1);
+     __m128i one;
+     _mm_stream_si128(&one, *((__m128i*) one4));
+    //    const __m128i one =  _mm_stream_load_si128 ((__m128i*) one4 );
+#endif
 	const int *src = nblist;
 	      int *dst = list[addr].nb;
 	for(int k=0; k<nnb; k+=8){
-
       // assert((unsigned long)dst %16 == 0);
-		typedef int       v4si __attribute__((vector_size(16)));
-		typedef long long v2di __attribute__ ((__vector_size__ (16)));
+#ifdef __USE_INTEL
+      //        const __m128i one  = 
+      //        const __m128i idx0 = _mm_stream_load_si128 ((__m128i*) (src+k+0));
+      //        const __m128i idx1 = _mm_stream_load_si128 ((__m128i*) (src+k+4));
+        __m128i idx0,idx1;
+        _mm_stream_si128(&idx0, *((__m128i*) (src+k+0)));
+        _mm_stream_si128(&idx1, *((__m128i*) (src+k+4)));
+  
+        _mm_stream_si128((__m128i *) (dst+k+0), idx0-one);
+        _mm_stream_si128((__m128i *) (dst+k+4), idx1-one);
+#else
+        typedef long long v2di __attribute__ ((__vector_size__ (16)));
+        typedef int       v4si __attribute__((vector_size(16)));
 		const v4si one = REP4(1);
 		const v4si idx0 = (v4si)__builtin_ia32_loaddqu((const char *)(src+k+0));
 		const v4si idx1 = (v4si)__builtin_ia32_loaddqu((const char *)(src+k+4));
 		__builtin_ia32_movntdq((v2di *)(dst+k+0), (v2di)(idx0-one));
 		__builtin_ia32_movntdq((v2di *)(dst+k+4), (v2di)(idx1-one));
-
+#endif
 	}
 	// fill dummy
 	const int nmax = ::nmax;
@@ -454,7 +495,8 @@ static void irr_simd_set_list(
 static void irr_simd_firr(
 		const int addr,
 		_out_ double accout[3],
-		_out_ double jrkout[3])
+		_out_ double jrkout[3],
+        _out_ int  &nnbid)
 {
 	const Particle *ptcl = ::ptcl;
 	const v2df      tnow = ::vec_tnow;
@@ -472,17 +514,25 @@ static void irr_simd_firr(
 
 	for(int k=0; k<nnb; k+=8){
 		const int *jptr = &(list[addr].nb[k]);
-		const Pred2 p01(ptcl[jptr[0]], ptcl[jptr[1]], tnow);
-		const Pred2 p23(ptcl[jptr[2]], ptcl[jptr[3]], tnow);
-		const Pred2 p45(ptcl[jptr[4]], ptcl[jptr[5]], tnow);
-		const Pred2 p67(ptcl[jptr[6]], ptcl[jptr[7]], tnow);
+		const Pred2 p04(ptcl[jptr[0]], ptcl[jptr[4]], tnow);
+		const Pred2 p15(ptcl[jptr[1]], ptcl[jptr[5]], tnow);
+		const Pred2 p26(ptcl[jptr[2]], ptcl[jptr[6]], tnow);
+		const Pred2 p37(ptcl[jptr[3]], ptcl[jptr[7]], tnow);
 
-		const Pred8 prj(p01, p23, p45, p67);
+		const Pred8 prj(p04, p15, p26, p37);
+		// const Pred2 p01(ptcl[jptr[0]], ptcl[jptr[1]], tnow);
+		// const Pred2 p23(ptcl[jptr[2]], ptcl[jptr[3]], tnow);
+		// const Pred2 p45(ptcl[jptr[4]], ptcl[jptr[5]], tnow);
+		// const Pred2 p67(ptcl[jptr[6]], ptcl[jptr[7]], tnow);
 
-		force.calc_and_accum(pri, prj);
+		// const Pred8 prj(p01, p23, p45, p67);
+
+		assert(0 == (size_t)jptr % 32);
+		v8sf idx = *(v8sf *)jptr;
+		force.calc_and_accum(pri, prj, idx);
 	}
 
-	force.write(accout, jrkout);
+	force.write(accout, jrkout, nnbid);
 }
 
 static void irr_simd_firr_vec(
@@ -490,7 +540,8 @@ static void irr_simd_firr_vec(
 		const int ni,
 		const int addr[],
 		_out_ double accout[][3],
-		_out_ double jrkout[][3])
+		_out_ double jrkout[][3],
+        _out_ int nnbid[])
 {
   //  printf("NI %d TIME %f FIRST %d",ni,ti,addr[0]);
 	const double t0 = get_wtime();
@@ -499,7 +550,7 @@ static void irr_simd_firr_vec(
 
 #pragma omp parallel for reduction(+: ninter) schedule(guided)
 	for(int i=0; i<ni; i++){
-        irr_simd_firr(addr[i]-1, accout[i], jrkout[i]);
+        irr_simd_firr(addr[i]-1, accout[i], jrkout[i], nnbid[i]);
 		ninter += list[addr[i]-1].nnb;
 	}
 	::num_inter += ninter;
@@ -543,8 +594,9 @@ extern "C"{
 			int   *ni,
 			int    addr[],
 			double acc [][3],
-			double jrk [][3])
+			double jrk [][3],
+            int    nnbid[])
 	{
-      irr_simd_firr_vec(*ti, *ni, addr, acc, jrk);
+      irr_simd_firr_vec(*ti, *ni, addr, acc, jrk, nnbid);
 	}
 }

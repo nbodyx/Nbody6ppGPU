@@ -968,7 +968,7 @@ c$$$            end if
 *       Predict current KS variables and save at end of routine RESOLV.
                   CALL RESOLV(KSPAIR,3)
                   IPHASE = 2
-                  IF(IPOLY.GE.0) IPLOY = 2
+                  IF(IPOLY.GE.0) IPOLY = 2
                   JCOMP = 0
 *     Do enery correction before particle index change
 *                  call encorr_mdot(NPNUM,NDMLIST,DMLIST,IGPUDM,
@@ -1137,10 +1137,11 @@ c$$$      end if
 *       Ensure all NS/BH are assigned a kick (might depend on DM).
             IF (KW.EQ.13.OR.KW.EQ.14) IKICK = .TRUE.
 *
-C       IF(rank.eq.0.and.KW.GE.10.AND.KW.LE.15) then
-C          write(6,*), 'MDOT2:KW,N,IKICK,M0,MC,AGE,TN,DM,DMSUN=',
-C     &         KW,NAME(I),IKICK,M0,MC,AGE,TN,DM,DMSUN
-C       end if
+c$$$       IF(rank.eq.0.and.KW.GE.13.AND.KW.LE.15) then
+c$$$          write(6,*), 'MDOT K*',KW,' K*0',KSTAR(I),' NAME',NAME(I),
+c$$$     &         ' IKICK',IKICK,' M0',M0,' MC',MC,' AGE',AGE,' TN',TN,
+c$$$     &         ' DM',DM,' DMSUN',DMSUN,' TIME',TIME
+c$$$       end if
 
 *     --09/27/13 10:39-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
@@ -1153,7 +1154,7 @@ c$$$      end if
 *     --09/27/13 10:39-lwang-end----------------------------------------*
        
 *       Perform total force & energy corrections (delay dF if DMSUN > 0.1).
-       IF (DMSUN.LE.0.05.AND.(KW.LT.10.OR..NOT.IKICK)) THEN
+            IF (DMSUN.LE.0.05.AND.(KW.LT.10.OR..NOT.IKICK)) THEN
 c$$$          IF(NPNUM.GT.0) THEN
 c$$$             IF(NDMLIST(NPNUM).EQ.I) THEN
 c$$$                DMLIST(NPNUM) = DMLIST(NPNUM) + DM
@@ -1167,10 +1168,10 @@ c$$$             NPNUM = NPNUM + 1
 c$$$             NDMLIST(NPNUM) = I
 c$$$             DMLIST(NPNUM) = DM
 c$$$          END IF
-          call cputim(tttfia)
-          CALL FICORR(I,DM)
-          call cputim(tttfib)
-          ttfic = ttfic + (tttfib-tttfia)*60
+               call cputim(tttfia)
+               CALL FICORR(I,DM)
+               call cputim(tttfib)
+               ttfic = ttfic + (tttfib-tttfia)*60
 *          call encorr_mdot(NPNUM,NDMLIST,DMLIST,IGPUDM,IGPUSWITCH)
 *     --11/10/13 15:36-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
@@ -1179,14 +1180,14 @@ c$$$  write(130,*) 1,MDOT_C,NAME(I),DMSUN,KW,TIME,
 c$$$  &                (tttfib-tttfia)*60
 c$$$  END if
 *     --11/10/13 15:36-lwang-end----------------------------------------*
-       ELSE
+            ELSE
 c$$$          IF (KW.GE.10.AND.KW.LE.15) THEN
 c$$$             call encorr_mdot(NPNUM,NDMLIST,DMLIST,IGPUDM,IGPUSWITCH)
 c$$$  NCNUM = 0
 c$$$          END IF
-          call cputim(tttfia)
-          CALL FCORR(I,DM,KW)
-          call cputim(tttfib)
+               call cputim(tttfia)
+               CALL FCORR(I,DM,KW)
+               call cputim(tttfib)
 c$$$  if(NCNUM.GT.0.AND.DCLIST(NCNUM).EQ.I) THEN
 c$$$  DCLIST(NCNUM) = DCLIST(NCNUM) + DM
 c$$$  else
@@ -1194,7 +1195,7 @@ c$$$  NCNUM = NCNUM + 1
 c$$$  NDCLIST(NCNUM) = I
 c$$$  DCLIST(NCNUM) = DM
 c$$$  end if
-          ttfc = ttfc + (tttfib-tttfia)*60
+               ttfc = ttfc + (tttfib-tttfia)*60
 *     --11/10/13 15:36-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 c$$$  if(rank.eq.0) THEN
@@ -1202,10 +1203,10 @@ c$$$  write(130,*) 0,MDOT_C,NAME(I),DMSUN,KW,TIME,
 c$$$  &                (tttfib-tttfia)*60
 c$$$  end if
 *     --11/10/13 15:36-lwang-end----------------------------------------*
-       END IF
+            END IF
 *
 *       Set flag to ensure new sorting after CALL FPOLY (need IPHASE < 0).
-       IF (I.GT.N) IPOLY = -1
+            IF (I.GT.N) IPOLY = -1
 *
 *       Initialize new polynomials of neighbours & #I for DMSUN > 0.1.
 *     --11/16/13 10:40-lwang-check--------------------------------------*
@@ -1290,7 +1291,7 @@ c$$$                  CALL CMCORR
 c$$$               END IF
 c$$$            END IF
             
-            TPREV = TIME - STEPX
+C            TPREV = TIME - STEPX
 *       Set indicator < 0 for new sorting.
             IF (IGHOST.GT.0) I = II
             IF(IPHASE.EQ.-3) IPHASE = 0

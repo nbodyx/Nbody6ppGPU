@@ -53,12 +53,12 @@
       JMAXU=MIN(JMAXU,NMAX)
       if(rank.eq.0)then
          WRITE (6,30)  (IHIST(J),J=1,JMAXI)
-   30 FORMAT (' STEP I ',22I5,(/,24I5))
+   30 FORMAT (' STEP I ',22I7,(/,24I5))
       IF (KZ(33).GT.1)WRITE (6,301)  (IHISTR(J),J=1,JMAXR)
-  301 FORMAT (' STEP R ',50I5,(/,24I5))
+  301 FORMAT (' STEP R ',50I7,(/,24I5))
       IF (KZ(8).GT.0 .OR. NBIN0.GT.0 )WRITE (6,3001)
      *     (IHISTU(J),J=1,JMAXU)
- 3001 FORMAT (' STEP U ',50I5,(/,24I5))
+ 3001 FORMAT (' STEP U ',50I7,(/,24I5))
       end if
 *
 *       IPROC contains a list of possible processor numbers,

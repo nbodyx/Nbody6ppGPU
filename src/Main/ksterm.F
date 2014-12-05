@@ -153,10 +153,12 @@ c$$$      END IF
      &              (X(2,ICM) - RDENS(2))**2 +
      &              (X(3,ICM) - RDENS(3))**2)
           if(rank.eq.0)
-     &    WRITE (6,15)  TIME+TOFF, BODY(I1)*ZMBAR, BODY(I1+1)*ZMBAR,
+     &    WRITE (6,15)  TIME+TOFF, NAME(I1),NAME(I1+1),
+     &         BODY(I1)*ZMBAR, BODY(I1+1)*ZMBAR,
      &          DTAU(IPAIR),R(IPAIR), RI, H(IPAIR), IPAIR, NAME(ICM),
      &         GAMMA(IPAIR), STEP(I1), LIST(1,I1), LIST(1,ICM)
-   15     FORMAT (/,' END KSREG   TIME[NB]',1P,E17.10,0P,' M(I1)[M*]',
+   15     FORMAT (/,' END KSREG   TIME[NB]',1P,E17.10,0P,' NAME(I1)',
+     &         I10,' NAME(I2)',I10,' M(I1)[M*]',
      &         F9.3,' M(I2)[M*]',F9.3,' DTAU',F8.3,' R12[NB]',1P,E9.1
      &         ,0P,' RI[NB]',F7.2,' H',F9.2,' IPAIR',I9,' NAME(ICM)'
      &         ,I10,' GAMMA',F8.3,' STEP(I1)',1P,E11.1,0P,' NPERT',I5

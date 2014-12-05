@@ -5,15 +5,13 @@
 #    make
 #    make install
 #
-# Extra Tools
-#    dump_btoa   (A small routine for transfering between unformatted 
-#                fort.1/2 and formatted dump.dat. dump.dat is very 
-#                useful when you want to restart the simulation in a
-#                different system)
 
 RESULT = nbody6++@RESULT@
 INSTALLDIR = @prefix@
 EXTRATOOLS = nb6++dumpb2a libinitial.so libnb6out3.so nb6++snapshot
+ifeq ("x@EXTRARESULT@", "x $(EXTRATOOLS)")
+EXTRAOBJS = installtools
+endif
 
 VPATH=./build
 
@@ -23,7 +21,7 @@ $(RESULT) @EXTRARESULT@:
 clean: 
 	rm -f ./build/*.o ./build/*.so ./build/$(RESULT) $(EXTRATARGET)
 
-install: $(RESULT) installtools
+install: $(RESULT) $(EXTRAOBJS)
 	@[ -d $(INSTALLDIR)/bin ] || mkdir $(INSTALLDIR)/bin
 	@[ -d $(INSTALLDIR)/share ] || mkdir $(INSTALLDIR)/share
 	@[ -d $(INSTALLDIR)/share/doc ] || mkdir $(INSTALLDIR)/share/doc

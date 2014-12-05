@@ -2,6 +2,8 @@
 #define PROFILE
 #ifdef PROFILE
 #include <sys/time.h>
+#include "simd_define.h"
+
 static double get_wtime(){
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
@@ -13,7 +15,7 @@ static double get_wtime(){
 }
 #endif
 
-typedef float v4sf __attribute__ ((vector_size(16)));
+//typedef float v4sf __attribute__ ((vector_size(16)));
 static inline v4sf v4sf_rsqrt(v4sf x){
 	v4sf y = __builtin_ia32_rsqrtps(x);
 	return ((v4sf){-0.5f, -0.5f, -0.5f, -0.5f} * y) * 

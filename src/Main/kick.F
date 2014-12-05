@@ -11,7 +11,7 @@
       SAVE  IPAIR, KC, VDIS, RI
       DATA  IPAIR,KC /0,0/
 *       Reinstall the traditional kicks (March 2012)
-      PARAMETER (VFAC=2.0D0)
+      PARAMETER (VFAC=-1.0D0)
 *       Get fallback from hrdiag.f
 *     Safe for parallel
       common /fall/fallback
@@ -102,8 +102,11 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
 *     IF (FAC.LT.RAN2(IDUM1).AND.IT.LT.10) GO TO 2
 *     VKICK = V0*VT
 *
-*       Adopt the Maxwellian of Hansen & Phinney (MN 291, 569, 1997).
-      DISP = 190.0
+C*       Adopt the Maxwellian of Hansen & Phinney (MNRAS 291, 569, 1997).
+C      DISP = 190.0
+*
+*       Adopt the Maxwellian of Hobbs (MNRAS 360, 974, 2005)
+      DISP = 265.0
 *
 *       Include velocity dispersion in terms of VSTAR (Parameter statement!).
       IF (VFAC.GT.0.0D0) THEN
@@ -136,14 +139,14 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
       IF(KW.EQ.14) VKICK = VKICK*(1.D0-fallback)
 *
 *       Limit kick velocity to VDIS+10*VSTAR/10*VST for binary/single stars.
-      IF (IPAIR.GT.0) THEN
-          VBF = SQRT(VDIS**2 + 100.0*VSTAR**2)
-          VKICK = MIN(VKICK,VBF)
-      ELSE
-          VKICK = MIN(VKICK,10.0D0*VSTAR)
+C      IF (IPAIR.GT.0) THEN
+C          VBF = SQRT(VDIS**2 + 100.0*VSTAR**2)
+C          VKICK = MIN(VKICK,VBF)
+C      ELSE
+C          VKICK = MIN(VKICK,10.0D0*VSTAR)
 *       Ensure escape of massless star.
-          IF (BODY(I).EQ.0.0D0) VKICK = 10.0*VSTAR
-      END IF
+      IF (IPAIR.LE.0.AND.BODY(I).EQ.0.0D0) VKICK = 10.0*VSTAR
+C      END IF
       VKICK = VKICK/VSTAR
 *
       IF (VKICK.EQ.0.0) GO TO 30
@@ -202,10 +205,12 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
 *    &    (KW.GE.13.AND.TTOT*TSTAR.GT.100.0)) THEN
           ZM = BODY(I)*ZMBAR
           if(rank.eq.0)
-     &    WRITE (6,20)  I, NAME(I), KSTAR(I), KC, BODY0(I)*ZMBAR, ZM,
-     &    SQRT(VI2)*VSTAR, VKICK*VSTAR, SQRT(VF2)*VSTAR, VK(4),fallback
-   20     FORMAT (' VELOCITY KICK: I',I10'  NAME',I10,'  K*',I4,
-     &         '  K*(ICM)',I4'  M0[M*]',F9.4,'  MN[M*]',F9.4,
+     &    WRITE (6,20)  I, NAME(I), (TIME+TOFF)*TSTAR, KSTAR(I), KW, KC,
+     &         BODY0(I)*ZMBAR,ZM,SQRT(VI2)*VSTAR, VKICK*VSTAR, 
+     &         SQRT(VF2)*VSTAR, VK(4),fallback
+   20     FORMAT (' VELOCITY KICK: I',I10'  NAME',I10,
+     &         '  Time[Myr]',E12.5,'  K*0',I4,
+     &         '  K*',I4,'  K*(ICM)',I4'  M0[M*]',F9.4,'  MN[M*]',F9.4,
      &         '  VI[km/s]',F9.4,'  VK[km/s]',F9.4'  VF[km/s]',F9.4,
      &         '  VK0[km/s]',F9.4,'  FB',F9.4)
           KC = 0

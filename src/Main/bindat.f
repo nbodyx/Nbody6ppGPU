@@ -89,7 +89,7 @@ C              RM = MIN(RM,99.9D0)
               ECC2 = (1.0 - SEMI/R(JPAIR))**2
           END IF
           ECC(JPAIR) = SQRT(ECC2)
-          EB(JPAIR) = MAX(EB(JPAIR),-9.99999)
+C          EB(JPAIR) = MAX(EB(JPAIR),-9.99999)
           PB(JPAIR) = DAYS*SEMI*SQRT(ABS(SEMI)/BODYCM)
 *          PB(JPAIR) = MIN(PB(JPAIR),99999.9)
           IF (SEMI.LT.0.0) PB(JPAIR) = 0.0

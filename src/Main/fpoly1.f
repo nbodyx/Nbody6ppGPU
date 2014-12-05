@@ -8,7 +8,7 @@
       REAL*8  A(9),F1(3),F1DOT(3)
 *
 *
-      call xbpredall
+      IF (TTOT+TOFF.GT.0.D0) call xbpredall
 *       Standard case, new c.m. or KS termination (KCASE = 0, 1, 2).
       JLAST = NTOT
 *       Reduce loop size for new c.m. polynomial.

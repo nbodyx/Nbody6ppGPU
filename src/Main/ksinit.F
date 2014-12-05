@@ -203,11 +203,13 @@ c$$$      end if
      &              (X(2,NTOT) - RDENS(2))**2 +
      &              (X(3,NTOT) - RDENS(3))**2)
           if(rank.eq.0)
-     &    WRITE (6,60)  TIME+TOFF, NAME(ICOMP), NAME(JCOMP),DTAU(IPAIR),
-     &             R(IPAIR), RI, H(IPAIR), IPAIR, NAME(N+IPAIR),
-     &             GAMMA(IPAIR),STEP(NTOT), LIST(1,ICOMP), LIST(1,NTOT)
+     &    WRITE (6,60)  TIME+TOFF, NAME(ICOMP), NAME(JCOMP), 
+     &         BODY(ICOMP)*ZMBAR,BODY(JCOMP)*ZMBAR,
+     &         DTAU(IPAIR),R(IPAIR), RI, H(IPAIR), IPAIR, NAME(N+IPAIR),
+     &         GAMMA(IPAIR),STEP(NTOT), LIST(1,ICOMP), LIST(1,NTOT)
    60     FORMAT (/,' NEW KSREG   TIME[NB]',1P,E17.10,0P,' NAME(I1)',
-     &         I10,' NAME(I2)',I10,' DTAU',F8.3,' R12[NB]',1P,E9.1,0P
+     &         I10,' NAME(I2)',I10,' M(I1)[M*]',
+     &         F9.3,' M(I2)[M*]',F9.3,' DTAU',F8.3,' R12[NB]',1P,E9.1,0P
      &         ,' RI[NB]',F7.2,' H',F9.2,' IPAIR',I9,' NAME(ICM)',
      &         I10,' GAMMA',F8.3,' STEP(ICM)',1P,E10.1,0P,' NPERT',I5
      &         ,' NB(ICM)',I5)

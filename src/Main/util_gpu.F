@@ -12,16 +12,21 @@
       
       INTEGER IREG(NMAX), istart, iend
       INTEGER LISTGP(LMAX,maxthr),NOFL,M_FLAG
+#ifdef GPU
       REAL*8 GPU_RS(maxthr),GPU_DTR(maxthr)
+      REAL*8 GPU_POT(maxthr)
+#endif
       REAL*8 x_i(3,maxthr), v_i(3,maxthr)
-      REAL*8 GPU_POT(maxthr), GPU_A(3,maxthr), GPU_JERK(3,maxthr)
+      REAL*8 GPU_A(3,maxthr), GPU_JERK(3,maxthr)
 *      REAL*8 FI_HOST(3,maxthr),FID_HOST(3,maxthr)
 *     If it's in parallel loop, flag_p = .true.
 *      LOGICAL FLAG_P
 
       M_FLAG = 0
+      NB_FLAG = 0
 *     Use mass ratio as neighbor member criterion
       IF(KZ(39).EQ.2.OR.KZ(39).EQ.3) M_FLAG = 1
+      IF(KZ(39).EQ.0.OR.KZ(39).EQ.2) NB_FLAG = 1
       
       NOFL = 0
 *     calculate the pot, a & jerk on the GPU
@@ -30,13 +35,14 @@
          ni = maxthr
          IF( (L+ni).GT.iend ) ni = iend - L + 1
 
+#ifdef GPU
 *     fill the GPU "working" arrays
 !$omp parallel do private(ii,idi)
          DO ii=1,ni
             idi = IREG(L+ii-1)
 *    Obtain irregular & regular force and determine current neighbours.
 *    Take volume between inner and outer radius equal to basic sphere.
-            IF(KZ(39).EQ.2.OR.KZ(39).EQ.3) THEN
+            IF(M_FLAG.EQ.1) THEN
 *     Use mass ratio as neighbor member criterion
                GPU_RS(ii) = RS(idi)**2/BODYM
             ELSE
@@ -68,11 +74,10 @@
  56            FORMAT (' OVERFLOW! I',I8,'  NAME',I8,'  NBPRE',I6,
      &              '  NBNEW',I6,'  RNB[NB]',F10.4,
      &              '  RI[NB]',F10.4,'  Time[NB]',1P,D12.5,0P)
-               CALL FLUSH(41)
 *     Define all particles as neighbours for overflow for full force loop in regint.
 *     LIST_G(1,idi) = NNB
                NOFL = NOFL + 1
-               IF(KZ(39).EQ.0.OR.KZ(39).EQ.2) THEN
+               IF(NB_FLAG.EQ.1) THEN
 *     For smooth density system, use NNBOPT/NNB to estimate the neighbor radius
                   IF(-NNB.GT.NNBOPT) THEN
                      RS(idi)=(-FLOAT(NNBOPT)/FLOAT(NNB))**0.333*RS(idi)
@@ -82,7 +87,7 @@
                ELSE
                   RS(idi) = 0.9*RS(idi)
                END IF
-               IF(KZ(39).EQ.2.OR.KZ(39).EQ.3) THEN
+               IF(M_FLAG.EQ.1) THEN
 *     Use mass ratio as neighbor member criterion
                   GPU_RS(ii) = RS(idi)**2/BODYM
                ELSE
@@ -108,6 +113,15 @@ C$$$#ifdef SIMD
 C$$$            CALL IRR_SIMD_SET_LIST(IDI,LISTGP(1,II))
 C$$$#endif
          END DO
+#else
+*     OpemMP version of regular force, fdot, potential and neighbor list
+         call cputim(tt53)
+         CALL regint(L,NI,IREG,IFIRST,NTOT,X,XDOT,BODY,STEPR,BODYM,
+     &        M_FLAG,NB_FLAG,NNBOPT,RS,GPU_A,GPU_JERK,LISTGP,PHIDBL)
+         call cputim(tt54)
+         ttgpu = ttgpu + (tt54-tt53)*60.0
+#endif
+         CALL FLUSH(41)
 
 C$$$#ifdef SIMD
 *       Evaluate current irregular forces by vector procedure.
@@ -134,6 +148,10 @@ C$$$#endif
 *!$omp parallel do if(ni.GE.ithread) private(II,I)
          DO II = 1, ni
             I = IREG(L+II-1)
+#ifndef GPU
+            x_i(1:3,II) = x(1:3,I)
+            v_i(1:3,II) = xdot(1:3,I)
+#endif
 *     --04/19/14 12:44-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 c$$$            IF(NAME(I).EQ.8317.AND.TIME.EQ.1.32592773437500000) THEN

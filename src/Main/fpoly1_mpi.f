@@ -33,8 +33,8 @@
       ista(ix) = irun+1
  1003 irun = irun + inum(ix)
 *
-      istart = ista(rank+1)
-      iend = ista(rank+1) + inum(rank+1) - 1
+      istart = ista(rank+1) + IFIRST - 1
+      iend = ista(rank+1) + inum(rank+1) - 2 + IFIRST
 *
       do 40 i = istart,iend
 *
@@ -128,11 +128,11 @@
       irank = rank - ir
       if(irank.lt.0)irank=irank+isize
 *
-      istart=ista(irank+1)
+      istart=ista(irank+1) + IFIRST - 1
       icnt = inum(irank+1)
 *
       if(irank.eq.0)irank=isize
-      istrec = ista(irank)
+      istrec = ista(irank) + IFIRST - 1
       icnt2 = inum(irank)
 *
 *     print*,' FPOLY1: bef rank,irank=',rank,irank

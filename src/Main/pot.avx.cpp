@@ -2,6 +2,8 @@
 #define PROFILE
 #ifdef PROFILE
 #include <sys/time.h>
+#include "simd_define.h"
+
 static double get_wtime(){
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
@@ -13,12 +15,12 @@ static double get_wtime(){
 }
 #endif
 
-#define REP4(x) {x, x, x, x}
-#define REP8(x) {x, x, x, x, x, x, x, x}
+//#define REP4(x) {x, x, x, x}
+//#define REP8(x) {x, x, x, x, x, x, x, x}
 
-typedef float  v4sf __attribute__ ((vector_size(16)));
-typedef float  v8sf __attribute__ ((vector_size(32)));
-typedef double v4df __attribute__ ((vector_size(32)));
+//typedef float  v4sf __attribute__ ((vector_size(16)));
+//typedef float  v8sf __attribute__ ((vector_size(32)));
+//typedef double v4df __attribute__ ((vector_size(32)));
 
 static inline v8sf v8sf_rsqrt(const v8sf x){
 	v8sf y = __builtin_ia32_rsqrtps256(x);

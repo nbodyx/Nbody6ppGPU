@@ -66,7 +66,7 @@
           RI = SQRT(RI2)
           EB = 0.5*BODY(I1)*BODY(I2)/SEMI
           EB = EB*FLOAT(N-NPAIRS)/ZKIN
-          EB = MIN(EB,999.9D0)
+C          EB = MIN(EB,999.9D0)
           ZM = (BODY(I) + BODY(JCOMP))*SMU
           CALL FINDJ(I,JG,IM)
 *       Check possible extension of next look-up time (skip GR case).
@@ -84,7 +84,7 @@
      &    WRITE (6,5)  WHICH1, TIME+TOFF, ZM, NAME(I1), NAME(I2),
      &                 NAME(JCOMP), RI, ECC, EB, SEMI,PCRIT,GAMMA(IPAIR)
     5     FORMAT (/,' NEW',A11,'   T MT NM1 NM2 NM3 RI E0 EB0 A0 PC G0',
-     &                             F10.2,F6.2,3I6,2F6.2,F6.1,1P,3E10.2)
+     &                             F10.2,F6.2,3I6,2F6.2,1P,4E10.2)
       END IF
 *
 *       Check for [[B,S],S] quartet or [[B,B],S] quintuplet.

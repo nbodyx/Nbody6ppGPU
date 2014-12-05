@@ -476,7 +476,7 @@ C      TIME = MIN(TBLOCK,TIME)
      &                      (XDOT(K,I3) - XDOT(K,NTOT))
    74     CONTINUE
           HI = 0.5*VIJ2 - (BODY(I3) + BODY(NTOT))/SQRT(RIJ2)
-          IF (HI.GT.0.0.AND.RDOT.GT.0.0) THEN
+          IF (HI.GT.0.0.AND.RDOT.GT.0.0.AND.KZ(37).GT.0) THEN
                CALL HIVEL(I3)
           END IF
       END IF

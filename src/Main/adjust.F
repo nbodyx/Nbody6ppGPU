@@ -260,20 +260,20 @@ c$$$     &        EBIN,EMERGE
  55      FORMAT('  PE       N        Total     Inti.    Intgrt',
      &        '      Reg.      Irr.     Pred.   Init.B.      Mdot',
      &        '      Move   Comm.I.   Comm.R.   Send.I.   Send.R.',
-     &        '        KS    Adjust     Barr.   Barr.I.   Barr.R.',
-     &        ' Reg.GPU.S Reg.GPU.P Comm.Adj.',
+     &        '        KS    Adjust     OUT      Barr.   Barr.I.   ',
+     &        'Barr.R. Reg.GPU.S Reg.GPU.P Comm.Adj.',
      &        ' Mdot.Fic.  Mdot.Fc. Mdot.Pot.  Mdot.EC.   Sort.B.',
-     &        '  KS.Init.B',
+     &        '    HighV  KS.Init.B',
      &        '  KS.Int.S  KS.Int.P  KS.Comm.  KS.Barr.   KS.Move',
      &        '   KS.Cmb. KS.Insert  KS.Init.  KS.Term.     Hiar.',
-     &        '       xtsub1       xtsub2')
+     &        '     KS.UP       xtsub1       xtsub2')
          WRITE(6,56)isize,n,ttotal,ttinit,ttint,ttreg,ttirr,ttpre,
      &        ttintb,ttmdot,ttmov,ttsub,ttsub2,ttsimdsend,ttgrcomm,
-     &        ttks,ttadj,ttbar,ttbarnb,ttbarreg,ttgrcalc,ttgrcalc2,
-     &        ttsube,ttfic,ttfc,ttpot,ttecor,ttnewt,ttksblist,ttksints,
-     &        ttksintp,ttkssub,ttksbar,ttkscp,ttkscmb,ttksins,ttksinit,
-     &        ttksterm,tttq,xtsub1,xtsub2
- 56      FORMAT(1X,I3,I8,F13.5,36F10.2,1P,2D13.5)
+     &        ttks,ttadj,ttout,ttbar,ttbarnb,ttbarreg,ttgrcalc,
+     &        ttgrcalc2,ttsube,ttfic,ttfc,ttpot,ttecor,ttnewt,ttshk,
+     &        ttksblist,ttksints,ttksintp,ttkssub,ttksbar,ttkscp,
+     &        ttkscmb,ttksins,ttksinit,ttksterm,tttq,ttup,xtsub1,xtsub2
+ 56      FORMAT(1X,I3,I8,F13.5,39F10.2,1P,2D13.5)
          CALL FLUSH(6)
       end if
 

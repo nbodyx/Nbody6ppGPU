@@ -240,12 +240,12 @@
       call flush(6)
 
 *     In case of no tidal field choose very large RTIDE (R.Sp.)
-      IF (KZ(14).EQ.0.AND.KZ(23).LE.2) RTIDE = 1.D8
+C      IF (KZ(14).EQ.0.AND.KZ(23).LE.2) RTIDE = 1.D8
 *       In case of King model scale initial tidal radius
-      IF(KZ(23).GE.3)THEN
-         RTIDE = RTIDE/SX
+C      IF(KZ(23).GE.3)THEN
+C         RTIDE = RTIDE/SX
 c$$$      if(rank.eq.0)PRINT*,' RTIDE =',RTIDE,' ETID=',ZMASS/RTIDE
-      END IF
+C      END IF
 *
 *       Check whether to include rotation (VXROT = 0 in standard case).
       IF (VXROT.GT.0.0D0) THEN

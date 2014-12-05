@@ -6,8 +6,9 @@
 #include <unistd.h>
 #include <omp.h>
 #include "vector3.h"
+#include "simd_define.h"
 
-#define NNBMAX 400
+#define NNBMAX 600
 
 #define _out_
 #define PROFILE
@@ -25,10 +26,10 @@ static double get_wtime(){
 }
 #endif
 
-typedef float  v4sf __attribute__((vector_size(16)));
-typedef double v2df __attribute__((vector_size(16)));
+//typedef float  v4sf __attribute__((vector_size(16)));
+//typedef double v2df __attribute__((vector_size(16)));
 
-#define REP4(x) {x,x,x,x}
+//#define REP4(x) {x,x,x,x}
 
 static inline v4sf rsqrt_NR(const v4sf x){
 	const v4sf y = __builtin_ia32_rsqrtps(x);
@@ -220,11 +221,15 @@ struct Pred4{
 struct Force{
 	v4sf ax, ay, az;
 	v4sf jx, jy, jz;
+    v4sf vnnb;
 
 	void clear(){
 		const v4sf zero = REP4(0.0f);
 		ax = ay = az = zero;
 		jx = jy = jz = zero;
+
+        v2df tmp = {HUGE,HUGE};
+        vnnb = (v4sf)tmp;
 	}
  
 	static double reduce(const v4sf v){
@@ -235,7 +240,20 @@ struct Force{
 		return __builtin_ia32_vec_ext_v2df(sum , 0);
 	}
 
-	void write(double *acc, double *jrk) const{
+    int reduce_nnb() const{
+        // min( [i1|r1|i2|r2] , [i2|r2|i2|r2] )
+        v2df min = __builtin_ia32_minpd((v2df)vnnb,
+                         __builtin_ia32_unpckhpd((v2df)vnnb, (v2df)vnnb));
+        // [i1|r1] <-> [i|]
+        union{
+            v2df v;
+            int  i;
+        } mem;
+        mem.v = min;
+        return mem.i;
+    }
+
+  void write(double *acc, double *jrk, int &nnbid) const{
 
 		const double a0 = reduce(ax);
 		const double a1 = reduce(ay);
@@ -243,14 +261,16 @@ struct Force{
 		const double j0 = reduce(jx);
 		const double j1 = reduce(jy);
 		const double j2 = reduce(jz);
+        const int    ii = reduce_nnb() + 1;
 		acc[0] = a0;
 		acc[1] = a1;
 		acc[2] = a2;
 		jrk[0] = j0;
 		jrk[1] = j1;
 		jrk[2] = j2;
+        nnbid  = ii;
 	}
-	void calc_and_accum(const Pred4 &pi, const Pred4 &pj){
+  void calc_and_accum(const Pred4 &pi, const Pred4 &pj, const v4sf idx){
 		const v4sf dx = (pj.xH - pi.xH) + (pj.xL - pi.xL);
 		const v4sf dy = (pj.yH - pi.yH) + (pj.yL - pi.yL);
 		const v4sf dz = (pj.zH - pi.zH) + (pj.zL - pi.zL);
@@ -267,6 +287,14 @@ struct Force{
 		const v4sf alpha  = c1 * rinv2 * rv;
 		const v4sf mrinv3 = pj.mass * rinv * rinv2;
 
+        // idx     = [i1|i2|i3|i4]; r2      = [r1|r2|r3|r4]
+        // r2_idx0 = [i1|r1|i2|r2]; r2_idx1 = [i3|r3|i4|r4]
+        const v4sf r2_idx0 = __builtin_ia32_unpcklps(idx, r2);
+        const v4sf r2_idx1 = __builtin_ia32_unpckhps(idx, r2);
+        // Find minimum distance
+        vnnb = (v4sf)__builtin_ia32_minpd((v2df)vnnb, (v2df)r2_idx0);
+        vnnb = (v4sf)__builtin_ia32_minpd((v2df)vnnb, (v2df)r2_idx1);
+
 		ax += mrinv3 * dx;
 		ay += mrinv3 * dy;
 		az += mrinv3 * dz;
@@ -279,7 +307,7 @@ struct Force{
 
 struct NBlist{
 	enum{ NB_MAX = NNBMAX };
-	int pad[3];
+	int pad[7];
 	int nnb;
 	int nb[NB_MAX];
 
@@ -438,7 +466,8 @@ static void irr_simd_set_list(
 static void irr_simd_firr(
 		const int addr,
 		_out_ double accout[3],
-		_out_ double jrkout[3])
+		_out_ double jrkout[3],
+        _out_ int    &nnbid)
 {
 	const Particle *ptcl = ::ptcl;
 	const v2df      tnow = ::vec_tnow;
@@ -463,10 +492,12 @@ static void irr_simd_firr(
 
 		const Pred4 prj(p0, p1, p2, p3);
 
-		force.calc_and_accum(pri, prj);
+        assert(0 == (size_t)jptr % 16);
+        v4sf idx = *(v4sf *)jptr;
+        force.calc_and_accum(pri, prj, idx);
 	}
 
-	force.write(accout, jrkout);
+	force.write(accout, jrkout, nnbid);
 }
 
 static void irr_simd_firr_vec(
@@ -474,7 +505,8 @@ static void irr_simd_firr_vec(
 		const int ni,
 		const int addr[],
 		_out_ double accout[][3],
-		_out_ double jrkout[][3])
+		_out_ double jrkout[][3],
+        _out_ int nnbid[])
 {
   //  printf("NI %d TIME %f FIRST %d",ni,ti,addr[0]);
 	const double t0 = get_wtime();
@@ -483,7 +515,7 @@ static void irr_simd_firr_vec(
 
 #pragma omp parallel for reduction(+: ninter) schedule(guided)
 	for(int i=0; i<ni; i++){
-        irr_simd_firr(addr[i]-1, accout[i], jrkout[i]);
+      irr_simd_firr(addr[i]-1, accout[i], jrkout[i], nnbid[i]);
 		ninter += list[addr[i]-1].nnb;
 	}
 	::num_inter += ninter;
@@ -527,8 +559,9 @@ extern "C"{
 			int   *ni,
 			int    addr[],
 			double acc [][3],
-			double jrk [][3])
+			double jrk [][3],
+            int nnbid[])
 	{
-      irr_simd_firr_vec(*ti, *ni, addr, acc, jrk);
+      irr_simd_firr_vec(*ti, *ni, addr, acc, jrk, nnbid);
 	}
 }

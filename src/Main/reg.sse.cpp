@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cassert>
 #include <vector>
+#include "simd_define.h"
 
 #define TMAX 32 // maximum number of threads
 #if 1
@@ -62,7 +63,7 @@ struct myvector{
 	}
 };
 
-typedef float v4sf __attribute__ ((vector_size(16)));
+//typedef float v4sf __attribute__ ((vector_size(16)));
 static inline v4sf v4sf_rsqrt(v4sf x){
 	v4sf y = __builtin_ia32_rsqrtps(x);
 	return ((v4sf){-0.5f, -0.5f, -0.5f, -0.5f} * y) * 

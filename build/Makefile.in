@@ -18,10 +18,12 @@ NVCC = @NVCC@
 
 RESULT = nbody6++@RESULT@
 #FFLAGS = -O3 -fbounds-check -fbacktrace -fPIC -mcmodel=large -Wall
+OMP_FLAGS= -D OMP
 MPI_FLAGS = -D PARALLEL -D PUREMPI
 GPU_FLAGS = -D GPU
 SIMD_FLAGS = -D SIMD
 HDF5_FLAGS = -D H5OUTPUT
+INTEL_FLAGS= -D __USE_INTEL
 
 FFLAGS = @FCFLAGS@
 CXXFLAGS = @CXXFLAGS@
@@ -29,14 +31,15 @@ CUFLAGS = @CUFLAGS@
 LDFLAGS = -o $(RESULT)
 
 MPI_FSOURCES= energy_mpi.f fpoly1_mpi.f fpoly2_mpi.f
-GPU_FSOURCES= phicor.f util_gpu.f regcor_gpu.f fpoly0.f
-HDF5_FSOURCES= custom_output.f
+GPU_FSOURCES= phicor.f
+HDF5_FSOURCES= custom_output.f custom_output_facility.f ksres_op.f
 
 IRRAVX_OBJECTS=irr.avx.o
 IRRSSE_OBJECTS=irr.sse.o
 AVX_OBJECTS=reg.avx.o pot.avx.o irr.avx.o
 SSE_OBJECTS=reg.sse.o pot.sse.o irr.sse.o
 CUDA_OBJECTS = gpunb.velocity.o gpupot.gpu.o
+CUDA_OBJECTS_SINGLE = gpunb.gpu.o gpupot.gpu.o
 #CUDAOBJECTS = gpunb.gpu.o gpupot.gpu.o gpupot.mdot.o
 #CUDAOBJECTS = gpunb.velocity.o gpupot.gpu.o gpupot.mdot.o
 #CUDAOBJECTS = gpunb.gpu.o gpupot.gpu.o
@@ -100,7 +103,8 @@ kcpert_cor.f ksparmpi.f remove_ks.f nbint_cor.f string_left.f \
 sort_tlist.f next_tlist.f shrink_tlist.f repair_tlist.f remove_tlist.f \
 add_tlist.f exchange_tlist.f replace_tlist.f delay_store_tlist.f \
 delay_add_tlist.f delay_remove_tlist.f rmesc_tlist.f shift_tlist.f k_step.f \
-imbhinit.f bhplot.f energy.f
+imbhinit.f bhplot.f energy.f kspinit.f kspreg.f counter_reset.f util_gpu.f \
+regcor_gpu.f fpoly0.f
 
 .SUFFIXES : .o .F
 

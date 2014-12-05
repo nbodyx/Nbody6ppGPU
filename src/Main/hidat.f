@@ -11,7 +11,7 @@
       REAL*8  XX(3,3),VV(3,3),M1,M2,M3
 *     REAL*4  EB(KMAX),ECM(KMAX)
 *      LOGICAL  FIRST
-      CHARACTER*27 OUTFILE
+      CHARACTER*29 OUTFILE
       CHARACTER*20 TCHAR
 *
 *
@@ -34,7 +34,7 @@
 *      
       WRITE (87,1)
  1    FORMAT (/,'NAME(I1)    NAME(I2)    NAME(I3)    K*(I1)      ',
-     &     'K*(I2)      K*(I3)      M(I1)[M*]                 ',
+     &     'K*(I2)      K*(INCM)    M(I1)[M*]                 ',
      &     'M(I2)[M*]                 M(I3)[M*]                 ',
      &     'RI[NB]                    ECCMAX                    ',
      &     'ECC0                      ECC1                      ',

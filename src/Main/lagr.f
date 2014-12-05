@@ -504,7 +504,7 @@
      &              12(1X,18E10.2,1X,A4))
             end if
 
-            write (7,*) TTOT,
+            write (7,60) TTOT,
      &           RLAGR(1:NLENS),RC,
      &           RSLAGR(1:NLENS),RBLAGR(1:NLENS),
      &           AVMASS(1:NLENS),AVMRC,
@@ -519,6 +519,7 @@
      &           SIGR2(1:NLENS),SIGR2C,
      &           SIGT2(1:NLENS),SIGT2C,
      &           VROT(1:NLENS),VROTC
+ 60         format(75E26.17,19I12,190E26.17)
             CALL FLUSH(7)
          END IF
       end if

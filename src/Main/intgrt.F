@@ -17,14 +17,12 @@
       COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
       COMMON/NEWXV/ XN(3,NMAX),XNDOT(3,NMAX)
       INTEGER JHIST,JHISTR,LSHORT(NMAX)
-      INTEGER IREG(NMAX)
-#ifdef SIMD
+      INTEGER IREG(NMAX),IMINR(NMAX),IMINR_TMP(NMAX)
       REAL*8 FIRR_SIMD(3,NMAX),FD_SIMD(3,NMAX)
-#endif
 #ifdef PARALLEL
       integer inum(maxpe),ista(maxpe),NXTLST_MPI(NMAX+500),NPIECE
       integer istart_lst,iend_lst
-      REAL*8 XMPI(19,NMAX),YMPI(41,NMAX)
+      REAL*8 XMPI(20,NMAX),YMPI(41,NMAX)
       SAVE NPIECE
       INTEGER IMPI(LMAX,NMAX),JMPI(11), JMPILOCAL(11,maxpe)
 #endif
@@ -32,16 +30,10 @@
       DATA LSHORT(1) /0/
       DATA IQ,ICALL,LSTEPM,STEPM,IPSTART /0,2,.FALSE.,0.03125,.true./
       SAVE IQ,ICALL,LSTEPM,STEPM,IPSTART,TMIN
-
-*     --09/26/13 22:52-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$      INTEGER NGPUC
-c$$$      SAVE NGPUC
-c$$$      DATA NGPUC/0/
-C$$$      REAL*8 TCCT
-C$$$      DATA TCCT/32.0/
-C$$$      SAVE TCCT
-*     --09/26/13 22:52-lwang-end----------------------------------------*
+#ifdef H5OUTPUT
+      REAL*8 DTH5OUT
+      SAVE DTH5OUT
+#endif
 
 *
 *       Update quantized value of STEPM for large N (first time only).
@@ -71,47 +63,70 @@ C$$$      SAVE TCCT
             END DO
             IF(NGHOSTS.GT.0) NXTLST(NXTLIMIT+1:NXTLIMIT+NGHOSTS) 
      &           = NXTLST(NMAX-NGHOSTS+1:NMAX)
-*     --07/17/14 10:55-lwang-debug--------------------------------------*
-***** Note: Print NXTLST PARAMETER-------------------------------------**
-c$$$            if(rank.eq.0) write(6,*) 'NXTLIMIT',NXTLIMIT,'NGHOSTS',
-c$$$     &           NGHOSTS
-*     --07/17/14 10:56-lwang-end----------------------------------------*
+
+#ifdef H5OUTPUT
+*     Initial NMINR
+            IMINR(1:NTOT) = 1
+            DO I = IFIRST,2*NBIN0
+               IF(NAME(I).LE.2*NBIN0) THEN
+                  IF(MOD(I,2).EQ.0.AND.NAME(I-1).EQ.NAME(I)-1) THEN
+                     IMINR(I) = I - 1
+                  ELSE IF(MOD(I,2).EQ.1.AND.NAME(I+1).EQ.NAME(I)+1) THEN
+                     IMINR(I) = I + 1
+                  END IF
+               END IF
+            END DO
+
+*     HDF5 format output initialization                  
+            IF(KZ(46).GT.0) THEN
+*     At the first time, full dataset need to be stored,
+               if(rank.eq.0) then
+                  IF(KZ(46).eq.1)
+     &                 write(6,*) 'HDF5 output active particles ',
+     &                 'with time interval ',DTK(KZ(47)+1)
+                  IF(KZ(46).eq.3)
+     &                 write(6,*) 'HDF5 output all particles ',
+     &                 'with time interval ',DTK(KZ(47)+1)
+                  IF(KZ(46).eq.2)
+     &                 write(6,*) 'CSV output active particles ',
+     &                 'with time interval ',DTK(KZ(47)+1)
+                  IF(KZ(46).eq.4)
+     &                 write(6,*) 'CSV output all particles  ',
+     &                 'with time interval ',DTK(KZ(47)+1)
+                  IF(KZ(46).GE.3.AND.KZ(46).LE.4.AND.SMAX.GT.
+     &                 DTK(KZ(47)+1)) then
+                     write(6,*) 'Warning!: Maximum time step ',SMAX,
+     &                    ' > Output interval ',DTK(KZ(47)+1),
+     &                    ' Wide bianries cannot be detected for ',
+     &                    ' Non-active particles!'
+                  END IF
+               end if
+               if(rank.eq.0) then
+                  call custom_update_file(TTOT,DELTAT)
+               end if
+               CALL custom_output(NXTLEN,NXTLST,
+     &              NXTLIMIT,NGHOSTS,IMINR)
+            END IF
+#endif
+
 *     Sorting NXTLST
             call sort_tlist(STEP,DTK,.true.)
             NXTLEVEL = NDTMAX
-*     --07/08/14 10:21-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$            print*,'NDTMAX',NDTMAX,'NDTMIN',NDTMIN
-c$$$            print*,'NDTK',(NDTK(K),DTK(K),STEP(NXTLST(NDTK(K+1)+1)),
-c$$$     &           K=1,NDTMAX)
-*     --07/08/14 10:21-lwang-end----------------------------------------*
-         END IF
 
-*     HDF5 format output initialization (Maxwell)
+*     Initial tcheck block step level
+         END IF
 #ifdef H5OUTPUT
-         IF(KZ(46).GT.0.and.TTOT.EQ.0.D0) THEN
-            KZ46_TMP = KZ(46)
-*     At the first time, full dataset need to be stored,
-*     thus templately change KZ(46) to full output option
-            IF(KZ(46).EQ.1) KZ(46) = 3
-            IF(KZ(46).EQ.2) KZ(46) = 4
-            IF(rank.eq.0) CALL custom_output(NXTLST,NXTLEN,1)
-            KZ(46) = KZ46_TMP
-*
-            if(rank.eq.0) then
-               IF(KZ(46).eq.1)
-     &              write(6,*) 'HDF5 output with time interval ',
-     &              DTK(KZ(47)+1)
-               IF(KZ(46).eq.3)
-     &              write(6,*) 'HDF5 output every irregular ',
-     &              'block step'
-               IF(KZ(46).eq.2)
-     &              write(6,*) 'CSV output with time interval ',
-     &              DTK(KZ(47)+1)
-               IF(KZ(46).eq.4)
-     &              write(6,*) 'CSV output every irregular ',
-     &              'block step'
-            end if
+*     Initial output interval
+         IF(KZ(47).GE.0) THEN
+            DTH5OUT = 1.0D0
+            DO K = 1, KZ(47)
+               DTH5OUT = 0.5D0*DTH5OUT
+            END DO
+         ELSE
+            DTH5OUT = DTK(64)
+         END IF
+         IF(rank.eq.0.and.TOFF+TIME.NE.0.D0) THEN
+            call custom_update_file(TTOT,DELTAT)
          END IF
 #endif
 
@@ -134,13 +149,14 @@ c$$$     &           K=1,NDTMAX)
             NPIECE = NMAX / ISIZE + 1
          END IF
 #endif         
+
          IPSTART = .false.
       END IF
       call cputim(tttiend)
       ttintb = ttintb +(tttiend-tttbegin)*60
 *
 *       Search for high velocities after escape or KS/chain termination.
-  999 IF (IPHASE.EQ.-1.OR.IPHASE.GE.2) THEN
+  999 IF (KZ(37).GT.0.AND.(IPHASE.EQ.-1.OR.IPHASE.GE.2)) THEN
           CALL HIVEL(0)
       END IF
 *
@@ -186,39 +202,6 @@ c$$$     &           K=1,NDTMAX)
 *     Determine NXTLEN, TMIN and NXTLEVEL
       call next_tlist(TMIN,DTK,T0)
 
-*     --07/07/14 23:44-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$      IF(TMIN.GE.0.71682739257812500) THEN
-c$$$         print*,'NXTLEN',NXTLEN,'NXTL',NXTLEVEL,'DTK',DTK(NXTLEVEL),
-c$$$     &        'TMIN',TMIN,'T',TIME
-c$$$      END IF
-c$$$      DO L = 1, NXTLEN
-c$$$         J=NXTLST(L)
-c$$$         IF(T0(J)+STEP(J).NE.TMIN) then
-c$$$            print*,'J',J,'N',NAME(J),'TMIN',TMIN,'T0+STEP',T0(J)+STEP(J)
-c$$$     &           ,'T0',T0(J),'STEP',STEP(J),'DTKM',NDTMAX,DTK(NDTMAX),
-c$$$     &           'NXTL',NXTLEVEL,'NXTLEN',NXTLEN,'L',L,'NXTLIMIT',
-c$$$     &           NXTLIMIT
-c$$$            print*,'NDTK',(K,NDTK(K),DTK(K),K=1,NDTMAX)
-c$$$            call flush(6)
-c$$$            call abort()
-c$$$         END IF
-c$$$C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
-c$$$      END DO
-c$$$      DO L = NXTLEN+1,NXTLIMIT
-c$$$         J = NXTLST(L)
-c$$$         IF(T0(J)+STEP(J).LE.TMIN) THEN
-c$$$            print*,'J',J,'N',NAME(J),'TMIN',TMIN,'T0+STEP',T0(J)+STEP(J)
-c$$$     &           ,'T0',T0(J),'STEP',STEP(J),'DTKM',NDTMAX,DTK(NDTMAX),
-c$$$     &           'NXTL',NXTLEVEL,'NXTLEN',NXTLEN,'L',L,'LOST!'
-c$$$            print*,'NDTK',(K,NDTK(K),DTK(K),K=1,NDTMAX)
-c$$$            call flush(6)
-c$$$            call abort()
-c$$$         END IF
-c$$$C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
-c$$$      END DO
-*     --07/07/14 23:44-lwang-end----------------------------------------*
-
 *     Determine MPI NXTLST and Regular block
       NREG = 0
       DO L = 1, NXTLEN
@@ -243,59 +226,10 @@ c$$$      END DO
           CALL SHORT(NXTLEN,NXTLST,LSHORT)
       END IF
 *
-*     --11/08/13 23:15-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$      if(rank.eq.0.and.time.ge.TCCT) then
-c$$$         write(120,*) time,ifirst,n,ntot
-c$$$         do L=1,NTOT
-c$$$            write(120,*) name(L),tev(L)-tev0(L),step(L),stepr(L)
-c$$$         END DO
-c$$$         TCCT = TCCT + 0.1
-c$$$      end if
-c$$$      if(time+toff.ge.59.9) then
-c$$$         if(rank.eq.0) call mydump(1,1)
-c$$$         call mpi_barrier(MPI_COMM_WORLD,ierr)
-c$$$         stop
-c$$$      end if
-*     --11/08/13 23:15-lwang-end----------------------------------------*
 *       Set new time and save block time (for regularization terminations).
       TIME = TMIN
-*     --11/09/13 19:12-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$*      IF(DMOD(TIME,step(nxtlst(1))).NE.0) then
-c$$$         DTT = TIME - TBLOCK
-c$$$      call mpi_barrier(MPI_COMM_WORLD,ierr)
-c$$$      if(time.ge.69.7665.and.rank.eq.0) then
-c$$$      if(time.ge.0.71387481689453125) then
-c$$$         write(6,*) 'TIME',time,'LEN',nxtlen,nxtlst(1),
-c$$$     &     'NREG',NREG,
-c$$$     &     'n',name(nxtlst(1)),'iks',iks,
-c$$$     &     'STEP I R',step(nxtlst(1)),stepr(nxtlst(1)),
-c$$$     *     'T0',t0(nxtlst(1)),'DM',DMOD(time,step(nxtlst(1))),
-c$$$     &     'tb',tblock
-C$$$         call flush(102+rank)
-c$$$         call flush(6)
-c$$$         call mpi_barrier(MPI_COMM_WORLD,ierr)  
-c$$$*         stop
-c$$$      end if
-*     --11/09/13 19:12-lwang-end----------------------------------------*
       TBLOCK = TIME
       TTOT = TIME + TOFF
-*     --11/03/13 10:22-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-*      if(time.ge.3.25285E+01) then
-c$$$         write(100+rank,*),'t',time,'nxtlen',nxtlen,'nxtlst',nxtlst(1),
-c$$$     &     'n',name(nxtlst(1)),'iks',iks,'tpr',tprev,
-c$$$     &     'STEP I R',step(nxtlst(1)),stepr(nxtlst(1)),
-c$$$     *     'T0',t0(nxtlst(1)),'nstepi',nstepi
-c$$$         call flush(100+rank)
-*      end if
-c$$$      if(time.ge.69.7668) then
-c$$$         call adjust
-c$$$         call flush(6)
-c$$$         stop
-c$$$      end if
-*     --11/03/13 10:22-lwang-end----------------------------------------*
 *
 *     Check option for advancing interstellar clouds.
       IF (KZ(13).GT.0) THEN
@@ -311,7 +245,7 @@ c$$$      end if
           IF (MPDOT.GT.0.0D0.AND.TIME + TOFF.GT.TDELAY) THEN
               MP = MP0/(1.0 + MPDOT*(TIME + TOFF - TDELAY))
           END IF
-      END IF
+       END IF
 
       call cputim(tttiend)
       ttintb = ttintb +(tttiend-tttbegin)*60
@@ -350,72 +284,7 @@ c$$$      end if
 *       See whether to advance any close encounters at first new time.
       IF (TIME.GT.TPREV) THEN
          call cputim(tt5)
-*     --08/27/13 16:25-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$            if (time.ge.3.90625000000000000E-003) then
-c$$$               do iii=1,ntot
-*         if(name(iii).eq.5287) then
-*         write(113+rank,*)'5287a',iii,
-*     *           t0(iii),step(iii),ibarcount,time,tprev
-*           call flush(6)
-*         end if
-c$$$                  if(name(iii).eq.23871) then
-*      print*,'suba',iii,x0(1,iii),x0dot(1,iii),time,tprev
-c$$$                    print*,rank,'suba',iii,t0(iii),step(iii),time,tprev,
-c$$$     *                    x(1,iii),x0(1,iii)
-c$$$                    call flush(6)
-c$$$                  end if
-c$$$               end do
-c$$$            end if
-*          if(time.ge.6E-002) print*,rank,time
-*          if(time.ge.6.6E-02) stop
-*     --09/04/13 15:10-lwang-end----------------------------------------*
-c$$$      call flush(6)
-c$$$      call mpi_barrier(MPI_COMM_WORLD,ierr)            
-c$$$         if(time.ge.0.73) then
-c$$$            write(100+rank,*),'bsub time',time,'iq',iq,'tpr',
-c$$$     &           tprev,'tblock',tblock
-c$$$            call flush(100+rank)
-c$$$         end if
-c$$$         if(rank.eq.0.and.time.ge.0.3756) then
-c$$$            print*,'asub iq',iq,'time',time,'tprev',tprev
-c$$$         end if
-*     --08/27/13 16:25-lwang-end-debug----------------------------------*
          CALL SUBINT(IQ,I10)
-*     --08/27/13 16:31-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$         if(time.eq.1.70898437500000000E-003) then
-c$$$            print*,'j',12079,'n',name(12079),'tpred',tpred(12079),
-c$$$     ^           't',time
-c$$$            call flush(6)
-c$$$         end if
-c$$$         if(time.ge.0.73) then
-c$$$            write(100+rank,*),'asub time',time,'iq',iq,'tpr'
-c$$$     &           ,tprev,'tblock',tblock
-c$$$            call flush(100+rank)
-c$$$         end if
-c$$$      if(time.ge.TCCT)
-c$$$         if(rank.eq.0.and.iq.ne.0) then
-c$$$            print*,'bsub iq',iq,'time',time,'tprev',tprev
-c$$$         end if
-c$$$         if(iq.ne.0) print*,rank,'subint ',iq,time
-c$$$         call flush(6)
-c$$$            if (time.ge.3.90625000000000000E-003) then
-c$$$               do iii=1,ntot
-c$$$                  if(name(iii).eq.23871) then
-c$$$c$$$*         write(113+rank,*)'5287b',iii,
-c$$$c$$$*     *           t0(iii),step(iii),ibarcount,time,tprev
-c$$$c$$$*         end if
-c$$$c$$$         if(time.ge.1.41601562500000000E-002.and.name(iii).eq.5287) then
-c$$$                    print*,rank,'subb',iii,t0(iii),step(iii),time,tprev,
-c$$$     *                    x(1,iii),x0(1,iii)
-c$$$                    call flush(6)
-c$$$c$$$           stop
-c$$$                 end if
-c$$$              end do
-c$$$              end if
-c$$$         if(IPHASE.EQ.8) print*,'IPHASE',IPHASE,'IQ',IQ,'T',TIME
-*     --08/27/13 16:31-lwang-end-debug----------------------------------*
          call cputim(tt6)
          ttksintgrt = ttksintgrt + (tt6-tt5)*60.
          ttks = ttks + (tt6-tt5)*60.
@@ -456,7 +325,7 @@ c$$$  END IF
       IF(ISMIN.GT.0) THEN
          CALL SEARCH(ISMIN,IKS)
 *       Include close encounter search for low-eccentric massive binaries.
-         IF (IKS.EQ.0.AND.NXTLEVEL.LE.7.AND.STEP(ISMIN).LT.4.0*DTMIN) 
+         IF (IKS.EQ.0.AND.NXTLEVEL.LE.4.AND.STEP(ISMIN).LT.4.0*DTMIN) 
      &        THEN
 *       Consider massive single bodies in absence of subsystems.
             IF (ISMIN.LE.N.AND.BODY(I).GT.2.0*BODYM.AND.NSUB.EQ.0) THEN
@@ -498,101 +367,6 @@ c$$$  END IF
 *       Block-Step Level Diagnostics (R.Sp. 29.Apr. 1993)
       IF(KZ(33).GT.0)JHIST(NXTLEN) = JHIST(NXTLEN) + 1
 *
-*     --08/27/13 16:38-lwang-debug--------------------------------------*
-***** Note: Before nbint-----------------------------------------------**
-c$$$      do L = 1 ,NXTLEN
-c$$$         J = NXTLST(L)
-c$$$         IF(rank.eq.0.and.NAME(J).EQ.12833) print*,'J',J,'N',NAME(J),'t'
-c$$$     &        ,time,'T0',T0(J),'STEP',STEP(J),'TN',TIMENW(J)
-c$$$      end do
-c$$$      J = 12195
-c$$$      JJ = 2*(J-N)-1
-c$$$      print*,rank,'J',J,'N',NAME(J),'X',X(1,J),'X1',X(1,JJ),
-c$$$     &     'X2',X(1,JJ+1),'T',TIME,'TPR',TPRED(J),'NNB',LIST(1,JJ)
-c$$$      call flush(6)
-*****      GET NEIGHBOR LIST      
-c$$$      if(rank.eq.0.and.nxtlen.ge.5000) then
-c$$$         do j=1,nxtlen
-c$$$            jj = nxtlst(j)
-c$$$            write(102+NGPUC,*) jj, list(1,jj)
-c$$$         end do
-c$$$*         tcct = tcct + 0.1
-c$$$         NGPUC = NGPUC + 1
-c$$$      end if
-c$$$         if(time.eq.0.73070335388183594) then
-C$$$      if(time.ge.TCCT) then
-C$$$c$$$         do i=1,ifirst-1
-C$$$c$$$            if(name(i).eq.16107) then
-C$$$c$$$            write(100+rank,*) i,name(i),step(i),t0(i),time,body(i),
-C$$$c$$$     *           gamma((i+1)/2),list(1,i),name((i+1)/2+N)
-C$$$c$$$*               write(100+rank,*) i,name(i),x0(1,i),x0dot(1,i),
-C$$$c$$$*     *              f(1,i),fdot(1,i),time
-C$$$c$$$            end if
-C$$$c$$$         end do
-C$$$c$$$        write(102+rank,*) 'NXTLEN :',nxtlen,'t',time,'ibar',
-C$$$c$$$     &     ibarcount,'nreg',nreg,'ireg',ireg(1),'ip',iphase
-c$$$        do L=1,NXTLEN
-c$$$           J = NXTLST(L)
-c$$$           if(name(j).eq.1) then
-c$$$c$$$              if(rank.eq.0.and.name(j).eq.2570) then
-c$$$c$$$                 rmmjj=0.0
-c$$$c$$$                 DO Jk=2,list(1,j)+1
-c$$$c$$$                    jj=list(jk,j)
-c$$$c$$$                    rmjjj=body(jj)/((X(1,jj)-X(1,J))**2
-c$$$c$$$     &                   +(x(2,jj)-x(2,j))**2+
-c$$$c$$$     ^                   (x(3,jj)-x(3,j))**2)
-c$$$c$$$                    if(rmjjj.gt.rmmjj) then
-c$$$c$$$                       immj=jj
-c$$$c$$$                       rmmjj=rmjjj
-c$$$c$$$                    end if
-c$$$c$$$                 end do
-c$$$c$$$                 print*,'J',J,'N',NAME(J),'JP',immj,'N',
-c$$$c$$$     &                NAME(immj),' f',rmmjj,
-c$$$c$$$     ^                'fv',rmmjj*body(j)/body(immj),'FI',
-c$$$c$$$     &                sqrt(FI(1,J)**2+FI(2,J)**2+FI(3,J)**2),
-c$$$c$$$     &                'T',TIME,'SI',STEP(J)
-c$$$c$$$                 call flush(6)
-c$$$c$$$              end if
-c$$$            write(102+rank,109),l,j,name(j),x0(1:3,j),x0dot(1:3,j),
-c$$$     *           t0(j),t0r(j),step(j),stepr(j),
-c$$$     *           f(1:3,j),fdot(1:3,j),fi(1:3,j),fidot(1:3,j),
-c$$$     &             d0(1:3,j),d1(1:3,j),
-c$$$     *           d2(1:3,j),d3(1:3,j),d0r(1:3,j),d1r(1:3,j),
-c$$$     *           d2r(1:3,j),d3r(1:3,j),body(j),time,list(1,j),
-c$$$     &           NREG,NPAIRS,NXTLEN
-c$$$C$$$           if(rank.eq.0.and.d2r(1,j).ne.d2r(1,j)) STOP
-c$$$            write(102+rank,*)'LIST',LIST(1:LIST(1,J)+1,J)
-c$$$c$$$            CALL IRR_SIMD_SET_JP(J,X0(1,J),X0DOT(1,J),
-c$$$c$$$     &           F(1,J),FDOT(1,J),BODY(J),T0(J))
-c$$$c$$$            call irr_simd_set_list(j,list(1,j))
-c$$$           call flush(102+rank)
-c$$$*           stop
-c$$$          end if
-c$$$        end do
-c$$$*         end if
-c$$$ 109    format(/,'L',I7,'J',I7,'  N',I7,'  X0',3E25.17,'  X0D',3E25.17,
-c$$$     &       '  T0',F21.17,'  T0R',F21.17,'  STEP',F20.17,
-c$$$     &       '  STEPR',F20.17,'  F',3E25.17,' FD',3E25.17,
-c$$$     &       '  FI',3E25.17,'  FIDOT',3E25.17,'  D0',3E25.17,
-c$$$     &       '  D1',3E25.17,'  D2',3E25.17,'  D3',3E25.17,
-c$$$     &       '  D0R',3E25.17,'  D1R',3E25.17,'  D2R',3E25.17,
-c$$$     &       '  D3R',3E25.17,'  M',E25.17,'  T',F21.17,'  NB',I4,
-c$$$     &       '  NREG',I8,'  NPAIRS',I8,'  NXTLEN',I8)
-c$$$        call mpi_barrier(MPI_COMM_WORLD,ierr)
-C$$$C$$$        if (TCCT.gt.2.0) stop
-C$$$        TCCT = TCCT + 0.05
-C$$$      end if
-c$$$      if(time.ge.2.0) stop
-c$$$      if(time.ge.32.91898596286773682) stop
-c$$$      if (time.ge.TCCT) then
-c$$$        call mpi_barrier(MPI_COMM_WORLD,ierr)        
-c$$$      end if
-c$$$         if (time.ge.20.852127075195313) then
-c$$$            print*,rank,time,'nxtlst ',(nxtlst(k),k=1,nxtlen)
-c$$$         end if
-c$$$      if(time.ge.54.192613631486893) stop
-*     --08/27/13 16:38-lwang-end-debug----------------------------------*
-
 *     Do full prediction when regular block step come
       ipredall = .false.
       IF(NREG.GT.0) THEN
@@ -623,91 +397,22 @@ c$$$      if(time.ge.54.192613631486893) stop
 *         call cputim(ttnb2)
 *         ttpre = ttpre + (ttnb2-ttnb1)*60.
 #ifdef SIMD
-*     --04/18/14 23:07-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$         DO L = 1,NXTLEN
-c$$$            I = NXTLST(L)
-c$$$            call IRR_SIMD_SET_JP(I,X0(1,I),x0dot(1,I),f(1,i),fdot(1,i),
-c$$$     &           body(i),t0(i))
-c$$$         END DO
-*     --04/18/14 23:07-lwang-end----------------------------------------*
 *     Use AVX/SSE to calculate irregular force and fdot
-         call IRR_SIMD_FIRR_VEC(TIME,NXTLEN,NXTLST,FIRR_SIMD,FD_SIMD)
+         call IRR_SIMD_FIRR_VEC(TIME,NXTLEN,NXTLST,FIRR_SIMD,FD_SIMD,
+     &        IMINR_TMP)
          call cputim(ttsimdc)
          ttsimdcalc = ttsimdcalc + (ttsimdc-ttnb1)*60.
-*     --04/18/14 22:27-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$         DO L = 1,NXTLEN
-c$$$            I = NXTLST(L)
-c$$$            IF(TIME.EQ.30.04376220703125000.and.I.eq.7660) THEN
-c$$$               NNNNB = LIST(1,I)+1
-c$$$               DO LL = 2, NNNNB
-c$$$                  K = LIST(LL,I)
-c$$$                  write(102+rank,*),'K',K,'N',NAME(K),'X0',X0(1:3,K),
-c$$$     &           'XD',X0DOT(1:3,K),'F',F(1:3,K),'FD',FDOT(1:3,K),'T',
-c$$$     ^                 TIME,'I',I,'N',NAME(I)
-c$$$               END DO
-c$$$            write(102+rank,*) 'L',L,'I',I,'N',NAME(I),'X',X0(1:3,I),
-c$$$     &           'XD',X0DOT(1:3,I),'F',F(1:3,I),'FD',FDOT(1:3,I),
-c$$$     &           'FIRR',FIRR_SIMD(1:3,L),'FD',FD_SIMD(1:3,L)
-c$$$     &           ,'T',TIME,'NXT',NXTLEN,'NNB',NNNNB,'IFIRST',IFIRST
-c$$$            call flush(102+rank)
-c$$$         end if
-c$$$         end do
-*     --04/18/14 22:27-lwang-end----------------------------------------*
+#else
+*     OpenMP version of irregular force and fdot
+         CALL NBINT(TIME,NXTLEN,NXTLST,X,XDOT,BODY,FIRR_SIMD,FD_SIMD,
+     &        LIST,IMINR_TMP)
+#endif
 !$omp parallel do if(NXTLEN.GE.ITHREAD) private(L,I)
          DO L = 1,NXTLEN
             I = NXTLST(L)
             CALL NBINT_COR(I,FIRR_SIMD(1,L),FD_SIMD(1,L))
          END DO
 !$omp end parallel do
-
-#else         
-*     Neighbor Integration
-!$omp parallel do if(NXTLEN.GE.ITHREAD) private(L,I)
-         DO L = 1,NXTLEN
-            I = NXTLST(L)
-*     --04/04/14 15:24-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$            IF(name(i).eq.8098) then
-c$$$               nnb=list(1,i)+1
-c$$$               write(102+rank,*) 'i',i,'n',name(i),'x',x(1,i),
-c$$$     &              'xd',xdot(1,i),'nnb',nnb,'t',time
-c$$$               do lj=2,nnb
-c$$$                  j=list(lj,i)
-c$$$                  write(102+rank,*) 'j',j,'n',name(j),
-c$$$     ^                 'x',x(1,j),'xd',xdot(1,j),'t',time
-c$$$                  if(j.ge.n) then
-c$$$                     j1=2*(j-n)-1
-c$$$                     if(list(1,j1).gt.0) then
-c$$$                        write(102+rank,*) 'j1',j1,'n',name(j1),
-c$$$     ^                       'x',x(1,j1),x(1,j1+1),'xd',xdot(1,j1),
-c$$$     &                       xdot(1,j1+1),'t',time,
-c$$$     &                       'u',u(1,j-n),'ud',udot(1,j-n),
-c$$$     &                       'fu',fu(1,j-n),'fud',fudot(1,j-n),
-c$$$     &                       'fudot2',fudot(1,j-n),
-c$$$     &                       'fudot2',fudot2(1,j-n),'u0',u0(1,j-n)
-c$$$                     end if
-c$$$                  end if
-c$$$               end do
-c$$$               call flush(102+rank)
-c$$$            end if
-*     --04/04/14 15:24-lwang-end----------------------------------------*
-            CALL NBINT(I)
-         END DO
-!$omp end parallel do
-#endif
-*     --04/02/14 15:33-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$        do L=1,nxtlen
-c$$$           J = nxtlst(L)
-c$$$            write(102+rank,*),'NBj',j,'n',name(j),
-c$$$     &          'xn',xn(1:3,j),'xnd',xndot(1:3,j),
-c$$$     *           's',step(j),'fi',fi(1:3,j),'fid',fidot(1:3,j),
-c$$$     *           'd2',d2(1:3,j),'d3',d3(1:3,j),'t',time
-c$$$           call flush(102+rank)
-c$$$        end do
-*     --04/02/14 15:33-lwang-end----------------------------------------*
 
 !$omp parallel do if(NXTLEN.GE.ITHREAD) private(L,I,DTR)
          DO L = 1,NXTLEN
@@ -718,6 +423,7 @@ c$$$            X(1:3,I) = XN(1:3,I)
 c$$$            XDOT(1:3,I) = XNDOT(1:3,I)
             D0(1:3,I) = FI(1:3,I)
             D1(1:3,I) = FIDOT(1:3,I)
+            IMINR(I) = IMINR_TMP(L)
 *     Save new block step and update T0 & next time
             T0(I) = TIME
             TIMENW(I) = T0(I) + STEP(I)
@@ -800,13 +506,6 @@ c$$$      ttbarnb = ttbarnb + (tt999-tt998)*60
 *    *    ' istart,iend=',istart,iend
 *     end if
 
-*     --11/09/13 19:09-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$           print*,'TEST ',time,rank,istart_lst,iend_lst,
-c$$$     &          nxtlst_mpi(istart_lst:iend_lst)
-c$$$           call flush(6)
-c$$$           call mpi_barrier(MPI_COMM_WORLD,ierr)
-*     --11/09/13 19:09-lwang-end----------------------------------------*
            call cputim(ttnb1)
 *#ifndef SIMD
 *     Predict x and xdot
@@ -815,14 +514,19 @@ c$$$           call mpi_barrier(MPI_COMM_WORLD,ierr)
 *           call cputim(ttnb2)
 *           ttpre = ttpre + (ttnb2-ttnb1)*60.
 
+           NPART_LEN = iend_lst - istart_lst + 1
 #ifdef SIMD
 *     Use AVX/SSE to calculate irregular force and fdot
-           NPART_LEN = iend_lst - istart_lst + 1
            call IRR_SIMD_FIRR_VEC(TIME,NPART_LEN,NXTLST_MPI(istart_lst),
-     &          FIRR_SIMD,FD_SIMD)
+     &          FIRR_SIMD,FD_SIMD,IMINR_TMP)
            call cputim(ttsimdc)
            ttsimdcalc = ttsimdcalc + (ttsimdc-ttnb1)*60.
-           
+#else
+*     OpenMP version of irregular force and fdot
+           CALL NBINT(TIME,NPART_LEN,NXTLST_MPI(istart_lst),
+     &          X,XDOT,BODY,FIRR_SIMD,FD_SIMD,
+     &          LIST,IMINR_TMP)
+#endif           
            LL = istart
            I_STEP_LEN = ithread*icore
            DO L = istart_lst,iend_lst,I_STEP_LEN
@@ -843,54 +547,11 @@ c$$$           call mpi_barrier(MPI_COMM_WORLD,ierr)
                  XMPI(13:15,LL+LK) = FI(1:3,I)
                  XMPI(16:18,LL+LK) = FIDOT(1:3,I)
                  XMPI(19,LL+LK) = STEP(I)
+                 XMPI(20,LL+LK) = FLOAT(IMINR_TMP(IC_K))
               END DO
 !$omp end parallel do
               LL = LL + I_STEP_LEN
            END DO
-*     --04/18/14 21:46-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$         if(rank.eq.0) then
-c$$$            print*,'NXTLEN',NPART_LEN,
-c$$$     &           'FIRR_SIMD',FIRR_SIMD(1:3,1:NPART_LEN+1),
-c$$$     &       'T', TIME
-c$$$            call flush(6)
-c$$$         end if
-c$$$c$$$         call mpi_barrier(MPI_COMM_WORLD,ierr)
-c$$$         stop
-*     --04/18/14 21:46-lwang-end----------------------------------------*
-#else 
-*     Neighbor Integration
-           LL = istart
-           I_STEP_LEN = ithread*icore
-           DO L = istart_lst,iend_lst,I_STEP_LEN
-              if(iend_lst-L+1.GE.I_STEP_LEN) THEN
-                 I_LOOP_LEN = I_STEP_LEN - 1
-              else
-                 I_LOOP_LEN = iend_lst - L
-              end if
-!$omp parallel do private(LK,I)
-              DO LK = 0, I_LOOP_LEN
-                 I = NXTLST_MPI(L + LK)
-                 CALL NBINT(I)
-                 XMPI(1:3,LL+LK) = XN(1:3,I)
-                 XMPI(4:6,LL+LK) = XNDOT(1:3,I)
-                 XMPI(7:9,LL+LK) = D2(1:3,I)
-                 XMPI(10:12,LL+LK) = D3(1:3,I)
-                 XMPI(13:15,LL+LK) = FI(1:3,I)
-                 XMPI(16:18,LL+LK) = FIDOT(1:3,I)
-                 XMPI(19,LL+LK) = STEP(I)
-*     --04/09/14 20:56-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$                 write(102+rank,*),'NB I',I,'N',Name(i),'FI',FI(1,I),
-c$$$     &                'FD',FIDOT(1,I),'XN',XN(1,I),'X',X(1,I),'T',time
-c$$$                 IF(XN(1,I).NE.XN(1,I)) STOP
-c$$$                 call flush(102)
-*     --04/09/14 20:56-lwang-end----------------------------------------*
-              END DO
-!$omp end parallel do
-              LL = LL + I_STEP_LEN
-           END DO
-#endif           
 *
            call cputim(tt3)
            ttirr = ttirr + (tt3-ttnb1)*60.
@@ -927,8 +588,8 @@ c$$$                 call flush(102)
 *
 #ifdef PUREMPI
               call cputim(tta)
-              CALL MPI_SENDRECV(XMPI(1,istsen),19*icnt,MPI_REAL8,isend,
-     *             rank,XMPI(1,istrec),19*icnt2,MPI_REAL8,irecv,irecv,
+              CALL MPI_SENDRECV(XMPI(1,istsen),20*icnt,MPI_REAL8,isend,
+     *             rank,XMPI(1,istrec),20*icnt2,MPI_REAL8,irecv,irecv,
      *             MPI_COMM_WORLD,status,ierr)
               call cputim(ttb)
               call mpi_barrier(MPI_COMM_WORLD,ierr)
@@ -939,13 +600,13 @@ c$$$                 call flush(102)
 *     print*, 'Nbint Barrier 3: rank iphase ttbarnb ttbar',
 *     &     ' dt nxtlen bcount',rank,ixxx,ttbarnb,ttbar,tttdet,
 *     &     nxtlen,ibarcount
-              xtsub1 = xtsub1 + dble(19*8*(icnt+icnt2))
+              xtsub1 = xtsub1 + dble(20*8*(icnt+icnt2))
               ttsub = ttsub + (ttb-tta)*60.
 #endif
 *
 #ifdef SHMEM
               call barrier()
-              call shmem_get(XMPI(1,istrec),XMPI(1,istrec),19*icnt2,
+              call shmem_get(XMPI(1,istrec),XMPI(1,istrec),20*icnt2,
      &             irecv)
 #endif
 *
@@ -977,6 +638,7 @@ c$$$                 call flush(102)
                  FIDOT(1:3,I) = XMPI(16:18,L)
                  D1(1:3,I) = FIDOT(1:3,I)
                  STEP(I) = XMPI(19,L)
+                 IMINR(I) = INT(XMPI(20,L))
 *     Save new block step and update T0 & next time
                  T0(I) = TIME
                  TIMENW(I) = T0(I) + STEP(I)
@@ -1042,35 +704,6 @@ c$$$*     X0DOT(K,I) = XNDOT(K,I)
 c$$$        END DO
 c$$$**!$omp end parallel do
 *
-*     --09/26/13 12:46-lwang-debug--------------------------------------*
-***** Note: After nbint------------------------------------------------**
-c$$$         if(time.ge.0.73070144653320313) then
-c$$$            j = 15967
-c$$$            kk = 1
-c$$$c$$$         do L=1,nxtlen
-c$$$c$$$            J = nxtlst(L)
-c$$$c$$$            if(name(j).eq.16107) then
-c$$$            write(6,*),rank,'Anbint',j,'n',name(j),'x0',x0(kk,j),
-c$$$     *        'x0dot',x0dot(kk,j),'t0',t0(j),
-c$$$     &           'step',step(j),'stepr',stepr(j),
-c$$$     *        'f',f(kk,j),'fdot',fdot(kk,j),
-c$$$     *       'fi',fi(kk,j),'fidot',fidot(kk,j),
-c$$$     *        'd0',d0(kk,j),'d1',d1(kk,j),
-c$$$     *        'd2',d2(kk,j),'d3',d3(kk,j),
-c$$$     *        'd0r',d0r(kk,j),'d1r',d1r(kk,j),
-c$$$     *        'd2r',d2r(kk,j),'d3r',d3r(kk,j),
-c$$$     *        'body',body(j),'time',time,'nnb',list(1,j)
-c$$$*            call flush(100+rank)
-c$$$            call flush(6)
-c$$$c$$$            end if
-c$$$c$$$         end do
-c$$$         call mpi_barrier(MPI_COMM_WORLD,ierr)
-c$$$c$$$*        if (TCCT.gt.0.111) stop
-c$$$c$$$*        TCCT = TCCT + 0.001
-c$$$      end if
-c$$$      if(time.ge.0.73070335388183594) stop
-*     --09/26/13 12:46-lwang-end----------------------------------------*
-
 *
 *       See whether any KS candidates are in the same block.
         IF (IKS.GT.0) THEN
@@ -1140,17 +773,9 @@ c$$$      end if
 #endif
 *
             call cputim(tt1)
-#ifdef GPU
             CALL CALC_REG_ON_GPU(IREG,1,NREG)
             call cputim(tt2)
             ttgrcalc = ttgrcalc + (tt2-tt1)*60.0
-#else
-*
-            DO L = 1,NREG
-               I = IREG(L)
-               CALL REGINT(I,LIST(1,I))
-            END DO
-#endif            
 *
 !$omp parallel do private(L,I)
             DO L = 1,NREG
@@ -1177,27 +802,6 @@ c$$$               XDOT(1:3,I) = XNDOT(1:3,I)
 *     Update neighbor list for AVX/SSE library
                CALL IRR_SIMD_SET_LIST(I,LIST(1,I))
 #endif
-*     --04/09/14 18:41-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$               J = I
-c$$$               write(102+rank,119),j,name(j),x0(1:3,j),x0dot(1:3,j),
-c$$$     *              t0(j),t0r(j),step(j),stepr(j),
-c$$$     *              f(1:3,j),fdot(1:3,j),fi(1:3,j),fidot(1:3,j),
-c$$$     &              d0(1:3,j),d1(1:3,j),
-c$$$     *              d2(1:3,j),d3(1:3,j),d0r(1:3,j),d1r(1:3,j),
-c$$$     *              d2r(1:3,j),d3r(1:3,j),body(j),time,list(1,j),
-c$$$     &              NREG,NPAIRS
-c$$$               call flush(102+rank)
-c$$$c$$$  end if
-c$$$ 119        format(/,'AJ',I7,'  N',I7,'  X0',3E25.17,'  X0D',3E25.17,
-c$$$     &           '  T0',F21.17,'  T0R',F21.17,'  STEP',F20.17,
-c$$$     &           '  STEPR',F20.17,'  F',3E25.17,' FD',3E25.17,
-c$$$     &           '  FI',3E25.17,'  FIDOT',3E25.17,'  D0',3E25.17,
-c$$$     &           '  D1',3E25.17,'  D2',3E25.17,'  D3',3E25.17,
-c$$$     &           '  D0R',3E25.17,'  D1R',3E25.17,'  D2R',3E25.17,
-c$$$     &           '  D3R',3E25.17,'  M',E25.17,'  T',F21.17,'  NB',I4,
-c$$$     &           '  NREG',I8,'  NPAIRS',I8)
-*     --04/09/14 18:41-lwang-end----------------------------------------*
             END DO
 !$omp end parallel do
 *     
@@ -1256,31 +860,16 @@ c$$$      end if
 *
 
             call cputim(tt1)
-#ifdef GPU
             CALL CALC_REG_ON_GPU(IREG,istart,iend)
             call cputim(tt2)
             ttgrcalc2 = ttgrcalc2 + (tt2-tt1)*60.0
-#else
-*
-            DO L = istart,iend
-               I = IREG(L)
-*
-               NNB = LIST(1,I) + 1
-               IMPI(1:NNB,L) = LIST(1:NNB,I)
-*
-               CALL REGINT(I,IMPI(1,L))
-            END DO
-            call cputim(tt2)
-#endif
             ttreg = ttreg + (tt2-tt1)*60.0
 
 !$omp parallel do private(L,I,NNB)
             DO L = istart,iend
                I = IREG(L)
-#ifdef GPU
                NNB = LIST(1,I) + 1
                IMPI(1:NNB,L) = LIST(1:NNB,I)
-#endif               
                YMPI(37,L) = STEPR(I)
                YMPI(38,L) = STEP(I)
                YMPI(39,L) = TIMENW(I)
@@ -1512,56 +1101,23 @@ c$$$         ttmov = ttmov +(tt334-tt333)*60
       ttsimdsend = ttsimdsend + (ttirrs2-ttirrs1)*60.
 #endif
 
+#ifdef H5OUTPUT
+*     custom output
+      call cputim(ttiout1)
+      IF(KZ(46).GT.0.AND.DMOD(TIME,DTH5OUT).EQ.0) THEN
+         call custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS,IMINR)
+      END IF
+      call cputim(ttiout2)
+      ttout = ttout + (ttiout2 - ttiout1)*60.
+#endif
+
 *     Resorting the NXTLST
       call cputim(tt335)
       call sort_tlist(STEP,DTK,.false.)
       call cputim(tt336)
       ttintb =ttintb + (tt336-tt335)*60
       ttnewt = ttnewt + (tt336 - tt335)*60.      
-*     --07/08/14 15:38-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$      DO L = 1, NDTMAX
-c$$$         IF(NDTK(L).LT.NDTK(L+1)) then
-c$$$            print*,'Error: L',L,'NDTK(L)',NDTK(L),'NDTK(L+1)',NDTK(L+1)
-c$$$            call flush(6)
-c$$$            call abort()
-c$$$         END IF
-c$$$      END DO
-c$$$      IF(NGHOSTS.GT.0) THEN
-c$$$         DO L = 1, NGHOSTS
-c$$$            J = NXTLST(NXTLIMIT+L)
-c$$$            IF(STEP(J).LE.DTK(1)) THEN
-c$$$               print*,'Error: Ghost particle with normal step! J',J,
-c$$$     &              'L',L,'STEP',STEP(J),'T',TIME,'NGHOSTS',
-c$$$     &              NXTLST(NXTLIMIT+1:NXTLIMIT+NGHOSTS)
-c$$$               call flush(6)
-c$$$               call abort()
-c$$$            END IF
-c$$$         END DO
-c$$$      END IF
-c$$$      J = 751
-c$$$      K=K_STEP(STEP(J),DTK)
-c$$$      DO L = NDTK(K+1)+1, NDTK(K)
-c$$$         IF(NXTLST(L).EQ.J) THEN
-c$$$            print*,'J',J,'N',NAME(J),'STEP',STEP(J),'T',TIME,'NXTLEVEL',
-c$$$     &           NXTLEVEL,'L',L,'DTK',DTK(K),'K',K,'IPHASE',IPHASE
-c$$$            GO TO 1022
-c$$$         end if
-c$$$      END DO
-c$$$      print*,'J',J,'N',NAME(J),'NOT FIND STEP',STEP(J),'K',K,'NXTLEVEL',
-c$$$     &     NXTLEVEL,'IPHASE',IPHASE
-c$$$      call flush(6)
-c$$$C      call abort()
-c$$$ 1022 continue
-*     --07/08/14 15:38-lwang-end----------------------------------------*
 *
-#ifdef H5OUTPUT
-*     HDF5 format output (Maxwell)
-      IF(KZ(46).GT.0) THEN
-         IF(rank.eq.0) CALL custom_output(NXTLST,NXTLEN,1)
-      END IF
-#endif
-
 *     Output of Massive black hole data
       IF (KZ(24).EQ.1) then
          call BHPLOT
@@ -1603,35 +1159,19 @@ c$$$*     --10/27/13 10:33-lwang-end----------------------------------------*
       END IF
 *
 *       Perform optional check on high-velocity particles at major times.
-      IF (LISTV(1).GT.0) THEN
-          IF (DMOD(TIME,STEPM).EQ.0.0D0) THEN
+      IF (KZ(37).GT.0.AND.LISTV(1).GT.0) THEN
+          call cputim(tttsa)
+          IF (DMOD(TIME,STEPM).EQ.0.0D0.AND.NREG.GT.0) THEN
               CALL SHRINK(TMIN)
               IF (LISTV(1).GT.0) THEN
                   CALL HIVEL(-1)
               END IF
           END IF
+          call cputim(tttsb)
+          ttshk = ttshk + (tttsb-tttsa)*60.0
       END IF
 *
 *       Check optional mass loss time.
-*     --09/27/13 10:39-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$      IF (NREG.GT.0.or.(TIME.GT.TMDOT.AND.DMOD(TIME,STEPX).EQ.0.0D0))
-c$$$     &     THEN
-c$$$         if(TIME.GT.TMDOT.AND.DMOD(TIME,STEPX).EQ.0.0D0) then
-c$$$            NGPUC = NGPUC + 1
-c$$$         end if
-c$$$         if(rank.eq.0) then
-c$$$            write(140,*) NREG,NGPUC,TIME
-c$$$            call flush(140)
-c$$$         end if
-c$$$      end if
-c$$$      if(time.ge.3.5373535156250000) then
-c$$$      ii=3173
-c$$$*      print*,rank,'bm',ii,name(ii),f(1,ii),fdot(1,ii),body(ii),time
-c$$$      print*,rank,'bm',ii,name(ii),d3(1,ii),d2r(1,ii),d3r(1,ii),time
-c$$$      call flush(6)
-c$$$      end if
-*     --09/27/13 10:39-lwang-end----------------------------------------*
       IF (KZ(19).GT.0) THEN
 *       Delay until time commensurate with 1000-year step (new polynomials).
           IF (NREG.NE.0.AND.TIME.GT.TMDOT
@@ -1649,16 +1189,6 @@ c$$$          IF (TIME.GT.TMDOT.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
           END IF
       END IF
 *
-*     --09/27/13 10:39-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$      if (time.ge.3.5373535156250000) then
-c$$$      ii=3173
-c$$$*      print*,rank,'bm',ii,name(ii),f(1,ii),fdot(1,ii),body(ii),time
-c$$$      print*,rank,'bm',ii,name(ii),d3(1,ii),d2r(1,ii),d3r(1,ii),time
-c$$$      call flush(6)
-c$$$      end if
-c$$$      call mpi_barrier(MPI_COMM_WORLD,ierr)      
-*     --09/27/13 10:39-lwang-end----------------------------------------*
 *       Advance counters and check timer & optional COMMON save (NSUB = 0).
       NTIMER = NTIMER + NXTLEN
       IF (NTIMER.LT.NMAX) GO TO 1

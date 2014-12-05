@@ -48,7 +48,23 @@
       END IF
       K1 = I3
       K2 = I4
-*
+
+*     --10/27/14 22:55-Sverre-update------------------------------------*
+***** Note: Our student Harley showed an interesting sequence of a B-B CHAIN
+*           collision event which did not show consistent diagnostics. It
+*           turned out that the case of escape gave a wrong identification of
+*           exchange. The fix consisted of remembering the sum of names for
+*           the closest binary.
+*           A second example by the same guy showed that collision in a
+*           four-body chain system also required a special condition.
+*     --10/27/14 22:55-Sverre-end---------------------------------------*
+*       Initial binary names for EXCHANGE test.
+      IF (NSTEP1.EQ.0) THEN
+          NAME12 = NAMEC(I1) + NAMEC(I2)
+          NAME34 = 0
+          IF (N.EQ.4) NAME34 = NAMEC(I3) + NAMEC(I4)
+      END IF
+
 *       Ensure that original KS pair is considered (H > 0 is possible).
       IF (N.LE.3.AND.IEND.EQ.0) THEN
           DO 5 K = 1,N
@@ -193,7 +209,8 @@
       DE = DE + ABS(ENERGY - E0)
 *
 *       Provide diagnostics for exchange (membership may have changed).
-      IF (NAME1 + NAME2.NE.NAMEC(I1) + NAMEC(I2).AND.EB.LT.0.0) THEN
+      IF (NAME12.NE.NAMEC(I1) + NAMEC(I2).AND.
+     &    NAME34.NE.NAMEC(I1) + NAMEC(I2).AND.EB.LT.0.0) THEN
           ISUB = ISYS(5)
           TCH = T0S(ISUB) + TIMEC
           if(rank.eq.0)

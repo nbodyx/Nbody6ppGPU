@@ -13,6 +13,7 @@
       NNB = LISTV(1)
       DO 20 L = 1,NNB
           I = LISTV(L+1)
+!$omp parallel do private(J,NNB1,K,RV,VV,RIJ,DT,IT,R2,FJ2,FI2)
           DO 10 J = IFIRST,NTOT
 *       Form relative quantities for large regular time-steps.
               IF (STEPR(J).LT.DTM.OR.J.EQ.I) GO TO 10
@@ -62,9 +63,13 @@
                   IF (STEP(J).GT.STEPR(J)) THEN
 *     Update NXTLST also
 C                     call shift_tlist(J,STEP(J),1,DTK)
+!$omp critical           
                       call delay_remove_tlist(J,STEP,DTK)
+!$omp end critical           
                       STEP(J) = 0.5*STEP(J)
+!$omp critical           
                       call delay_store_tlist(J)
+!$omp end critical           
                       TIMENW(J) = T0(J) + STEP(J)
 *                      TMIN = MIN(TIMENW(J),TMIN)
                   END IF
@@ -72,6 +77,7 @@ C                     call shift_tlist(J,STEP(J),1,DTK)
                   GO TO 5
               END IF
    10     CONTINUE
+!$omp end parallel do
    20 CONTINUE
 
 *

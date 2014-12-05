@@ -5,6 +5,7 @@
 *       ------------------------
 *
       INCLUDE 'common6.h'
+      INCLUDE 'tlist.h'
 *
 *
 *       See whether output intervals should be increased (at main output).

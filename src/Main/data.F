@@ -203,6 +203,7 @@
      &    '  BODY1 =',F5.1,'  BODYN =',F5.2,' ZMASS =',1P,E12.5,0P,
      &    ' NBIN0 =',I5,' NHI0 =',I5,' ZMET =',F7.4,' EPOCH0 =',F5.2)
       end if
+      call flush(6)
 *
       RETURN
 *

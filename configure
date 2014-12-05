@@ -694,7 +694,6 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-enable_local_env
 enable_mpi
 enable_mcmodel
 enable_debug
@@ -1334,8 +1333,6 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-local-env      Use local environment listed in last part instead of
-                          configure
   --disable-mpi           disable MPI support
   --enable-mcmodel=ARG    Use compiler option -mcmodel, avaiable arguments -->
                           small; -->medium; -->large (defalut is medium)
@@ -1346,7 +1343,7 @@ Optional Features:
                           force and potential, avaiable arguments --> sse:
                           Streaming SIMD Extensions; --> avx: Advanced Vector
                           Extensions; --> no: switch off SIMD; (default is
-                          avx)
+                          autodetecting)
   --enable-hdf5           Enable HDF5 output format support
   --enable-tools          Compile extral tools for data analysis, see
                           User_manual.pdf for detail
@@ -2416,29 +2413,19 @@ EXTRASRC=
 EXTRAOBJ=
 
 #Save environment
-# Check whether --enable-local-env was given.
-if test "${enable_local_env+set}" = set; then :
-  enableval=$enable_local_env;
-else
-  enable_local_env=no
-fi
+##AC_ARG_ENABLE([local-env],
+##   [AS_HELP_STRING([--enable-local-env],
+##        [Use local environment listed in last part instead of configure])],
+##   [],
+##   [enable_local_env=no])
 
-
-if test "x$enable_local_env" != xno ; then :
-  if test "x$FC" != x; then :
-  local_fc=$FC
-fi
-      if test "x$FCFLAGS" != x; then :
-  local_fcflags=$FCFLAGS
-fi
-      if test "x$CXXFLAGS" != x; then :
-  local_cxxflags=$CXXFLAGS
-fi
-else
-  local_fc=
-     local_fcflags=
-     local_cxxflags=
-fi
+##AS_IF([test "x$enable_local_env" != xno ],
+##     [AS_IF([test "x$FC" != x], [local_fc=$FC])
+##      AS_IF([test "x$FCFLAGS" != x], [local_fcflags=$FCFLAGS])
+##      AS_IF([test "x$CXXFLAGS" != x], [local_cxxflags=$CXXFLAGS])],
+##    [local_fc=
+##     local_fcflags=
+##     local_cxxflags=])
 
 #Features controls
 # Check whether --enable-mpi was given.
@@ -2487,7 +2474,7 @@ if test "${enable_simd+set}" = set; then :
        *) as_fn_error $? "bad value ${enableval} for --enable-simd" "$LINENO" 5 ;;
        esac
 else
-  enable_simd=avx
+  enable_simd=test
 fi
 
 
@@ -2510,11 +2497,16 @@ fi
 
 # Checks for programs.
 # Fortran part
+
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
+
+local_fc=$FC
+local_fcflags=$FCFLAGS
+local_fflags=$FFLAGS
 
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
@@ -2958,6 +2950,136 @@ ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
+fc_check=$FC
+FC=$local_fc
+
+# Checks for MPI and HDF5 support
+if test "x$enable_mpi" != xno; then :
+  if test "x$enable_hdf5" != xno; then :
+  # Extract the first word of "h5pfc", so it can be a program name with args.
+set dummy h5pfc; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_FC+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$FC"; then
+  ac_cv_prog_FC="$FC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_FC="h5pfc"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_prog_FC" && ac_cv_prog_FC="none"
+fi
+fi
+FC=$ac_cv_prog_FC
+if test -n "$FC"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FC" >&5
+$as_echo "$FC" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+else
+  # Extract the first word of "mpif77", so it can be a program name with args.
+set dummy mpif77; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_FC+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$FC"; then
+  ac_cv_prog_FC="$FC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_FC="mpif77"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_prog_FC" && ac_cv_prog_FC="none"
+fi
+fi
+FC=$ac_cv_prog_FC
+if test -n "$FC"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FC" >&5
+$as_echo "$FC" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+else
+  if test "x$enable_hdf5" != xno; then :
+  # Extract the first word of "h5fc", so it can be a program name with args.
+set dummy h5fc; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_FC+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$FC"; then
+  ac_cv_prog_FC="$FC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_FC="h5fc"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_prog_FC" && ac_cv_prog_FC="none"
+fi
+fi
+FC=$ac_cv_prog_FC
+if test -n "$FC"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FC" >&5
+$as_echo "$FC" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+else
+  FC=$fc_check
+fi
+      local_fcflags=$local_fcflags' -I../extra_inc/nompi'
+fi
+
 
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
@@ -3282,360 +3404,7 @@ $as_echo "$ac_cv_prog_fc_openmp" >&6; }
 
 FCFLAGS=$FCFLAGS' '$OPENMP_FCFLAGS
 
-if test "x$enable_simd" != xno; then :
-  FCFLAGS=$FCFLAGS' ${SIMD_FLAGS}'
-fi
-
 FCFLAGS=$FCFLAGS' -I../include'
-
-# Checks for MPI and HDF5 support
-
-FC=$local_fc
-if test "x$enable_mpi" != xno; then :
-  if test "x$enable_hdf5" != xno; then :
-  # Extract the first word of "h5pfc", so it can be a program name with args.
-set dummy h5pfc; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_FC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$FC"; then
-  ac_cv_prog_FC="$FC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_FC="h5pfc"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  test -z "$ac_cv_prog_FC" && ac_cv_prog_FC="none"
-fi
-fi
-FC=$ac_cv_prog_FC
-if test -n "$FC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FC" >&5
-$as_echo "$FC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-else
-  # Extract the first word of "mpif77", so it can be a program name with args.
-set dummy mpif77; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_FC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$FC"; then
-  ac_cv_prog_FC="$FC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_FC="mpif77"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  test -z "$ac_cv_prog_FC" && ac_cv_prog_FC="none"
-fi
-fi
-FC=$ac_cv_prog_FC
-if test -n "$FC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FC" >&5
-$as_echo "$FC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-fi
-      FCFLAGS=$FCFLAGS' $(MPI_FLAGS)'
-      EXTRASRC=$EXTRASRC' $(MPI_FSOURCES)'
-      RESULT=$RESULT'.mpi'
-
-else
-  if test "x$enable_hdf5" != xno; then :
-  # Extract the first word of "h5fc", so it can be a program name with args.
-set dummy h5fc; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_FC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$FC"; then
-  ac_cv_prog_FC="$FC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_FC="h5fc"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  test -z "$ac_cv_prog_FC" && ac_cv_prog_FC="none"
-fi
-fi
-FC=$ac_cv_prog_FC
-if test -n "$FC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FC" >&5
-$as_echo "$FC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-else
-  ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-if test -n "$ac_tool_prefix"; then
-  for ac_prog in gfortran g95 xlf95 f95 fort ifort ifc efc pgfortran pgf95 lf95 ftn nagfor xlf90 f90 pgf90 pghpf epcf90 g77 xlf f77 frt pgf77 cf77 fort77 fl32 af77
-  do
-    # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
-set dummy $ac_tool_prefix$ac_prog; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_FC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$FC"; then
-  ac_cv_prog_FC="$FC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_FC="$ac_tool_prefix$ac_prog"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-FC=$ac_cv_prog_FC
-if test -n "$FC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FC" >&5
-$as_echo "$FC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-    test -n "$FC" && break
-  done
-fi
-if test -z "$FC"; then
-  ac_ct_FC=$FC
-  for ac_prog in gfortran g95 xlf95 f95 fort ifort ifc efc pgfortran pgf95 lf95 ftn nagfor xlf90 f90 pgf90 pghpf epcf90 g77 xlf f77 frt pgf77 cf77 fort77 fl32 af77
-do
-  # Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_ac_ct_FC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$ac_ct_FC"; then
-  ac_cv_prog_ac_ct_FC="$ac_ct_FC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_FC="$ac_prog"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-ac_ct_FC=$ac_cv_prog_ac_ct_FC
-if test -n "$ac_ct_FC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_FC" >&5
-$as_echo "$ac_ct_FC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-  test -n "$ac_ct_FC" && break
-done
-
-  if test "x$ac_ct_FC" = x; then
-    FC=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    FC=$ac_ct_FC
-  fi
-fi
-
-
-# Provide some information about the compiler.
-$as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran compiler version" >&5
-set X $ac_compile
-ac_compiler=$2
-for ac_option in --version -v -V -qversion; do
-  { { ac_try="$ac_compiler $ac_option >&5"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-$as_echo "$ac_try_echo"; } >&5
-  (eval "$ac_compiler $ac_option >&5") 2>conftest.err
-  ac_status=$?
-  if test -s conftest.err; then
-    sed '10a\
-... rest of stderr output deleted ...
-         10q' conftest.err >conftest.er1
-    cat conftest.er1 >&5
-  fi
-  rm -f conftest.er1 conftest.err
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }
-done
-rm -f a.out
-
-# If we don't use `.F' as extension, the preprocessor is not run on the
-# input file.  (Note that this only needs to work for GNU compilers.)
-ac_save_ext=$ac_ext
-ac_ext=F
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we are using the GNU Fortran compiler" >&5
-$as_echo_n "checking whether we are using the GNU Fortran compiler... " >&6; }
-if ${ac_cv_fc_compiler_gnu+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat > conftest.$ac_ext <<_ACEOF
-      program main
-#ifndef __GNUC__
-       choke me
-#endif
-
-      end
-_ACEOF
-if ac_fn_fc_try_compile "$LINENO"; then :
-  ac_compiler_gnu=yes
-else
-  ac_compiler_gnu=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-ac_cv_fc_compiler_gnu=$ac_compiler_gnu
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_fc_compiler_gnu" >&5
-$as_echo "$ac_cv_fc_compiler_gnu" >&6; }
-ac_ext=$ac_save_ext
-ac_test_FCFLAGS=${FCFLAGS+set}
-ac_save_FCFLAGS=$FCFLAGS
-FCFLAGS=
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $FC accepts -g" >&5
-$as_echo_n "checking whether $FC accepts -g... " >&6; }
-if ${ac_cv_prog_fc_g+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  FCFLAGS=-g
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-
-      end
-_ACEOF
-if ac_fn_fc_try_compile "$LINENO"; then :
-  ac_cv_prog_fc_g=yes
-else
-  ac_cv_prog_fc_g=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_prog_fc_g" >&5
-$as_echo "$ac_cv_prog_fc_g" >&6; }
-if test "$ac_test_FCFLAGS" = set; then
-  FCFLAGS=$ac_save_FCFLAGS
-elif test $ac_cv_prog_fc_g = yes; then
-  if test "x$ac_cv_fc_compiler_gnu" = xyes; then
-    FCFLAGS="-g -O2"
-  else
-    FCFLAGS="-g"
-  fi
-else
-  if test "x$ac_cv_fc_compiler_gnu" = xyes; then
-    FCFLAGS="-O2"
-  else
-    FCFLAGS=
-  fi
-fi
-
-if test $ac_compiler_gnu = yes; then
-  GFC=yes
-else
-  GFC=
-fi
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-fi
-      FCFLAGS=$FCFLAGS' -I../extra_inc'
-fi
-
-# HDF5 format
-if test "x$enable_hdf5" != xno; then :
-  FCFLAGS=$FCFLAGS' $(HDF5_FLAGS)'
-        EXTRASRC=$EXTRASRC' $(HDF5_FSOURCES)'
-        RESULT=$RESULT'.hdf5'
-fi
 
 # Check FC
 if test "x$FC" == xnone; then :
@@ -3678,6 +3447,7 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
+local_cxxflags=$CXXFLAGS
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -4511,11 +4281,10 @@ if test "x$ac_cv_lib_stdcpp_main" = xyes; then :
 fi
 
 
-if test "x$enable_debug" != xno; then :
-  CXXFLAGS=$local_cxxflags" -g"
-else
-  CXXFLAGS=$local_cxxflags" -O3"
-fi
+#AS_IF([test "x$enable_debug" != xno],
+#      [CXXFLAGS=$local_cxxflags" -O2"],
+#      [CXXFLAGS=$local_cxxflags" -O3"])
+CXXFLAGS=$local_cxxflags" -O3"
 
 
   OPENMP_CXXFLAGS=
@@ -4740,7 +4509,287 @@ fi
 
 
 # SIMD part
-if test "x$enable_simd" != xno; then :
+if test "x$OPENMP_CXXFLAGS" != x; then :
+  if test "x$enable_simd" == xtest; then :
+  c_simd_check="avx"
+       as_ac_File=`$as_echo "ac_cv_file_"/proc/cpuinfo"" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for \"/proc/cpuinfo\"" >&5
+$as_echo_n "checking for \"/proc/cpuinfo\"... " >&6; }
+if eval \${$as_ac_File+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r ""/proc/cpuinfo""; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for grep that handles long lines and -e" >&5
+$as_echo_n "checking for grep that handles long lines and -e... " >&6; }
+if ${ac_cv_path_GREP+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -z "$GREP"; then
+  ac_path_GREP_found=false
+  # Loop through the user's path and test for each of PROGNAME-LIST
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH$PATH_SEPARATOR/usr/xpg4/bin
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_prog in grep ggrep; do
+    for ac_exec_ext in '' $ac_executable_extensions; do
+      ac_path_GREP="$as_dir/$ac_prog$ac_exec_ext"
+      as_fn_executable_p "$ac_path_GREP" || continue
+# Check for GNU ac_path_GREP and select it if it is found.
+  # Check for GNU $ac_path_GREP
+case `"$ac_path_GREP" --version 2>&1` in
+*GNU*)
+  ac_cv_path_GREP="$ac_path_GREP" ac_path_GREP_found=:;;
+*)
+  ac_count=0
+  $as_echo_n 0123456789 >"conftest.in"
+  while :
+  do
+    cat "conftest.in" "conftest.in" >"conftest.tmp"
+    mv "conftest.tmp" "conftest.in"
+    cp "conftest.in" "conftest.nl"
+    $as_echo 'GREP' >> "conftest.nl"
+    "$ac_path_GREP" -e 'GREP$' -e '-(cannot match)-' < "conftest.nl" >"conftest.out" 2>/dev/null || break
+    diff "conftest.out" "conftest.nl" >/dev/null 2>&1 || break
+    as_fn_arith $ac_count + 1 && ac_count=$as_val
+    if test $ac_count -gt ${ac_path_GREP_max-0}; then
+      # Best one so far, save it but keep looking for a better one
+      ac_cv_path_GREP="$ac_path_GREP"
+      ac_path_GREP_max=$ac_count
+    fi
+    # 10*(2^10) chars as input seems more than enough
+    test $ac_count -gt 10 && break
+  done
+  rm -f conftest.in conftest.tmp conftest.nl conftest.out;;
+esac
+
+      $ac_path_GREP_found && break 3
+    done
+  done
+  done
+IFS=$as_save_IFS
+  if test -z "$ac_cv_path_GREP"; then
+    as_fn_error $? "no acceptable grep could be found in $PATH$PATH_SEPARATOR/usr/xpg4/bin" "$LINENO" 5
+  fi
+else
+  ac_cv_path_GREP=$GREP
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_path_GREP" >&5
+$as_echo "$ac_cv_path_GREP" >&6; }
+ GREP="$ac_cv_path_GREP"
+
+
+          SIMD_CHECK=`grep -c $c_simd_check /proc/cpuinfo`
+else
+  SIMD_CHECK=-1
+fi
+
+         { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether current CPU support $c_simd_check" >&5
+$as_echo_n "checking whether current CPU support $c_simd_check... " >&6; }
+         if test "$SIMD_CHECK" -lt 0; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: unknown" >&5
+$as_echo "unknown" >&6; }
+elif test "$SIMD_CHECK" -gt 0; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+         as_CACHEVAR=`$as_echo "ax_cv_check_cxxflags__-m$c_simd_check" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C++ compiler accepts -m$c_simd_check" >&5
+$as_echo_n "checking whether C++ compiler accepts -m$c_simd_check... " >&6; }
+if eval \${$as_CACHEVAR+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CXXFLAGS
+  CXXFLAGS="$CXXFLAGS  -m$c_simd_check"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  eval "$as_CACHEVAR=yes"
+else
+  eval "$as_CACHEVAR=no"
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CXXFLAGS=$ax_check_save_flags
+fi
+eval ac_res=\$$as_CACHEVAR
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if test x"`eval 'as_val=${'$as_CACHEVAR'};$as_echo "$as_val"'`" = xyes; then :
+  CXXFLAGS=$CXXFLAGS" -m"$c_simd_check
+            RESULT=$RESULT"."$c_simd_check
+	    enable_simd=$c_simd_check
+
+else
+  c_simd_check="sse"
+           as_ac_File=`$as_echo "ac_cv_file_"/proc/cpuinfo"" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for \"/proc/cpuinfo\"" >&5
+$as_echo_n "checking for \"/proc/cpuinfo\"... " >&6; }
+if eval \${$as_ac_File+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r ""/proc/cpuinfo""; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for grep that handles long lines and -e" >&5
+$as_echo_n "checking for grep that handles long lines and -e... " >&6; }
+if ${ac_cv_path_GREP+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -z "$GREP"; then
+  ac_path_GREP_found=false
+  # Loop through the user's path and test for each of PROGNAME-LIST
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH$PATH_SEPARATOR/usr/xpg4/bin
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_prog in grep ggrep; do
+    for ac_exec_ext in '' $ac_executable_extensions; do
+      ac_path_GREP="$as_dir/$ac_prog$ac_exec_ext"
+      as_fn_executable_p "$ac_path_GREP" || continue
+# Check for GNU ac_path_GREP and select it if it is found.
+  # Check for GNU $ac_path_GREP
+case `"$ac_path_GREP" --version 2>&1` in
+*GNU*)
+  ac_cv_path_GREP="$ac_path_GREP" ac_path_GREP_found=:;;
+*)
+  ac_count=0
+  $as_echo_n 0123456789 >"conftest.in"
+  while :
+  do
+    cat "conftest.in" "conftest.in" >"conftest.tmp"
+    mv "conftest.tmp" "conftest.in"
+    cp "conftest.in" "conftest.nl"
+    $as_echo 'GREP' >> "conftest.nl"
+    "$ac_path_GREP" -e 'GREP$' -e '-(cannot match)-' < "conftest.nl" >"conftest.out" 2>/dev/null || break
+    diff "conftest.out" "conftest.nl" >/dev/null 2>&1 || break
+    as_fn_arith $ac_count + 1 && ac_count=$as_val
+    if test $ac_count -gt ${ac_path_GREP_max-0}; then
+      # Best one so far, save it but keep looking for a better one
+      ac_cv_path_GREP="$ac_path_GREP"
+      ac_path_GREP_max=$ac_count
+    fi
+    # 10*(2^10) chars as input seems more than enough
+    test $ac_count -gt 10 && break
+  done
+  rm -f conftest.in conftest.tmp conftest.nl conftest.out;;
+esac
+
+      $ac_path_GREP_found && break 3
+    done
+  done
+  done
+IFS=$as_save_IFS
+  if test -z "$ac_cv_path_GREP"; then
+    as_fn_error $? "no acceptable grep could be found in $PATH$PATH_SEPARATOR/usr/xpg4/bin" "$LINENO" 5
+  fi
+else
+  ac_cv_path_GREP=$GREP
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_path_GREP" >&5
+$as_echo "$ac_cv_path_GREP" >&6; }
+ GREP="$ac_cv_path_GREP"
+
+
+               SIMD_CHECK=`grep -c $c_simd_check /proc/cpuinfo`
+else
+  SIMD_CHECK=-1
+fi
+
+            { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether current CPU support $c_simd_check" >&5
+$as_echo_n "checking whether current CPU support $c_simd_check... " >&6; }
+            if test "$SIMD_CHECK" -lt 0; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: unknown" >&5
+$as_echo "unknown" >&6; }
+elif test "$SIMD_CHECK" -gt 0; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+            as_CACHEVAR=`$as_echo "ax_cv_check_cxxflags__-m$c_simd_check" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C++ compiler accepts -m$c_simd_check" >&5
+$as_echo_n "checking whether C++ compiler accepts -m$c_simd_check... " >&6; }
+if eval \${$as_CACHEVAR+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CXXFLAGS
+  CXXFLAGS="$CXXFLAGS  -m$c_simd_check"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  eval "$as_CACHEVAR=yes"
+else
+  eval "$as_CACHEVAR=no"
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CXXFLAGS=$ax_check_save_flags
+fi
+eval ac_res=\$$as_CACHEVAR
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if test x"`eval 'as_val=${'$as_CACHEVAR'};$as_echo "$as_val"'`" = xyes; then :
+  CXXFLAGS=$CXXFLAGS" -m"$c_simd_check
+               RESULT=$RESULT"."$c_simd_check
+	       enable_simd=$c_simd_check
+
+else
+  enable_simd=no
+fi
+
+fi
+
+else
+  if test "x$enable_simd" != xno; then :
   as_ac_File=`$as_echo "ac_cv_file_"/proc/cpuinfo"" | $as_tr_sh`
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for \"/proc/cpuinfo\"" >&5
 $as_echo_n "checking for \"/proc/cpuinfo\"... " >&6; }
@@ -4822,14 +4871,14 @@ $as_echo "$ac_cv_path_GREP" >&6; }
  GREP="$ac_cv_path_GREP"
 
 
-          SIMD_CHECK=`grep -c $enable_simd /proc/cpuinfo`
+                   SIMD_CHECK=`grep -c $enable_simd /proc/cpuinfo`
 else
   SIMD_CHECK=-1
 fi
 
-       { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether current CPU support $enable_simd" >&5
+                { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether current CPU support $enable_simd" >&5
 $as_echo_n "checking whether current CPU support $enable_simd... " >&6; }
-       if test "$SIMD_CHECK" -lt 0; then :
+                if test "$SIMD_CHECK" -lt 0; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: unknown" >&5
 $as_echo "unknown" >&6; }
 elif test "$SIMD_CHECK" -gt 0; then :
@@ -4839,7 +4888,7 @@ else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
-       as_CACHEVAR=`$as_echo "ax_cv_check_cxxflags__-m$enable_simd" | $as_tr_sh`
+                as_CACHEVAR=`$as_echo "ax_cv_check_cxxflags__-m$enable_simd" | $as_tr_sh`
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C++ compiler accepts -m$enable_simd" >&5
 $as_echo_n "checking whether C++ compiler accepts -m$enable_simd... " >&6; }
 if eval \${$as_CACHEVAR+:} false; then :
@@ -4872,7 +4921,7 @@ eval ac_res=\$$as_CACHEVAR
 $as_echo "$ac_res" >&6; }
 if test x"`eval 'as_val=${'$as_CACHEVAR'};$as_echo "$as_val"'`" = xyes; then :
   CXXFLAGS=$CXXFLAGS" -m"$enable_simd
-          RESULT=$RESULT"."$enable_simd
+                   RESULT=$RESULT"."$enable_simd
 
 else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
@@ -4881,6 +4930,11 @@ as_fn_error $? "$CXX compiler option -m$enable_simd is not avaiable
 See \`config.log' for more details" "$LINENO" 5; }
 fi
 
+fi
+fi
+else
+  enable_simd=no
+     SIMD_CHECK=-2
 fi
 
 # FIXME: Replace `main' with a function in `-llvisit':
@@ -5221,7 +5275,7 @@ fi
 done
 
 
-for ac_header in stdlib.h string.h strings.h sys/time.h unistd.h omp_lib.h
+for ac_header in stdlib.h string.h strings.h sys/time.h unistd.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_cxx_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
@@ -5787,7 +5841,7 @@ $as_echo "$ac_res" >&6; }
 if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
   CUFLAGS=$CUFLAGS" -I $cuda_sdk_prefix/common/inc"
 else
-  CUFLAGS=$CUFLAGS" -I ../extra_inc"
+  CUFLAGS=$CUFLAGS" -I ../extra_inc/cuda"
 fi
 
 fi
@@ -5833,7 +5887,7 @@ $as_echo "$ac_res" >&6; }
 if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
   CUFLAGS=$CUFLAGS" -I $cuda_prefix/common/inc"
 else
-  CUFLAGS=$CUFLAGS" -I ../extra_inc"
+  CUFLAGS=$CUFLAGS" -I ../extra_inc/cuda"
 fi
 
 fi
@@ -5841,11 +5895,34 @@ fi
 fi
       FCFLAGS=$FCFLAGS' $(GPU_FLAGS)'
       EXTRASRC=$EXTRASRC' $(GPU_FSOURCES)'
-      EXTRAOBJ=$EXTRAOBJ' $(CUDA_OBJECTS)'
+      if test "x$OPENMP_CXXFLAGS" != x ; then :
+  EXTRAOBJ=$EXTRAOBJ' $(CUDA_OBJECTS)'
+else
+  EXTRAOBJ=$EXTRAOBJ' $(CUDA_OBJECTS_SINGLE)'
+fi
       LDFLAGS=$LDFLAGS' -L'$CUDA_PREFIX
 
 fi
 
+#FLAGS
+
+# MPI FLAGS
+if test "x$enable_mpi" != xno; then :
+  FCFLAGS=$FCFLAGS' $(MPI_FLAGS)'
+      EXTRASRC=$EXTRASRC' $(MPI_FSOURCES)'
+      RESULT=$RESULT'.mpi'
+fi
+
+#SIMD
+if test "x$enable_simd" != xno; then :
+  FCFLAGS=$FCFLAGS' ${SIMD_FLAGS}'
+      CXXCOMP=`echo x$CXX|grep -c icc`
+      if test $CXXCOMP -gt 0; then :
+  CXXFLAGS=$CXXFLAGS' $(INTEL_FLAGS)'
+fi
+fi
+
+#GPU
 if test "x$enable_simd" == xavx; then :
   if test "x$enable_gpu" != xno; then :
   EXTRAOBJ=$EXTRAOBJ' ${IRRAVX_OBJECTS}'
@@ -5862,6 +5939,26 @@ else
              EXTRASRC=$EXTRASRC' $(GPU_FSOURCES)'
              FCFLAGS=$FCFLAGS' $(GPU_FLAGS)'
 fi
+fi
+
+#OMP
+if test "x$OPENMP_FCFLAGS" != x ; then :
+  FCFLAGS=$FCFLAGS' ${OMP_FLAGS}'
+else
+  FCFLAGS=$FCFLAGS' -I../extra_inc/noomp'
+fi
+
+if test "x$OPENMP_CXXFLAGS" != x ; then :
+  CXXFLAGS=$CXXFLAGS' ${OMP_FLAGS}'
+else
+  CXXFLAGS=$CXXFLAGS' -I ../extra_inc/noomp'
+fi
+
+# HDF5 format
+if test "x$enable_hdf5" != xno; then :
+  FCFLAGS=$FCFLAGS' $(HDF5_FLAGS)'
+        EXTRASRC=$EXTRASRC' $(HDF5_FSOURCES)'
+        RESULT=$RESULT'.hdf5'
 fi
 
 # params.h
@@ -6041,12 +6138,17 @@ $as_echo "$as_me:      Using GPU:      $enable_gpu" >&6;}
 $as_echo "$as_me:      CUDA version:   $CUDA_VERSION" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:      Using SIMD:     $enable_simd" >&5
 $as_echo "$as_me:      Using SIMD:     $enable_simd" >&6;}
-if test "$SIMD_CHECK" -lt 0; then :
+if test "x$enable_simd" != xno; then :
+  if test "$SIMD_CHECK" == -1; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:       No /proc/cpuinfo found, cannot comfirm whether current CPU support SIMD" >&5
 $as_echo "$as_me: WARNING:       No /proc/cpuinfo found, cannot comfirm whether current CPU support SIMD" >&2;}
 elif test "$SIMD_CHECK" == 0; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:       SIMD option used now is not supported in current CPU" >&5
 $as_echo "$as_me: WARNING:       SIMD option used now is not supported in current CPU" >&2;}
+fi
+elif test "$SIMD_CHECK" == -2; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:       SIMD is suppressed since OpenMP is switched off" >&5
+$as_echo "$as_me: WARNING:       SIMD is suppressed since OpenMP is switched off" >&2;}
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}:      mcmodel:        $enable_mcmodel" >&5
 $as_echo "$as_me:      mcmodel:        $enable_mcmodel" >&6;}

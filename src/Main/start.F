@@ -103,41 +103,6 @@
           CALL CLOUD0
       END IF
 *
-*       Set initial neighbour list & corresponding radius.
-      RS0 = RC
-      call cputim(tt1)
-#ifdef GPU
-      CALL FPOLY0(RS0)
-      call cputim(tt2)
-      if(rank.eq.0)print*,' fpoly0 time=',(tt2-tt1)*60.
-#else      
-      NNB0 = 0
-*
-      DO 40 I = 1,N
-          CALL NBLIST(I,RS0)
-          NNB0 = NNB0 + LIST(1,I)
-   40 CONTINUE
-*
-*       Obtain force & first derivative.
-#ifdef PARALLEL
-      CALL FPOLY1_MPI(1,N,0)
-#else
-      CALL FPOLY1(1,N,0)
-#endif
-      call cputim(tt2)
-      if(rank.eq.0)print*,' nblist + fpoly1 time=',(tt2-tt1)*60.
-*
-#endif      
-*       Obtain second & third force derivatives and set time-steps.
-      call cputim(tt1)
-#ifdef PARALLEL
-      CALL FPOLY2_MPI(1,N,0)
-#else
-      CALL FPOLY2(1,N,0)
-#endif
-      call cputim(tt2)
-      if(rank.eq.0)print*,' fpoly2 time=',(tt2-tt1)*60.
-*
 *       Regularize any hard primordial binaries (assume sequential ordering).
       IF (KZ(8).GT.0.AND.NBIN0.GT.0) THEN
           SMMIN = 1.D30
@@ -147,6 +112,9 @@
           TMMIN = 1.D30
           TMMAX = 0.D0
 *
+*     temperately set kstart = -1 for KSREG
+          KSDUM = KSTART
+          KSTART = -1
           DO 50 IPAIR = 1,NBIN0
               ICOMP = 2*IPAIR - 1
               JCOMP = 2*IPAIR
@@ -155,25 +123,94 @@
               DO 45 K = 1,3
                   RIJ2 = RIJ2 + (X(K,ICOMP) - X(K,JCOMP))**2
    45         CONTINUE
-        IF(RIJ2.LT.SMMIN)SMMIN=RIJ2
-        IF(RIJ2.GT.SMMAX)SMMAX=RIJ2
+              IF(RIJ2.LT.SMMIN) SMMIN=RIJ2
+              IF(RIJ2.GT.SMMAX) SMMAX=RIJ2
               XMBIN = BODY(ICOMP) + BODY(JCOMP)
               PERIOD = RIJ2**0.75/DSQRT(XMBIN)
-        IF(XMBIN.LT.XMMIN)XMMIN=XMBIN
-        IF(XMBIN.GT.XMMAX)XMMAX=XMBIN
-        IF(PERIOD.LT.TMMIN)TMMIN=PERIOD
-        IF(PERIOD.GT.TMMAX)TMMAX=PERIOD
+              IF(XMBIN.LT.XMMIN) XMMIN=XMBIN
+              IF(XMBIN.GT.XMMAX) XMMAX=XMBIN
+              IF(PERIOD.LT.TMMIN) TMMIN=PERIOD
+              IF(PERIOD.GT.TMMAX) TMMAX=PERIOD
               IF (RIJ2.LT.RMIN**2) THEN
-                 CALL KSREG
-              ELSE
-        if(rank.eq.0)PRINT*,' Pair ',IPAIR,' not regularised '
+                 CALL KSPREG
               END IF
-        if(rank.eq.0)PRINT*,' rij, rij/AU, tcross/YRS=',
-     *       DSQRT(rij2),DSQRT(RIJ2)*RAU,PERIOD*YRS
-                  CALL FLUSH(6)
    50     CONTINUE
+*     recover kstart
+          KSTART = KSDUM
       END IF
+*     Diagnostic
+      if(rank.eq.0) write(6,51) SQRT(SMMIN)*RAU, SQRT(SMMAX)*RAU,
+     &      XMMIN*ZMBAR, XMMAX*ZMBAR, TMMIN*DAYS, TMMAX*DAYS
+ 51   format(/,' Binary parameters: R12(min)[AU]',F15.6,
+     &     ' R12(max)[AU]',F15.6,' MCM(min)[M*]',F15.6,
+     &     ' MCM(max)[M*]',F15.6,' P[min][days]',1P,E15.6,
+     &     ' P[max][days]',E15.6,0P)
+
+*       Set initial neighbour list & corresponding radius.
+      RS0 = RC
+      call cputim(tt1)
+C#ifdef GPU
+      CALL FPOLY0(RS0)
+      call cputim(tt2)
+      if(rank.eq.0) write(6,52) (tt2-tt1)*60.0
+ 52   format(/,' Fpoly0 + Neighbor List Timing: ',F15.6)
+      call flush(6)
+c#else      
+c      NNB0 = 0
+c*
+c      DO 40 I = IFIRST,NTOT
+c          CALL NBLIST(I,RS0)
+c          NNB0 = NNB0 + LIST(1,I)
+c   40 CONTINUE
+c*
+c*       Obtain force & first derivative.
+c#ifdef PARALLEL
+c      CALL FPOLY1_MPI(IFIRST,NTOT,0)
+c#else
+c      CALL FPOLY1(IFIRST,NTOT,0)
+c#endif
+c      call cputim(tt2)
+c      if(rank.eq.0) write(6,53) (tt2-tt1)*60.0
+c 53   format(/,' Fpoly1 + Neighbor List Timing: ',F15.6)
+c      call flush(6)
+c*
+c#endif      
+
+*     Obtain second & third force derivatives and set time-steps.
+      call cputim(tt1)
+#ifdef PARALLEL
+      CALL FPOLY2_MPI(IFIRST,NTOT,0)
+#else
+      CALL FPOLY2(IFIRST,NTOT,0)
+#endif
+      call cputim(tt2)
+      if(rank.eq.0) write(6,54) (tt2-tt1)*60.0
+ 54   format(/,' Fpoly2 Timing: ',F15.6)
+      call flush(6)
 *
+*     Generate perturber list for KS
+      CALL KSPINIT
+      call cputim(tt3) 
+      if(rank.eq.0) write(6,55) (tt3-tt2)*60.0
+ 55   format(/,' KS Perturbers List Initialization Timing: ',F15.6)
+      call flush(6)
+*
+*     --11/08/14 10:12-lwang-debug--------------------------------------*
+***** Note:------------------------------------------------------------**
+c$$$      DO II = IFIRST,NTOT
+c$$$         write(113,*) 'II',II,'N',NAME(II),'X',X(1:3,II),
+c$$$     &        'XD',XDOT(1:3,II),'F',F(1:3,II),'FD',FDOT(1:3,II),
+c$$$     &        'D2',D2(1:3,II),'STEP',STEP(II),'NNB',LIST(1,II),
+c$$$     &        'LIST',LIST(2:5,II)
+c$$$      END DO
+c$$$      call flush(113)
+c$$$      DO II = 1, NPAIRS
+c$$$         write(114,*) 'II',II,'H',H(II),'R',R(II),'STEP',STEP(2*II-1),
+c$$$     &        'NP',LIST(1,2*II-1),'LIST',LIST(2:5,2*II-1)
+c$$$      END DO
+c$$$      call flush(114)
+c$$$      call abort()
+*     --11/08/14 10:12-lwang-end----------------------------------------*
 *       Include optional regularization of primordial triples.
       IF (KZ(18).GT.1.AND.NHI0.GT.0) THEN
           KSPAIR = 1

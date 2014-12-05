@@ -8,12 +8,6 @@
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
      &                NAMEM(MMAX),NAMEG(MMAX),KSTARM(MMAX),IFLAG(MMAX)
-#ifdef H5OUTPUT
-*     For HDF5 stellar evolution output
-      COMMON/STEVOL/ XLUM(NMAX),XRSTAR(NMAX),XTEFF(NMAX),
-     &               XZMET(NMAX),XCMASS(NMAX),XRC(NMAX)
-      INTEGER h5_array_index
-#endif      
       REAL*8  LUMS(10),TSCLS(20),GB(10)
       REAL*8  M0,M1,M2,LUM,LUM2,MC,ME,K2
       CHARACTER*27 FILE(2)
@@ -36,9 +30,6 @@
       IMERGE = 0
       if(rank.eq.0) WRITE (83,1)  NS, TPHYS
 
-#ifdef H5OUTPUT
-      h5_array_index = 1
-#endif      
 *
       DO 20 I = 1,N
           M0 = BODY0(I)*ZMBAR
@@ -98,6 +89,7 @@
               END IF
               RJ = R(JPAIR)
               HJ = H(JPAIR)
+              RDOT = TDOT2(JPAIR)
 *       Determine merger & ghost index for negative c.m. name.
               IF (NAME(N+JPAIR).LT.0) THEN
                   CALL FINDJ(J1,J,IMERGE)
@@ -108,6 +100,9 @@
                   HJ = HM(IMERGE)
                   RJ = SQRT(XREL(1,IMERGE)**2 + XREL(2,IMERGE)**2 +
      &                                          XREL(3,IMERGE)**2)
+                  RDOT = XREL(1,IMERGE)*VREL(1,IMERGE) + 
+     &                 XREL(2,IMERGE)*VREL(2,IMERGE) +
+     &                 XREL(3,IMERGE)*VREL(3,IMERGE)
 *       Re-define index of second component and obtain parameters of M1.
                   J2 = J
                   AGE = MAX(TPLOT,TEV0(J1))*TSTAR - EPOCH(J1)
@@ -130,7 +125,7 @@
                   BODYI = CM(3,IMERGE) + CM(4,IMERGE)
               END IF
               SEMI = -0.5*BODYI/HJ
-              ECC2 = (1.0 - RJ/SEMI)**2
+              ECC2 = (1.0 - RJ/SEMI)**2 + RDOT**2/(BODYI*SEMI)
               ECC = SQRT(ECC2)
               PB = DAYS*SEMI*SQRT(ABS(SEMI)/BODYI)
               PB = LOG10(ABS(PB))
@@ -141,20 +136,6 @@
               ZL2 = LOG10(LUM2)
               TE1 = 0.25*(ZL1 - 2.0*R1) + 3.7
               TE2 = 0.25*(ZL2 - 2.0*R2) + 3.7
-#ifdef H5OUTPUT
-*     Store stellar evolution information
-              XLUM(h5_array_index) = LUM
-              XLUM(h5_array_index+1) = LUM2
-              XRSTAR(h5_array_index) = RM
-              XRSTAR(h5_array_index+1) = RM2
-              XTEFF(h5_array_index) = 1.D1**(TE1)
-              XTEFF(h5_array_index+1) = 1.D1**(TE2)
-              XCMASS(h5_array_index) = MC
-              XCMASS(h5_array_index+1) = MC
-              XRC(h5_array_index) = RCC
-              XRC(h5_array_index+1) = RCC
-              h5_array_index = h5_array_index + 2
-#endif 
               if(rank.eq.0)
      &        WRITE (82,5)  TTOT, J1, J2, NAME(J1), NAME(J2), KW, KW2, 
      &            KSTAR(ICM),
@@ -170,14 +151,6 @@
               ZL1 = LOG10(LUM)
 *       Form LOG(Te) using L = 4*pi*R**2*\sigma*T**4 and solar value 3.7.
               TE = 0.25*(ZL1 - 2.0*R1) + 3.7
-#ifdef H5OUTPUT
-              XLUM(h5_array_index) = LUM
-              XRSTAR(h5_array_index) = RM
-              XTEFF(h5_array_index) = 1.D1**(TE)
-              XCMASS(h5_array_index) = MC
-              XRC(h5_array_index) = RCC
-              h5_array_index = h5_array_index + 1
-#endif 
               if(rank.eq.0)
      &        WRITE (83,10)  TTOT, I, NAME(I), KW, RI, M1, ZL1, R1, TE
    10         FORMAT (1X,1P,E12.5,2I8,I3,5E13.5)

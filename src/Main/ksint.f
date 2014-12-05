@@ -6,6 +6,7 @@
 *
       Include 'kspars.h'
       INCLUDE 'common6.h'
+      include 'timing.h'
 *     Safe for parallel, no value change, used value: tmdis,namem,nameg,kstarm
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
@@ -108,7 +109,10 @@ c$$$                      END IF
 c$$$    3             CONTINUE
 c$$$              END IF
 c$$$          END IF
+         call cputim(tt1)
           CALL UNPERT(IPAIR)
+          call cputim(tt2)
+          ttup = ttup + (tt2-tt1)*60.
           GO TO 100
       END IF
 *

@@ -23,6 +23,7 @@
       NNB0 = LIST(1,I)
 !$omp critical      
       NIRRF = NIRRF + NNB0
+      NBPRED = NBPRED + NNB0
 !$omp end critical      
 *
 *       Assume small mass at centre for special case of no neighbours.

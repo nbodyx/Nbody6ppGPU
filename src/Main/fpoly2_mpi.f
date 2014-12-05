@@ -37,8 +37,8 @@
       ista(ix) = irun+1
  1003 irun = irun + inum(ix)
 *
-      istart = ista(rank+1)
-      iend = ista(rank+1) + inum(rank+1) - 1
+      istart = ista(rank+1) + IFIRST - 1
+      iend = ista(rank+1) + inum(rank+1) - 2 + IFIRST
 *
 !$omp parallel do 
 !$omp& private(i,k,nnb,rcrit2,L,NAMEJ,A,J,RIJ2,DT,DT1,
@@ -163,11 +163,11 @@
       irank = rank - ir
       if(irank.lt.0)irank=irank+isize
 *
-      istart=ista(irank+1)
+      istart=ista(irank+1) + IFIRST - 1
       icnt = inum(irank+1)
 *
       if(irank.eq.0)irank=isize
-      istrec = ista(irank)
+      istrec = ista(irank) + IFIRST - 1
       icnt2 = inum(irank)
 *
 *     print*,' FPOLY2: rank,irank,isend,irecv,istrec=',

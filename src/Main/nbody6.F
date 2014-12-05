@@ -18,6 +18,12 @@
       INCLUDE 'timing.h'
       include 'omp_lib.h'
       COMMON/STSTAT/  TINIT,NIR,NIB,NRGL,NKS
+#ifdef DEBUG
+*     --10/03/14 19:40-lwang-debug--------------------------------------*
+***** Note:------------------------------------------------------------**
+      COMMON/adt/ adtime,dumptime,dprintt
+*     --10/03/14 19:41-lwang-end----------------------------------------*
+#endif
       EXTERNAL MERGE
 *
 #ifdef PARALLEL
@@ -45,11 +51,14 @@
       CALL CPUTIM(ttota)
 
 *       Get threads number
+#ifdef OMP
 !$omp parallel 
       icore=OMP_get_num_threads()
 !$omp end parallel
       PRINT*,'RANK: ',rank,' OpenMP Number of Threads: ',icore
-*      icore = 4
+#else
+      icore = 1
+#endif
 
 #ifdef PARALLEL
       call mpi_barrier(MPI_COMM_WORLD,ierr)
@@ -59,6 +68,17 @@
 *       Read start/restart indicator & CPU time.
       IF(rank.eq.0)READ (5,*)  KSTART, TCOMP, TCRITP,
      *    isernb,iserreg,iserks
+#ifdef DEBUG
+*     --10/03/14 19:41-lwang-debug--------------------------------------*
+***** Note:------------------------------------------------------------**
+      if(rank.eq.0) read(5,*) adtime,dumptime,dprintt
+#if MPIINIT
+      CALL MPI_BCAST(adtime,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(dumptime,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(dprintt,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+#endif      
+*     --10/03/14 19:41-lwang-end----------------------------------------*
+#endif
 *
 #if MPIINIT
       CALL MPI_BCAST(isernb,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)

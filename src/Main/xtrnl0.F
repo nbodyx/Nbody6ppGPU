@@ -88,7 +88,7 @@
 *
           IF (RTIDE.GT.0.0) THEN
 *       Determine RBAR (N-body units) from RT (pc) and King model (see SCALE).
-              IF(KZ(22).EQ.2) RBAR = RT/RTIDE
+              IF(KZ(22).GE.2) RBAR = RT/RTIDE
           ELSE
               RTIDE = RT/RBAR
           END IF
@@ -104,7 +104,7 @@
           GMG = GMG/ZMTOT
 *
 *       Check re-scaling units to current RBAR (i.e. TSCALE, TSTAR & VSTAR).
-          IF (KZ(22).EQ.2) THEN
+          IF (KZ(22).GE.2) THEN
               CALL UNITS
           END IF
 *
@@ -153,14 +153,17 @@
           OMEGA = (RG(1)*VG(2) - RG(2)*VG(1))/R02
           TIDAL(4) = 2.0*OMEGA
           GMG = GMG/ZMTOT
+
+*       Form tidal radius from circular angular velocity (assumes apocentre).
+          IF (RTIDE.EQ.0.0D0) RTIDE = (0.5/OMEGA**2)**0.3333
 *       Adopt a tidal radius of 10 units unless specified by routine SCALE.
-          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0
+C          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0
 *
           if(rank.eq.0)
      &    WRITE (6,35)  GMG, SQRT(R02), OMEGA, RTIDE, RBAR
-   35     FORMAT (/,12X,'POINT-MASS MODEL:    MG =',1P,E9.1,
+   35     FORMAT (/,12X,'POINT-MASS MODEL (NB unit):    MG =',1P,E9.1,
      &                  '  RG =',E9.1,'  OMEGA =',E9.1,
-     &                  '  RT =',E9.2,'  RBAR =',F6.2)
+     &                  '  RTIDE =',E9.2,'  RBAR =',0P,F6.2)
 *       Define disk and/or logarithmic halo parameters in N-body units.
           IF (DISK.GT.0.0D0) THEN
               DISK = DISK/ZMTOT
@@ -258,7 +261,8 @@
    78             CONTINUE
    80         CONTINUE
           END IF
-      ELSE
+          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0*RSCALE
+       ELSE
           MP = 0.0
       END IF
       RTIDE0 = RTIDE

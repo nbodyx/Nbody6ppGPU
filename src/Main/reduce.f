@@ -240,7 +240,7 @@ C              call exchange_tlist(I,ICH,STEP,DTK)
           call delay_store_tlist(I,STEP,DTK)
 *       Check high-velocity ejection for outwards hyperbolic motion.
           HI = 0.5*VIJ2 - (BODY(I) + BODY(ICH))/SQRT(RIJ2)
-          IF (HI.GT.0.0.AND.RDOT.GT.0.0) THEN
+          IF (HI.GT.0.0.AND.RDOT.GT.0.0.AND.KZ(37).GT.0) THEN
                CALL HIVEL(I)
           END IF
           IPHASE = -1

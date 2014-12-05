@@ -16,14 +16,17 @@ C     &                LISTC(LMAX)
 *     REAL*8  DFI(3),DFRG(3)
 *      LOGICAL LCHECK
 *
-*
+*     Mass weighted neighbor list criterion flag
+      IF(KZ(39).EQ.2.OR.KZ(39).EQ.3) M_FLAG = 1
+      IF(KZ(39).EQ.0.OR.KZ(39).EQ.2) NB_FLAG = 1
+      
 *       Set neighbour number, time-step & choice of central distance.
       NNB = NLIST(1)
       NNB0 = LIST(1,I)
       DTR = TIME - T0R(I)
       IRSKIP = 0
 *      NBSKIP = 0
-      IF (KZ(39).EQ.0.OR.KZ(39).EQ.2) THEN
+      IF (NB_FLAG.EQ.1) THEN
           RI2 = (XI(1) - RDENS(1))**2 + (XI(2) - RDENS(2))**2 +
      &                              (XI(3) - RDENS(3))**2
           RH2 = RSCALE**2
@@ -150,7 +153,7 @@ C$$$      END IF
       A3 = MIN(A3,0.9*NBAVE)
       NBP = INT(A3)
 *       Reduce predicted membership slowly outside half-mass radius.
-      IF (RI2.GT.RH2.AND.(KZ(39).EQ.0.OR.KZ(39).EQ.2)) THEN
+      IF (RI2.GT.RH2.AND.NB_FLAG.EQ.1) THEN
           A3 = A3*MAX(RSCALE/SQRT(RI2),0.1)
       ELSE
           A3 = MAX(A3,ZNBMIN)
@@ -164,8 +167,7 @@ C$$$      END IF
           RIDOT = (XI(1) - RDENS(1))*XIDOT(1) +
      &            (XI(2) - RDENS(2))*XIDOT(2) +
      &            (XI(3) - RDENS(3))*XIDOT(3)
-      IF (RI2.GT.RC2.AND.(KZ(39).EQ.0.OR.KZ(39).EQ.2).AND.
-     &         RI2.LT.100.0*RH2) THEN
+      IF (RI2.GT.RC2.AND.NB_FLAG.EQ.1.AND.RI2.LT.100.0*RH2) THEN
           A4 = A4*(1.0 + RIDOT*DTR/RI2)
       END IF
 *
@@ -223,22 +225,24 @@ c$$$          call flush(6)
          END IF
       END IF
 *
+      IF(M_FLAG.EQ.0) THEN
 *       Calculate the radial velocity with respect to at most 3 neighbours.
-      IF (NNB.LE.3.AND.RI2.LT.100.0*RH2) THEN
-          A1 = 2.0*RS(I)
-          DO 45 L = 1,NNB
-              J = NLIST(L+1)
-              RIJ = SQRT((XI(1) - X(1,J))**2 + (XI(2) - X(2,J))**2 +
-     &                                         (XI(3) - X(3,J))**2)
-              RSDOT = ((XI(1) - X(1,J))*(XIDOT(1) - XDOT(1,J)) +
-     &                 (XI(2) - X(2,J))*(XIDOT(2) - XDOT(2,J)) +
-     &                 (XI(3) - X(3,J))*(XIDOT(3) - XDOT(3,J)))/RIJ
-*       Find smallest neighbour distance assuming constant regular step.
-              A1 = MIN(A1,RIJ + RSDOT*DTR)
-   45     CONTINUE
-*
-*       Increase neighbour sphere if all members are leaving inner region.
-          RS(I) = MAX(A1,1.1*RS(I))
+         IF (NNB.LE.3.AND.RI2.LT.100.0*RH2) THEN
+            A1 = 2.0*RS(I)
+            DO 45 L = 1,NNB
+               J = NLIST(L+1)
+               RIJ = SQRT((XI(1) - X(1,J))**2 + (XI(2) - X(2,J))**2 +
+     &              (XI(3) - X(3,J))**2)
+               RSDOT = ((XI(1) - X(1,J))*(XIDOT(1) - XDOT(1,J)) +
+     &              (XI(2) - X(2,J))*(XIDOT(2) - XDOT(2,J)) +
+     &              (XI(3) - X(3,J))*(XIDOT(3) - XDOT(3,J)))/RIJ
+*     Find smallest neighbour distance assuming constant regular step.
+               A1 = MIN(A1,RIJ + RSDOT*DTR)
+ 45         CONTINUE
+*     
+*     Increase neighbour sphere if all members are leaving inner region.
+            RS(I) = MAX(A1,1.1*RS(I))
+         END IF
       END IF
 *
 *       Check optional procedures for adding neighbours.

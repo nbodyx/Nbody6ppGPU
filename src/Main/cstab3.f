@@ -77,7 +77,7 @@ C      Q3 = QL**0.33333
 C      Q13 = Q1**0.33333
 C      AR = 1.0 + 3.7/Q3 - 2.2/(1.0 + Q3) + 1.4/Q13*(Q3 - 1.0)/(Q3 + 1.0)
 *
-      EK = AR*SEMI*(1.0D0 + ECC)
+C      EK = AR*SEMI*(1.0D0 + ECC)
       PMIN = SEMI1*(1.0D0 - ECC1)
 *
 *       Replace the EK criterion by the MA analytical stability formula.
@@ -125,10 +125,10 @@ C      AR = 1.0 + 3.7/Q3 - 2.2/(1.0 + Q3) + 1.4/Q13*(Q3 - 1.0)/(Q3 + 1.0)
 *
           ITERM = -1
           if(rank.eq.0)
-     &    WRITE (6,20)  ECC, ECC1, SEMI, SEMI1, PMIN, PCRIT, EK, PZ
+     &    WRITE (6,20)  ECC, ECC1, SEMI, SEMI1, PMIN, PCRIT, PZ
    20     FORMAT (' CSTAB3    E =',F6.3,'  E1 =',F6.3,'  A =',1P,E8.1,
      &                     '  A1 =',E8.1,'  PM =',E9.2,'  PC =',E9.2,
-     &                     '  EK =',E9.2,'  P/Z =',0P,F5.2)
+     &                     '  P/Z =',0P,F5.2)
           RI = SQRT(CM(1)**2 + CM(2)**2 + CM(3)**2)
           EMAX = 0.0
           if(rank.eq.0)

@@ -59,9 +59,9 @@ C
       NBIN1 = NBIN + 1
       if(rank.eq.0)
      &WRITE (6,1)  NBIN, SEMI0, ECC0, RATIO, RANGE, NSKIP, IDORM
-    1 FORMAT (/,12X,'BINARIES:   NBIN =',I4,'  A =',F9.6,'  E =',F6.2,
-     &              '  RATIO =',F4.1,'  RANGE =',F6.1,'  NSKIP =',I3,
-     &              '  IDORM =',I2/)
+    1 FORMAT (/,12X,'BINARIES:   NBIN =',I8,'  A =',F9.6,'  E =',F6.2,
+     &     '  RATIO =',F4.1,'  RANGE =',1P,E12.5,0P,
+     &     '  NSKIP =',I3,'  IDORM =',I2/)
 *
 *       Check type of binary mass distribution (NSKIP, IMF2 or split c.m.).
       IF (NSKIP.EQ.0.OR.KZ(20).GE.2) GO TO 10
@@ -176,10 +176,6 @@ C
  31       IF (ECC0.LT.0.0) THEN
               ECC2 = RAN2(KDUM)
               ECC = SQRT(ECC2)
-*     --09/25/13 22:34-lwang-bug-fix------------------------------------*
-***** Note: Avoid high eccentricity at beginning of simulation
-*              ECC = MIN(ECC,0.9D0)
-*     --09/25/13 22:35-lwang-end----------------------------------------*
           else if (ecc0.EQ.20) then
               ecc = RAN2(KDUM)
 *
@@ -320,59 +316,59 @@ C AND periods shorter than 10^(10) days!
              semi = semi/AU
              semi = semi/RBAR
 *========= KZ(42) = ? ========
-          else if (KZ(42).EQ.6) THEN
-*       Check for eigen-evolution (Pavel Kroupa & Rosemary Mardling).
-              IC0 = 0
-              IC1 = 0
-              IC2 = 0
-              IC3 = 0
-              ZMB = (BODY(I1) + BODY(I2))*ZMBAR
-*       Include minimum period (copy RANGE; at least 1 day).
-              PMIN = MAX(RANGE,1.0D0)
-              IT = 0
- 35           XR = RAN2(IDUM1)
-*       Generate period distribution (Pavel Kroupa: MN 277, 1491, eq.11b).
-              P0 = LOG10(PMIN) + SQRT(ETA2*(EXP(2.0*XR/ETA1) - 1.0))
-              TK = 10.0**P0
-*       Invert eccentricity from thermal distribution (XR = E**2).
-              XR = RAN2(IDUM1)
-              ES0 = SQRT(XR)
-*       Set pericentre distance in AU with period in days & mass in SU.
-              RP0 = (1.0 - ES0)*((TK/365.0)**2*ZMB)**0.3333
-*       Convert to N-body units.
-              RP0 = RP0/RAU
-              A0 = RP0/(1.0 - ES0)
-              E0 = ES0
-*       Limit the maximum semi-major axis to 1000 AU (Oct 2004).
-              IF (A0*RAU.GT.1000.0) GO TO 35
-*       Define K* = 0/1 and enhanced radii for pre-main sequence.
-              KSTAR(I1) = 1
-              KSTAR(I2) = 1
-              IF (BODY(I1)*ZMBAR.LT.0.7) KSTAR(I1) = 0
-              IF (BODY(I2)*ZMBAR.LT.0.7) KSTAR(I2) = 0
-*       Perform eigen-evolution of pericentre & eccentricity for 10^6 yrs.
-              TC = -1.0/TSCALE
-              ICIRC = 1
-              CALL TCIRC(RP0,ES0,I1,I2,ICIRC,TC)
-*       Copy modified eccentricity and re-evaluate the semi-major axis.
-              ECC = ES0
-              SEMI = RP0/(1.0 - ECC)
-              IT = IT + 1
-              IF (SEMI.GT.SEMI0.AND.IT.LT.25) GO TO 35
-              TK = 365.0*SQRT((SEMI*RAU)**3/ZMB)
-              IF (ECC.LE.0.002) IC0 = IC0 + 1
-              IF (TK.LT.PMIN) IC1 = IC1 + 1
-              IF (TK.LT.2.0*PMIN) IC2 = IC2 + 1
-              IF (TK.LT.5.0*PMIN) IC3 = IC3 + 1
-              IF(rank.eq.0) then
-                 WRITE (23,99)  IT, I1, ZMB, E0, ECC, A0*SU, SEMI*SU, TK
- 99              FORMAT (12X,'BINARY:   ITER I1 M(ICM)[M*] ECCI ECCC ',
-     &                'SEMII[R*] SEMIC[R*] P[days]',
-     &                I4,I12,F12.8,2F7.3,1P,3E15.6)
-                 CALL FLUSH(23)
-              end if
-***-----------
-          else
+c$$$          else if (KZ(42).EQ.6) THEN
+c$$$*       Check for eigen-evolution (Pavel Kroupa & Rosemary Mardling).
+c$$$              IC0 = 0
+c$$$              IC1 = 0
+c$$$              IC2 = 0
+c$$$              IC3 = 0
+c$$$              ZMB = (BODY(I1) + BODY(I2))*ZMBAR
+c$$$*       Include minimum period (copy RANGE; at least 1 day).
+c$$$              PMIN = MAX(RANGE,1.0D0)
+c$$$              IT = 0
+c$$$ 35           XR = RAN2(IDUM1)
+c$$$*       Generate period distribution (Pavel Kroupa: MN 277, 1491, eq.11b).
+c$$$              P0 = LOG10(PMIN) + SQRT(ETA2*(EXP(2.0*XR/ETA1) - 1.0))
+c$$$              TK = 10.0**P0
+c$$$*       Invert eccentricity from thermal distribution (XR = E**2).
+c$$$              XR = RAN2(IDUM1)
+c$$$              ES0 = SQRT(XR)
+c$$$*       Set pericentre distance in AU with period in days & mass in SU.
+c$$$              RP0 = (1.0 - ES0)*((TK/365.0)**2*ZMB)**0.3333
+c$$$*       Convert to N-body units.
+c$$$              RP0 = RP0/RAU
+c$$$              A0 = RP0/(1.0 - ES0)
+c$$$              E0 = ES0
+c$$$*       Limit the maximum semi-major axis to 1000 AU (Oct 2004).
+c$$$C              IF (A0*RAU.GT.1000.0) GO TO 35
+c$$$*       Define K* = 0/1 and enhanced radii for pre-main sequence.
+c$$$              KSTAR(I1) = 1
+c$$$              KSTAR(I2) = 1
+c$$$              IF (BODY(I1)*ZMBAR.LT.0.7) KSTAR(I1) = 0
+c$$$              IF (BODY(I2)*ZMBAR.LT.0.7) KSTAR(I2) = 0
+c$$$*       Perform eigen-evolution of pericentre & eccentricity for 10^6 yrs.
+c$$$              TC = -1.0/TSCALE
+c$$$              ICIRC = 1
+c$$$              CALL TCIRC(RP0,ES0,I1,I2,ICIRC,TC)
+c$$$*       Copy modified eccentricity and re-evaluate the semi-major axis.
+c$$$              ECC = ES0
+c$$$              SEMI = RP0/(1.0 - ECC)
+c$$$              IT = IT + 1
+c$$$              IF (SEMI.GT.SEMI0.AND.IT.LT.25) GO TO 35
+c$$$              TK = 365.0*SQRT((SEMI*RAU)**3/ZMB)
+c$$$              IF (ECC.LE.0.002) IC0 = IC0 + 1
+c$$$              IF (TK.LT.PMIN) IC1 = IC1 + 1
+c$$$              IF (TK.LT.2.0*PMIN) IC2 = IC2 + 1
+c$$$              IF (TK.LT.5.0*PMIN) IC3 = IC3 + 1
+c$$$              IF(rank.eq.0) then
+c$$$                 WRITE (23,99)  IT, I1, ZMB, E0, ECC, A0*SU, SEMI*SU, TK
+c$$$ 99              FORMAT (12X,'BINARY:   ITER I1 M(ICM)[M*] ECCI ECCC ',
+c$$$     &                'SEMII[R*] SEMIC[R*] P[days]',
+c$$$     &                I4,I12,F12.8,2F7.3,1P,3E15.6)
+c$$$                 CALL FLUSH(23)
+c$$$              end if
+c$$$***-----------
+c$$$          else
              if(rank.eq.0)write(6,*)' No KZ(42) defined!!!!! '
              STOP
           end if

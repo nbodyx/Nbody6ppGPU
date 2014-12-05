@@ -112,6 +112,7 @@ C New: (Aug.1998, P.Kroupa)
          WRITE (6,30)  DTMIN, RMIN, ETAU, ECLOSE, GMIN, GMAX, SMAX
    30    FORMAT (/,9X,1P7E10.1)
       end if
+      call flush(6)
 *
 *       Define total particle number & neighbour membership range.
       NTOT = N
@@ -159,12 +160,12 @@ C NEW version (14.08.98, P.Kroupa):
 C*       Set random number SEED for routine DATA.
       IDUM1 = -1*NRAND
 c+++ Notify others of this change on log file:
-      if(rank.eq.0)then
-      write(6,*)
-      write(6,*)' ****** NOTE: new random number seed initialisation!'
-      write(6,*)' ****** AND new ran2 from new ed. of Press et al.'
-      write(6,*)
-      end if
+C      if(rank.eq.0)then
+C      write(6,*)
+C      write(6,*)' ****** NOTE: new random number seed initialisation!'
+C      write(6,*)' ****** AND new ran2 from new ed. of Press et al.'
+C      write(6,*)
+C      end if
 *
 *
 *       Save square of c.m. approximation parameter (coupled to GMIN).

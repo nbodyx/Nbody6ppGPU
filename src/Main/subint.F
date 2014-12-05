@@ -199,7 +199,9 @@ c$$$  #endif
 *     --12/21/13 22:30-lwang-end--------------------------------------------*
 *     Advance binaries due in the current sub-block-step.
 #ifdef PARALLEL
-            IF(KSB.LE.iserks) THEN
+            IF(KSB.LE.iserks.or.iserks.eq.0) THEN
+*     Reset ks par MPI
+               call ksparmpi(K_reset,0,0,0,0,0.0)
 #endif
                call cputim(ttks5)
                DO L = 1,KSB

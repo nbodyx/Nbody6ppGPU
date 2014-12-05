@@ -15,7 +15,7 @@
 struct ndata{
   double x1[3],v1[3],x2[3],v2[3],m1,m2,L1,L2,rs1,rs2;  //x/v(1/2): binary component(1/2) or single star(1)[NB], m1/2: mass[Msub], L1/2, log10 luminocity[Lsun], rs1/2, star radius[R_sun]
   int k1,k2; //k1/2: stellar type
-  double a,e,x[3],v[3]; //a: semi-major[AU], e: eccentricity, x/v: binary c.m. or single star[NB]
+  double a,e,x[3],v[3]; //a: semi-major[R_sun], e: eccentricity, x/v: binary c.m. or single star[NB]
   ndata() {}
   ndata(float a[3],float b[3],float c[3],float d[3],double p1,double p2,double p3,double p4,double p5,double p6,int p7,int p8,double p9,double p10,double p11[3],double p12[3]): m1(p1),m2(p2),L1(p3),L2(p4),rs1(p5),rs2(p6),k1(p7),k2(p8),a(p9),e(p10) {
     x1[0]=a[0];    x1[1]=a[1];    x1[2]=a[2];    v1[0]=b[0];    v1[1]=b[1];    v1[2]=b[2];
@@ -384,13 +384,13 @@ int main(int argc, char *argv[]){
     for(int i=0;i<ntt;i++) {
       fprintf(out,"%lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %d %d %lg %lg %lg %lg %lg %lg %lg %lg\n",
               dat[i].x1[0]*par->rbar, dat[i].x1[1]*par->rbar, dat[i].x1[2]*par->rbar,
-              dat[i].v1[0]*par->rbar, dat[i].v1[1]*par->rbar, dat[i].v1[2]*par->rbar,
+              dat[i].v1[0]*par->vstar, dat[i].v1[1]*par->vstar, dat[i].v1[2]*par->vstar,
               dat[i].x2[0]*par->rbar, dat[i].x2[1]*par->rbar, dat[i].x2[2]*par->rbar,
-              dat[i].v2[0]*par->rbar, dat[i].v2[1]*par->rbar, dat[i].v2[2]*par->rbar,
+              dat[i].v2[0]*par->vstar, dat[i].v2[1]*par->vstar, dat[i].v2[2]*par->vstar,
               dat[i].m1, dat[i].m2, dat[i].L1, dat[i].L2, dat[i].rs1, dat[i].rs2,
               dat[i].k1, dat[i].k2, dat[i].a, dat[i].e,
               dat[i].x[0]*par->rbar, dat[i].x[1]*par->rbar, dat[i].x[2]*par->rbar,
-              dat[i].v[0]*par->rbar, dat[i].v[1]*par->rbar, dat[i].v[2]*par->rbar);
+              dat[i].v[0]*par->vstar, dat[i].v[1]*par->vstar, dat[i].v[2]*par->vstar);
       countmass +=dat[i].m1+dat[i].m2;
       if(dat[i].m2>0.){
         cbmass +=dat[i].m1+dat[i].m2;

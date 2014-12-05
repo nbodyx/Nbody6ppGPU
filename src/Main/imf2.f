@@ -38,7 +38,7 @@ c      DATA  G1,G2,G3,G4  /0.28,1.14,0.010,0.1/
               ZM = 0.08 + (G1*XX**G2 + G3*XX**G4)/(1.0 - XX)**0.58
           ELSE IF (KZ(20).EQ.3.OR.KZ(20).EQ.5) THEN
               ZM = 0.3*XX/(1.0 - XX)**0.55
-          ELSE IF (KZ(20).EQ.6.OR.KZ(20).EQ.7) THEN
+          ELSE IF (KZ(20).EQ.6.OR.KZ(20).EQ.7.OR.KZ(20).EQ.8) THEN
               LM = BODYN
               UM = BODY10
               ZM = IMFBD(XX,LM,UM)
@@ -93,6 +93,14 @@ c      DATA  G1,G2,G3,G4  /0.28,1.14,0.010,0.1/
 *       Save scaled binary masses in decreasing order for routine BINPOP.
       DO 30 I = 1,NBIN0
           JB = JLIST(NBIN0-I+1)
+*       Adopt 0.6*(m2/m1)^(-0.4) distribution (Kouwenhoven, 2007)
+          IF(KZ(20).EQ.8) THEN
+ 21          BODY0(2*I) = RAN2(KDUM)**(5.0/3.0)*BODY(2*JB-1)
+             IF (BODY0(2*I).LT.BODYN) GO TO 21
+             BODY0(2*I-1) = BODY(2*JB-1)/ZMASS
+             BODY0(2*I) = BODY0(2*I)/ZMASS
+             GO TO 22
+          END IF
           BODY0(2*I-1) = MAX(BODY(2*JB-1),BODY(2*JB))/ZMASS
           BODY0(2*I) = MIN(BODY(2*JB-1),BODY(2*JB))/ZMASS
           IF ((KZ(20).GT.3.AND.KZ(20).LE.5).OR.KZ(20).EQ.7) THEN
@@ -102,7 +110,7 @@ c      DATA  G1,G2,G3,G4  /0.28,1.14,0.010,0.1/
               BODY0(2*I) = ZMB/(1.0 + RATIO**0.4)
               BODY0(2*I-1) = ZMB - BODY0(2*I)
           END IF
-          KSTAR(2*I-1) = KCM(2*JB-1)
+ 22       KSTAR(2*I-1) = KCM(2*JB-1)
           KSTAR(2*I) = KCM(2*JB)
    30 CONTINUE
 *

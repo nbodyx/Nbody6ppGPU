@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <cassert>
+#include "simd_define.h"
 
 #define TMAX 32 // maximum number of threads
 #if 1
@@ -62,13 +63,13 @@ struct myvector{
 	}
 };
 
-typedef float  v4sf __attribute__ ((vector_size(16)));
-typedef float  v8sf __attribute__ ((vector_size(32)));
-typedef double v2df __attribute__ ((vector_size(16)));
-typedef double v4df __attribute__ ((vector_size(32)));
+// typedef float  v4sf __attribute__ ((vector_size(16)));
+// typedef float  v8sf __attribute__ ((vector_size(32)));
+// typedef double v2df __attribute__ ((vector_size(16)));
+// typedef double v4df __attribute__ ((vector_size(32)));
 
-#define REP4(x) {x, x, x, x}
-#define REP8(x) {x, x, x, x, x, x, x, x}
+// #define REP4(x) {x, x, x, x}
+// #define REP8(x) {x, x, x, x, x, x, x, x}
 
 static inline v8sf v8sf_rsqrt(const v8sf x){
 	v8sf y = __builtin_ia32_rsqrtps256(x);

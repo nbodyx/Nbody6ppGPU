@@ -303,7 +303,7 @@
       END FILE 10
       CLOSE (UNIT=10)
 
-      RETURN
+      GO TO 999
 
 *     Reading ANSI
  2    OPEN (UNIT=10,STATUS='OLD',ACTION='READ',FORM='FORMATTED',
@@ -547,7 +547,5 @@
 
       END FILE IUNIT
       CLOSE (UNIT=IUNIT)
-      
-      RETURN
 
-      END
+ 999  END

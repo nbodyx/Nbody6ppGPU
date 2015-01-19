@@ -2405,6 +2405,34 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 #serial 3
 
 
+# AX_FC_CHECK_BOUNDS([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# ----------------------------------------------------------------------
+# Look for a compiler flag to turn on array bounds checking for the
+# Fortran (FC) compiler, and adds it to FCFLAGS.  Call
+# ACTION-IF-SUCCESS (defaults to nothing) if successful (i.e. can
+# compile code using new extension) and ACTION-IF-FAILURE (defaults to
+# failing with an error message) if not.  (Defined via DEFUN_ONCE to
+# prevent flag from being added to FCFLAGS multiple times.)
+#
+# The known flags are:
+# -fcheck=all, -fbounds-check: gfortran
+#     -fbounds-check: g77, g95
+# -CB, -check bounds: Intel compiler (icc, ecc, ifort)
+#                 -C: Sun/Oracle compiler (f95)
+#        -C, -qcheck: IBM compiler (xlf)
+#           -Mbounds: Portland Group compiler
+#       -C ,-Mbounds: Cray
+#  -C, -check_bounds: SGI compiler
+# -check_bounds, +check=all: HP Fortran
+#        -C, -Rb -Rc: Absoft (-Rb: array boundaries, -Rc: array conformance)
+# --chk e,s -chk (e,s): Lahey
+#          -C -C=all: NAGWare
+# -C, -ffortran-bounds-check: PathScale pathf90
+#                 -C: f2c
+#            -BOunds: Open Watcom
+# AC_FC_CHECK_BOUNDS
+
+
 #m4_include([macro/ax_check_cuda.m4])
 #AC_CONFIG_SRCDIR([helper_cuda.h])
 
@@ -3081,7 +3109,9 @@ fi
 fi
 
 
-ac_ext=${ac_fc_srcext-f}
+if test "x$enable_debug" != xno; then :
+  FCFLAGS=$local_fcflags" -g"
+      ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
@@ -3124,9 +3154,9 @@ if ac_fn_fc_try_link "$LINENO"; then :
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
   # If we can run the program, require failure at run time.
-	# In cross-compiling mode, we rely on the compiler not accepting
-	# unknown options.
-	if test "$cross_compiling" = yes; then :
+       # In cross-compiling mode, we rely on the compiler not accepting
+       # unknown options.
+       if test "$cross_compiling" = yes; then :
   ac_cv_fc_check_bounds=$ac_flag; break
 else
   if { ac_try='./conftest$ac_exeext'
@@ -3171,10 +3201,6 @@ ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-if test "x$enable_debug" != xno; then :
-
-      FCFLAGS=$local_fcflags" -g"
 
       { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Fortran compiler accepts -fbacktrace" >&5
 $as_echo_n "checking whether Fortran compiler accepts -fbacktrace... " >&6; }
@@ -3233,7 +3259,6 @@ if test x"$ax_cv_check_fcflags___Wall" = xyes; then :
 else
   :
 fi
-
 
 else
   FCFLAGS=$local_fcflags" -O3"

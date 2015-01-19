@@ -6,6 +6,7 @@ AC_PREREQ([2.69])
 AC_INIT([Nbody6++], [1.0], [longwang.astro@gmail.com])
 #AC_CONFIG_MACRO_DIR([./macro])
 m4_include([macro/ax_check_compile_flag.m4])
+m4_include([macro/ax_fc_check_bounds.m4])
 #m4_include([macro/ax_check_cuda.m4])
 #AC_CONFIG_SRCDIR([helper_cuda.h])
 
@@ -107,12 +108,10 @@ AS_IF([test "x$enable_mpi" != xno],
       local_fcflags=$local_fcflags' -I../extra_inc/nompi'])
 
 AS_IF([test "x$enable_debug" != xno],
-     [
-      [FCFLAGS=$local_fcflags" -g"]
-      AC_FC_CHECK_BOUNDS([])
+     [FCFLAGS=$local_fcflags" -g"
+      AX_FC_CHECK_BOUNDS
       AX_CHECK_COMPILE_FLAG([-fbacktrace],[FCFLAGS=$FCFLAGS" -fbacktrace"])
-      AX_CHECK_COMPILE_FLAG([-Wall],[FCFLAGS=$FCFLAGS" -Wall"])
-     ],
+      AX_CHECK_COMPILE_FLAG([-Wall],[FCFLAGS=$FCFLAGS" -Wall"])],
      [FCFLAGS=$local_fcflags" -O3"])
 
 AX_CHECK_COMPILE_FLAG([-fPIC],

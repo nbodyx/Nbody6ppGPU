@@ -239,7 +239,7 @@
           TS = 1.0D+06*365.0*TWOPI*TSTAR
           NBS = NBS + 1
           if(rank.eq.0)
-     &        WRITE (91,9)  TIME+TTOT, NAME(I1), NAME(I2), M3, ECC, PD,
+     &        WRITE (91,9)  TTOT, NAME(I1), NAME(I2), M3, ECC, PD,
      &                  TS/SPIN1, TS/SPIN2
     9     FORMAT (' NEW BS    Time[NB] NAME(I1) NAME(I2) M(INEW)[M*] ',
      &         'ECC P[days] ROT(I1) ROT(I2)',

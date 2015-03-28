@@ -152,6 +152,7 @@
       IF (ALPHAS.EQ.1.0.OR.BODY1.EQ.BODYN) THEN
           DO 10 I = 1,N
               BODY(I) = 1.0
+              BODY0(I) = 1.0/REAL(N)
    10     CONTINUE
           IF (KZ(20).NE.6) GO TO 40
       END IF

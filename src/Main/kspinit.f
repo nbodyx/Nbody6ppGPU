@@ -68,7 +68,7 @@ c     &           ' GAMMA',1P,E17.5,0P,'  IMOD',I3)
 c         end if
       END DO
 !$omp end parallel do      
-
+      TIME = TIME0
 
       RETURN
 

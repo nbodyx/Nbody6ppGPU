@@ -80,6 +80,14 @@ c$$$      NCNUM = 0
 *     Find global index of next star to be checked (NB! reset KS & IKS).
  4    ML = ML + 1
       I = MLIST(ML)
+*     Avoid the same binary or merger do the loop again
+      IF(TEV(I).GT.TIME) THEN
+         IF(ML.LT.ML0) THEN
+            GO TO 4
+         ELSE
+            GO TO 103
+         END IF
+      END IF
  5    KS = 0
       KSPAIR = 0
       IKS = 0
@@ -1636,7 +1644,7 @@ c$$$      IF (TMDOT.LT.TIME) GO TO 1
       IF (ML.LT.ML0) GO TO 4
 *
 *       Update any merged circularizing binary using TMDIS.
-      IMERGE = 1
+ 103  IMERGE = 1
   104 IF (NMERGE.GT.0) THEN
           IF (KSTARM(IMERGE).LT.0.AND.TMDIS(IMERGE).LT.TIME) THEN
               KSPAIR = 0

@@ -420,7 +420,7 @@ C      CALL DTCHCK(TIME,STEP(I2),DTK(40))
      &           '   NAME(I2) ',
      &           '    K*(I1)  ',
      &           '    K*(I2)  ',
-     &           '  K*(INEW)  ',
+     &           '     K*1    ',
      &           '   IQCOLL   ',
      &           '          M(I1)[M*]       ',
      &           '          M(I2)[M*]       ',

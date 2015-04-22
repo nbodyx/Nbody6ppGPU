@@ -700,6 +700,7 @@ enable_debug
 enable_gpu
 enable_simd
 enable_hdf5
+enable_tt
 enable_tools
 enable_openmp
 with_cuda
@@ -1344,7 +1345,12 @@ Optional Features:
                           Streaming SIMD Extensions; --> avx: Advanced Vector
                           Extensions; --> no: switch off SIMD; (default is
                           autodetecting)
-  --enable-hdf5           Enable HDF5 output format support
+  --enable-hdf5           Enable HDF5 output format support. (Ref: Cai,
+                          Maxwell, et al., 2015, submitted)
+  --enable-tt             Enable tidal tensor and analytical potential
+                          extension imported from NBODY6TT. (Ref: Renaud, F.,
+                          et al., 2011, MNRAS, 418, 759; Renaud, F. & Gieles,
+                          M., 2015, MNRAS, 448, 3416)
   --enable-tools          Compile extral tools for data analysis, see
                           User_manual.pdf for detail
   --disable-openmp        do not use OpenMP
@@ -2513,6 +2519,13 @@ else
   enable_hdf5=no
 fi
 
+
+# Check whether --enable-tt was given.
+if test "${enable_tt+set}" = set; then :
+  enableval=$enable_tt;
+else
+  enable_tt=no
+fi
 
 
 # Check whether --enable-tools was given.
@@ -5986,6 +5999,13 @@ if test "x$enable_hdf5" != xno; then :
         RESULT=$RESULT'.hdf5'
 fi
 
+# TT support
+if test "x$enable_tt" != xno; then :
+  FCFLAGS=$FCFLAGS' $(TT_FLAGS)'
+        EXTRASRC=$EXTRASRC' $(TT_FSOURCES)'
+	RESULT=$RESULT'.tt'
+fi
+
 # params.h
 
 # Check whether --with-par was given.
@@ -6183,6 +6203,8 @@ $as_echo "$as_me:      OpenMP option:  $OPENMP_FCFLAGS" >&6;}
 $as_echo "$as_me:      Debug mode:     $enable_debug" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:      HDF5 format:    $enable_hdf5" >&5
 $as_echo "$as_me:      HDF5 format:    $enable_hdf5" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:      TT package:     $enable_tt" >&5
+$as_echo "$as_me:      TT package:     $enable_tt" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: --Compilers:" >&5
 $as_echo "$as_me: --Compilers:" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:      C++ compiler:      $CXX" >&5
@@ -6221,6 +6243,13 @@ $as_echo "$as_me:   in your pre-configure script of shell (such as ~/.bashrc if 
     { $as_echo "$as_me:${as_lineno-$LINENO}: -----------------------------------------------------------" >&5
 $as_echo "$as_me: -----------------------------------------------------------" >&6;}
 fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Reference paper: Wang, L., et al., MNRAS accepted (http://arxiv.org/abs/1504.03687)" >&5
+$as_echo "$as_me: Reference paper: Wang, L., et al., MNRAS accepted (http://arxiv.org/abs/1504.03687)" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Email: Long Wang<longwang.astro@gmail.com>" >&5
+$as_echo "$as_me: Email: Long Wang<longwang.astro@gmail.com>" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: -----------------------------------------------------------" >&5
+$as_echo "$as_me: -----------------------------------------------------------" >&6;}
+
 ac_config_files="$ac_config_files Makefile build/Makefile include/params.h"
 
 cat >confcache <<\_ACEOF

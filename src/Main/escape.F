@@ -59,7 +59,16 @@
             VI2 = XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2
 *     Check escape criterion for tidal case or isolated system.
             EI = 0.5*VI2 - POTI
+#ifdef TT
+*** FlorentR - add nbody6tt
+          IF (KZ(14).EQ.4.OR.KZ(14).EQ.3.OR.KZ(14).EQ.9) THEN
+              EI = EI - MP/SQRT(RI2 + AP2)
+              IF (BODY(I).EQ.0.0D0) GO TO 30
+          END IF
+*** FRenaud
+#else
             IF (KZ(14).GT.0.OR.EI.GT.0.0) GO TO 30
+#endif
             IF (NAME(I).LT.0) GO TO 30
          END IF
 *
@@ -171,12 +180,37 @@
       IF (NAME(I).LT.0) KSTARI = KSTARI + 30
       IF (BODY(I).LE.0.0D0) GO TO 50
 *
+#ifdef TT
+*       Check initialization of tidal tail integration for 3D model.
+*** FlorentR - add nbody6tt
+      IF (KZ(23).GE.3.AND.(KZ(14).EQ.3.OR.KZ(14).EQ.9)) THEN
+*** FRenaud
+#else
+      IF (KZ(23).GE.3.AND.KZ(14).EQ.3) THEN
+#endif
+         CALL TAIL0(I)
+      END IF
+
 *       Obtain binding energy of body #I and update optional tidal radius.
       ZK = 0.5D0*BODY(I)*VI2
+#ifdef TT
+      IF (KZ(14).GT.0.AND.KZ(14).LT.3) THEN
+#else
       IF (KZ(14).GT.0) THEN
+#endif
           CALL XTRNLV(I,I)
           ZK = ZK + HT
           RTIDE = (ZMASS/TIDAL(1))**0.3333
+#ifdef TT
+      ELSE IF (KZ(14).EQ.4.OR.KZ(14).EQ.3) THEN
+*** FlorentR - include case of tidal tensor
+* make the escape criterion in KZ(14).eq.3 (=next line) the same as for KZ(14).eq.9 (a few lines below)
+*          RTIDE = RTIDE0*ZMASS**0.3333
+          RTIDE = 10.*RSCALE
+      ELSE IF (KZ(14).EQ.9) THEN
+          RTIDE = 10.*RSCALE
+*** FRenaud
+#endif
       END IF
       EI = ZK - BODY(I)*POTI
 *

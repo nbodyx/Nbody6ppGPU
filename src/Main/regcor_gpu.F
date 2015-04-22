@@ -97,8 +97,15 @@ C$$$      END IF
 *     
 *       See whether an external force should be added.
       IF (KZ(14).GT.0) THEN
+#ifdef TT
+*** FlorentR - include the case of tidal tensor
+*       Save current values for deriving work done by tides (#14 = 3 or 9).
+       IF (KZ(14).EQ.3.OR.KZ(14).EQ.9) THEN
+*** FRenaud
+#else
 *       Save current values for deriving work done by tides (#14 = 3).
           IF (KZ(14).EQ.3) THEN
+#endif
               DO 22 K = 1,3
                   FRX(K) = FREG(K)
                   FDX(K) = FDR(K)
@@ -545,7 +552,13 @@ c$$$          end if
    75 CONTINUE
 *
 *     Form rate of tidal energy change during last regular step.
+#ifdef TT
+*** FlorentR - include the case of tidal tensor (really needed?)
+      IF (KZ(14).EQ.3.OR.KZ(14).EQ.9) THEN
+*** FRenaud
+#else
       IF (KZ(14).EQ.3) THEN
+#endif
          WDOT = 0.0
          W2DOT = 0.0
 *     W3DOT = 0.0

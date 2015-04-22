@@ -1,3 +1,4 @@
+
       SUBROUTINE OUTPUT
 *
 *
@@ -6,11 +7,13 @@
 *
       INCLUDE 'common6.h'
       INCLUDE 'timing.h'
+#ifdef TT
+      INCLUDE 'tt.h'
+#endif
+      INCLUDE 'galaxy.h'
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
      &                NAMEM(MMAX),NAMEG(MMAX),KSTARM(MMAX),IFLAG(MMAX)
-      COMMON/GALAXY/  GMG,RG(3),VG(3),FG(3),FGD(3),TG,
-     &                OMEGA,DISK,A,B,V02,RL2
       COMMON/ECHAIN/  ECH
       COMMON/POTDEN/  RHO(NMAX),XNDBL(NMAX),PHIDBL(NMAX)
 *      COMMON/NNBCOT/  nnbave
@@ -19,6 +22,7 @@
       REAL*4  XJ(3,6),VJ(3,6),BODYJ(6)
       REAL*4  XNS(NMAX),PHI(NMAX)
       CHARACTER*27 OUTFILE
+      CHARACTER*27 OUTTAIL
       CHARACTER*20 TCHAR
 *
 *     Call Computation of Moments of Inertia (with Chr. Theis)
@@ -241,7 +245,13 @@
       END IF
 *
 *       Include diagnostics about cluster orbit in general external field.
+#ifdef TT
+*** FlorentR - add KZ(14)=9 in case of mode B
+      IF (KZ(14).EQ.3.OR.(KZ(14).EQ.9.AND.TTMODE.EQ.0)) THEN
+*** FRenaud
+#else
       IF (KZ(14).EQ.3) THEN
+#endif
           GZ = RG(1)*VG(2) - RG(2)*VG(1)
           SX = RBAR/1000.0
           WRITE (6,78)  (RG(K)*SX,K=1,3), (VG(K)*VSTAR,K=1,3),
@@ -521,6 +531,42 @@ C         END DO
      &         ((XS(K,J),K=1,3),J=1,NTOT), ((VS(K,J),K=1,3),J=1,NTOT),
      &         (PHI(J),J=1,NTOT),(NAME(J),J=1,NTOT)
          CLOSE(3)
+
+*     Tidal tail data
+         IF(KZ(23).GE.3) THEN
+            write(OUTTAIL,119) TCHAR
+ 119        format('tail.5_',A20)
+            OPEN (UNIT=5,STATUS='UNKNOWN',FILE=OUTTAIL)
+            
+            NK = 13
+            WRITE (5) NTAIL, MODEL, NK
+*     Include cluster centre just in case.
+            DO K = 1,3
+               AS(K) = REAL(RG(K))
+               AS(K+3) = REAL(VG(K))
+               AS(K+6) = REAL(RDENS(K))
+            END DO
+            AS(10) = REAL(TTOT)
+            AS(11) = REAL(RBAR)
+            AS(12) = REAL(TSTAR)
+            AS(13) = REAL(VSTAR)
+            NK = 13
+            WRITE (5)  (AS(K),K=1,NK)
+            
+            IF (NTAIL.GT.0) THEN
+*     Individual stars
+               DO I = ITAIL0,NTTOT
+                  BODYS(I) = REAL(BODY(I))
+                  DO K = 1,3
+                     XS(K,I) = REAL(X(K,I) - RG(K))
+                     VS(K,I) = REAL(XDOT(K,I) - VG(K))
+                  END DO
+                  WRITE (5) NAME(I),BODYS(I),XS(1:3,I),VS(1:3,I)
+               END DO
+            END IF
+            CLOSE(5)
+         END IF
+
       end if
 *
 *       Update next output interval and initialize the corresponding error.

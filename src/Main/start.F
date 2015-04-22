@@ -41,6 +41,11 @@
 *
 *       Check option for external force.
       IF (KZ(14).GT.0) THEN
+#ifdef TT
+*** FlorentR - initialize the tensors
+          IF (KZ(14).EQ.9) CALL TTINIT
+*** FRenaud
+#endif
           CALL XTRNL0
       END IF
 *

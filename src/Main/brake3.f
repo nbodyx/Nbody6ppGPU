@@ -148,7 +148,7 @@
       IF (KSX.GE.13.AND.KZ(28).GT.0) THEN
          RCOAL = 6.0*ZMB/CLIGHT**2
       ELSE
-         RCOAL = 100.0
+         RCOAL = 0.0
       END IF
 *
       WRITE (6,25)  NAME(I1), TOFF+TIME, ECC, SEMI1, DTGR, RCOAL

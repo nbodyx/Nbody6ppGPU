@@ -5,8 +5,7 @@
 *       ------------------------------
 *
       INCLUDE 'common6.h'
-      COMMON/GALAXY/ GMG,RG(3),VG(3),FG(3),FGD(3),TG,
-     &               OMEGA,DISK,A,B,V02,RL2
+      INCLUDE 'galaxy.h'
 *
 *
 #ifdef PARALLEL
@@ -30,10 +29,6 @@
 *       Convert rotation constants to units of cm/sec/pc.
       A = 100.0*A
       B = 100.0*B
-*
-*       Define GM in cgs units and length scale in pc.
-      GM = 6.67D-08*1.989D+33
-      PC = 3.0857D+18
 *
 *       Specify the tidal term in star cluster units (solar mass & pc).
       TIDAL(1) = 4.0*A*(A - B)*(PC/GM)
@@ -114,8 +109,9 @@
       ELSE IF (KZ(14).EQ.3) THEN
 *
 *       Read all parameters (NB! Do not confuse with Oort's constants A, B).
-         if(rank.eq.0) READ (5,*)  GMG, DISK, A, B, VCIRC, RCIRC,
-     &    (RG(K),K=1,3),(VG(K),K=1,3)
+         if(rank.eq.0) 
+     &        READ (5,*)  GMG, DISK, A, B, VCIRC, RCIRC, GMB, AR, GAM,
+     &        (RG(K),K=1,3),(VG(K),K=1,3)
 #if MPIINIT
       CALL MPI_BCAST(GMG,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(DISK,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
@@ -123,12 +119,15 @@
       CALL MPI_BCAST(B,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(VCIRC,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(RCIRC,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(GMB,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(AR,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(GAM,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(RG,3,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(VG,3,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
 #endif 
 *
 *       Specify planar motion from SEMI & ECC for no disk & halo if VZ = 0.
-          IF (DISK + VCIRC.EQ.0.0.AND.VG(3).EQ.0.0D0) THEN
+          IF (DISK + VCIRC + GMB.EQ.0.0.AND.VG(3).EQ.0.0D0) THEN
               RAP = RG(1)
               ECC = RG(2)
               SEMI = RAP/(1.0 + ECC)
@@ -153,17 +152,26 @@
           OMEGA = (RG(1)*VG(2) - RG(2)*VG(1))/R02
           TIDAL(4) = 2.0*OMEGA
           GMG = GMG/ZMTOT
+          GMB = GMB/ZMTOT
+          AR = 1000.0*AR/RBAR
 
 *       Form tidal radius from circular angular velocity (assumes apocentre).
           IF (RTIDE.EQ.0.0D0) RTIDE = (0.5/OMEGA**2)**0.3333
 *       Adopt a tidal radius of 10 units unless specified by routine SCALE.
 C          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0
 *
-          if(rank.eq.0)
+          if(rank.eq.0.and.GMG.GT.0.0)
      &    WRITE (6,35)  GMG, SQRT(R02), OMEGA, RTIDE, RBAR
    35     FORMAT (/,12X,'POINT-MASS MODEL (NB unit):    MG =',1P,E9.1,
      &                  '  RG =',E9.1,'  OMEGA =',E9.1,
      &                  '  RTIDE =',E9.2,'  RBAR =',0P,F6.2)
+
+          IF (rank.eq.0.and.GMB.GT.0.0D0) THEN
+              WRITE (6,36)  GMB, AR, GAM
+   36         FORMAT (/,12X,'GAMMA/ETA MODEL:    GMB =',1P,E9.1,
+     &                      '  AR =',E9.1,'  GAM =',E9.1)
+          END IF
+
 *       Define disk and/or logarithmic halo parameters in N-body units.
           IF (DISK.GT.0.0D0) THEN
               DISK = DISK/ZMTOT
@@ -180,6 +188,11 @@ C          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0
               RCIRC = 1000.0*RCIRC/RBAR
               A2 = RCIRC**2 + (A + B)**2
               V02 = VCIRC**2 - (GMG/RCIRC + DISK*RCIRC**2/A2**1.5)
+*       Include any contribution from bulge potential (V2 = R*F).
+              IF (GMB.GT.0.0D0) THEN
+                  VB2 = GMB/RCIRC*(1.0 + AR/RCIRC)**(GAM-3.0)
+                  V02 = V02 - VB2
+              END IF
               IF (V02.LT.0.0D0) THEN
                  if(rank.eq.0) WRITE (6,45)  V02, 0.001*RCIRC*RBAR
    45             FORMAT (' ',' NEGATIVE HALO VELOCITY!    V02 RCIRC ',
@@ -199,6 +212,7 @@ C          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0
               DO 60 K = 1,30
                   RI2 = RI**2
                   A2 = RI2 + (A + B)**2
+                  VB2 = GMB/RI*(1.0 + AR/RI)**(GAM-3.0)
                   VCIRC2 = GMG/SQRT(RI2) + DISK*RI2/A2**1.5 +
      &                                     V02*RI2/(RL2 + RI2)
                   if(rank.eq.0) WRITE (52,50)  SQRT(VCIRC2)*VSTAR,
@@ -211,6 +225,7 @@ C          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0
               CLOSE(52)
 *
               A2 = R02 + (A + B)**2
+              VB2 = GMB/SQRT(R02)*(1.0 + AR/SQRT(R02))**(GAM-3.0)
               VCIRC2 = GMG/SQRT(R02) + DISK*R02/A2**1.5 +
      &                                 V02*R02/(RL2 + R02)
               VCIRC = SQRT(VCIRC2)*VSTAR

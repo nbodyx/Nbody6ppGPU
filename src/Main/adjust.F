@@ -222,6 +222,11 @@ c$$$      END IF
 *     
 *     Define tidal radius for isolated system (2*RTIDE used in ESCAPE).
       IF (KZ(14).EQ.0) RTIDE = 10.0*RSCALE
+#ifdef TT
+*** FlorentR - set the tidal radius
+      IF (KZ(14).EQ.9) RTIDE = 10.0*RSCALE
+*** FRenaud
+#endif
 *     Redefine the crossing time for 3D cluster orbit or Plummer model.
       IF ((KZ(14).EQ.3.OR.KZ(14).EQ.4).AND.ZKIN.GT.0.0) THEN
          TCR = 2.0*RSCALE/SQRT(2.0*ZKIN/ZMASS)
@@ -267,7 +272,7 @@ c$$$     &        EBIN,EMERGE
      &        '  KS.Int.S  KS.Int.P  KS.Comm.  KS.Barr.   KS.Move',
      &        '   KS.Cmb. KS.Insert  KS.Init.  KS.Term.     Hiar.',
      &        '     KS.UP       xtsub1       xtsub2')
-         WRITE(6,56)isize,n,ttotal,ttinit,ttint,ttreg,ttirr,ttpre,
+         WRITE(6,56)isize,n,ttotal,ttinitial,ttint,ttreg,ttirr,ttpre,
      &        ttintb,ttmdot,ttmov,ttsub,ttsub2,ttsimdsend,ttgrcomm,
      &        ttks,ttadj,ttout,ttbar,ttbarnb,ttbarreg,ttgrcalc,
      &        ttgrcalc2,ttsube,ttfic,ttfc,ttpot,ttecor,ttnewt,ttshk,

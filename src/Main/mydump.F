@@ -9,6 +9,9 @@
       INCLUDE 'timing.h'
       INCLUDE 'mpi_base.h'
       INCLUDE 'tlist.h'
+#ifdef TT
+      INCLUDE 'tt.h'
+#endif
       PARAMETER  (NA=84,NB=168,NC=530,ND=392+MLR+MLD+MLV,NE=24,NM=40,
      &    NG=132,NL=99,NO=20*MCL+16,NP=32*NTMAX,NQ=31*MMAX,
      &    NS=44*MMAX)
@@ -118,6 +121,15 @@
      *       NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
      *       (NLSTDELAY(K),K=1,NLSTDELAY(1)+1)
 *
+#ifdef TT
+*** FlorentR
+        write (J) ttunit, nbtt, ttmode
+        write (J) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
+     *      ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
+     *      (tttime(i),i=1,nbtt)
+*** FRenaud
+#endif
+
         END FILE J
         CLOSE (UNIT=J)
         end if
@@ -240,7 +252,21 @@ C           END IF
      *       NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,NLSTDELAY(1),
      *       (NLSTDELAY(K),K=2,NLSTDELAY(1)+1)
 
+#ifdef TT
+*** FlorentR
+        read (J) ttunit, nbtt, ttmode
+        if (nbtt.gt.nbttmax.AND.TTMODE.EQ.1) then
+           write (*,*) "DANGER NBTT > NBTTMAX !"
+           stop
         end if
+
+        read (J) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
+     *    ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
+     *    (tttime(i),i=1,nbtt)
+#endif
+
+        end if
+
 *     Reinitialize KVEC
         DO K = 1,KMAX
            KVEC(2*K-1) = K
@@ -366,6 +392,16 @@ C           END IF
      &      ierr)
        CALL MPI_BCAST(NGHOSTS,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 *
+#ifdef TT
+       CALL MPI_BCAST(ttunit,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(nbtt,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(ttmode,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(ttens(1,1,1),9*nbtt,MPI_REAL8,0,MPI_COMM_WORLD,
+     &      ierr)
+       CALL MPI_BCAST(tteff(1,1),9,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(dtteff(1,1),9,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(tttime(1),nbtt,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+#endif
        call cputim(tt998)
        CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
        call cputim(tt999)

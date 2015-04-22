@@ -10,8 +10,8 @@ C--              of the sorted list
 C--
 C--                  subroutine from NUMERICAL RECIPES
 C--
-      DOUBLE PRECISION ARRIN(N) 
-      INTEGER INDX(N)
+      DOUBLE PRECISION ARRIN(N), Q
+      INTEGER INDX(N),INDXT,IR,L,I,J
       DO 11 J=1,N
         INDX(J)=J
 11    CONTINUE

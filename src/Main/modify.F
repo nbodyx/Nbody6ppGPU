@@ -119,6 +119,14 @@
           END IF
 *
       END IF
+#ifdef TT
+*** FlorentR - restart with new tensors
+      IF (KZ(14).EQ.9) THEN
+        CALL TTINIT
+      ENDIF
+*** FRenaud
+#endif
+
 *
 *       Perform a simple validation check on main input parameters.
       CALL VERIFY

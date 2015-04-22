@@ -73,10 +73,15 @@ AC_ARG_ENABLE([simd],
 
 AC_ARG_ENABLE([hdf5],
      [AS_HELP_STRING([--enable-hdf5],
-         [Enable HDF5 output format support])],
+         [Enable HDF5 output format support. (Ref: Cai, Maxwell, et al., 2015, submitted)])],
      [],
      [enable_hdf5=no])
 
+AC_ARG_ENABLE([tt],
+     [AS_HELP_STRING([--enable-tt],
+         [Enable tidal tensor and analytical potential extension imported from NBODY6TT. (Ref: Renaud, F., et al., 2011, MNRAS, 418, 759; Renaud, F. & Gieles, M., 2015, MNRAS, 448, 3416)])],
+     [],
+     [enable_tt=no])
 
 AC_ARG_ENABLE([tools],
     [AS_HELP_STRING([--enable-tools],
@@ -364,6 +369,12 @@ AS_IF([test "x$enable_hdf5" != xno],
         EXTRASRC=$EXTRASRC' $(HDF5_FSOURCES)'
         RESULT=$RESULT'.hdf5'])
 
+# TT support
+AS_IF([test "x$enable_tt" != xno],
+       [FCFLAGS=$FCFLAGS' $(TT_FLAGS)'
+        EXTRASRC=$EXTRASRC' $(TT_FSOURCES)'
+	RESULT=$RESULT'.tt'])
+
 # params.h
 AC_ARG_WITH([par], 
      [AS_HELP_STRING([--with-par=size],
@@ -523,6 +534,7 @@ AC_MSG_NOTICE([     mcmodel:        $enable_mcmodel])
 AC_MSG_NOTICE([     OpenMP option:  $OPENMP_FCFLAGS])
 AC_MSG_NOTICE([     Debug mode:     $enable_debug])
 AC_MSG_NOTICE([     HDF5 format:    $enable_hdf5])
+AC_MSG_NOTICE([     TT package:     $enable_tt])
 AC_MSG_NOTICE([--Compilers:])
 AC_MSG_NOTICE([     C++ compiler:      $CXX])
 AC_MSG_NOTICE([     Fortran compiler:  $FC])
@@ -542,5 +554,9 @@ AS_IF([test "x$enable_tools" != xno],
     AC_MSG_NOTICE([     LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$prefix/lib])
     AC_MSG_NOTICE([  in your pre-configure script of shell (such as ~/.bashrc if you use bash)])
     AC_MSG_NOTICE([-----------------------------------------------------------])])
+AC_MSG_NOTICE([Reference paper: Wang, L., et al., MNRAS accepted (http://arxiv.org/abs/1504.03687)])
+AC_MSG_NOTICE([Email: Long Wang<longwang.astro@gmail.com>])
+AC_MSG_NOTICE([-----------------------------------------------------------])
+
 AC_CONFIG_FILES([Makefile build/Makefile include/params.h])
 AC_OUTPUT

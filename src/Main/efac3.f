@@ -8,7 +8,7 @@
 *       Ray et. al. (A & A 184, 164) and Lee & Ostriker (Ap. J. 310, 176).
 *       Developed at IOA by S. Portegies Zwart & T. Meinen (A & A 280, 174).
 *
-      REAL*8  ZETA,COEFF(6),EFAC3
+      REAL*8  ZETA,COEFF(6),EFAC3,Y
 *
 *
 *       Select coefficients for a given polytropic index (ICASE = 1, 2, 3).

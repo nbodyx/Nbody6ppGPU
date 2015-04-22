@@ -53,7 +53,7 @@
 *       Check collision condition for degenerate objects.
 *     --09/20/13 19:49-lwang-bug-fix------------------------------------*
 ***** Note:It can be seen that the second condition used N-body and
-***** solar units which esulted in additional collisions involving BHs
+***** solar units which resulted in additional collisions involving BHs
 ***** when using option #28 > 0.
 *      If (RP.LE.(R1 + R2).OR.
 *     &   (KSX.GE.13.AND.R(IPAIR).LT.RCOAL)) THEN

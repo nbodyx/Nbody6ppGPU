@@ -6,8 +6,7 @@
 *
       IMPLICIT REAL*8  (A-H,O-Z)
 *     Safe for parallel
-      COMMON/GALAXY/ GMG,RG(3),VG(3),FG(3),FGD(3),TG,
-     &               OMEGA,DISK,A,B,V02,RL2
+      INCLUDE 'galaxy.h'
       REAL*8  XI(3),XIDOT(3),FM(3),FD(3)
 *
 *

@@ -1,4 +1,7 @@
 //transform bdat.9, bwdat.19, sev.83, bew.82 and conf.3 to specific format//
+// Output option 2:
+// single star data: mass[M_sun], x(1:3)[NB],v(1:3)[NB]
+// binary star data: eccentricity, log10(a[R_sun]), mass1[M_sun], mass2[M_sun], xcm(1:3)[NB], vcm(1:3)[NB]
 
 #include <stdio.h>
 #include <cstring>

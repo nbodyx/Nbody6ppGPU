@@ -255,11 +255,11 @@
          VR2I = VRI(I)*VRI(I)
 *     Tangential velocity
          DO K = 1,3
-            VTI(K,I) = VRI(I)*(X(K,IM)-C(K))/DSQRT(R2(I))
+            VTI(K,I) = XDOT(K,IM) - VRI(I)*(X(K,IM)-C(K))/DSQRT(R2(I))
 *     Cumulate tangential velocity
             VTAVE(K,J) = VTAVE(K,J) + BODY(IM)*VTI(K,I)
          END DO
-*     X-Y plane projected velocity square
+*     X-Y plane projected position square
          RR12 = X(1,IM)**2 + X(2,IM)**2
 *     X-Y plane radial velocity value * sqrt(RR12) 
          XR12 = 0.D0

@@ -13,6 +13,9 @@
 *       ............................................
 *       Message Passing Version NBODY6++ for Massively Parallel Systems
 *       Developed by Rainer Spurzem, ARI, Heidelberg
+*       
+*       Hybrid parallelization (GPU, AVX/SSE, OpenMP + MPI) 
+*       Developed by Long Wang, KIAA, Peking University
 *
       INCLUDE 'common6.h'
       INCLUDE 'timing.h'
@@ -167,7 +170,7 @@
       NKS = NSTEPU
 *
       call cputim(tt2)
-      ttinit = ttinit + (tt2-ttota)*60.
+      ttinitial = ttinitial + (tt2-ttota)*60.
 *       Advance solutions until next output or change of procedure.
     1 CONTINUE
       call cputim(tt1)

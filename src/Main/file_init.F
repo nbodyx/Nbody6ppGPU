@@ -46,7 +46,9 @@ C      FRAG(4) = 'bdat'
           WRITE (FILE(JF),112) FRAG(JF),JF
  100  CONTINUE
  112  FORMAT(A4,'.',I1,T4)
+*      FILE(3)  = 'conf.3'
       FILE(4)  = 'degen.4   '
+*      FILE(5)  = 'tail.5'
       FILE(10) = 'dat.10    '
       FILE(11) = 'esc.11    '
       FILE(12) = 'hiarch.12 '

@@ -7,6 +7,9 @@
       INCLUDE 'common6.h'
       INCLUDE 'timing.h'
       include 'tlist.h'
+#ifdef TT
+      INCLUDE 'tt.h'
+#endif
       include 'omp_lib.h'
       COMMON/CLUMP/   BODYS(NCMAX,5),T0S(5),TS(5),STEPS(5),RMAXS(5),
      &                NAMES(NCMAX,5),ISYS(5)
@@ -236,9 +239,20 @@
           CALL CLINT
       END IF
 *
+#ifdef TT
+*** FlorentR - add the case of the tidal tensor
+*      IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
+      IF (KZ(14).EQ.3.OR.KZ(14).EQ.4.OR.
+     &     (KZ(14).EQ.9.AND.TTMODE.EQ.0) ) THEN
+*          IF (KZ(14).EQ.3.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
+          IF ((KZ(14).EQ.3.OR.KZ(14).EQ.9).AND.
+     &            DMOD(TIME,STEPX).EQ.0.0D0) THEN
+*** FRenaud
+#else
 *       Check optional integration of cluster guiding centre.
       IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
           IF (KZ(14).EQ.3.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
+#endif
               CALL GCINT
           END IF
 *       Include mass loss by gas expulsion (Kroupa et al. MN 321, 699).
@@ -1143,7 +1157,22 @@ c$$$*     --10/27/13 10:33-lwang-end----------------------------------------*
 *     Take care is this really efficient?
 *         CALL GPUIRR_SET_JP(I,X0(1,I),X0DOT(1,I),F(1,I),FDOT(1,I),
 *    &                                            BODY(I),T0(I))
-      
+      IF (NTAIL.GT.0) THEN
+*     Allow large quantized interval with internal iteration.
+         IF (DMOD(TIME,0.25D0).EQ.0.0D0) THEN
+#ifndef TT
+!$omp parallel do private(J)      
+#endif
+            DO 65 J = ITAIL0,NTTOT
+               IF (TIMENW(J).LE.TIME) THEN
+                  CALL NTINT(J)
+               END IF
+ 65         CONTINUE
+#ifndef TT
+!$omp end parallel do
+#endif
+         END IF
+      END IF
 *
 *       Exit on KS termination, new multiple regularization or merger.
       IF (IQ.GT.0) THEN

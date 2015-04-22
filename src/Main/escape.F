@@ -59,17 +59,19 @@
             VI2 = XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2
 *     Check escape criterion for tidal case or isolated system.
             EI = 0.5*VI2 - POTI
+
 #ifdef TT
 *** FlorentR - add nbody6tt
           IF (KZ(14).EQ.4.OR.KZ(14).EQ.3.OR.KZ(14).EQ.9) THEN
+*** FRenaud
+#else
+          IF (KZ(14).EQ.4.OR.KZ(14).EQ.3) THEN
+#endif
               EI = EI - MP/SQRT(RI2 + AP2)
               IF (BODY(I).EQ.0.0D0) GO TO 30
           END IF
-*** FRenaud
-#else
-            IF (KZ(14).GT.0.OR.EI.GT.0.0) GO TO 30
-#endif
-            IF (NAME(I).LT.0) GO TO 30
+          IF ((KZ(14).GT.0.AND.KZ(14).NE.4).OR.EI.GT.0.0) GO TO 30
+          IF (NAME(I).LT.0) GO TO 30
          END IF
 *
       ELSE
@@ -138,6 +140,7 @@
 *
    30 A2 = (X(1,JMIN) - RDENS(1))**2 + (X(2,JMIN) - RDENS(2))**2 +
      &                                 (X(3,JMIN) - RDENS(3))**2
+
 *       See whether nearest body satisfies escape condition or RIJ > 10*RMIN.
       IF (A2.GT.RESC2.AND.KZ(14).GT.0) GO TO 40
       IF (RJMIN2.GT.100.0*RMIN2) GO TO 40

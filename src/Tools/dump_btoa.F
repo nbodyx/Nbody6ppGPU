@@ -6,6 +6,9 @@
       IMPLICIT REAL*8  (A-H,O-Z)
       INCLUDE 'params.h'
       INCLUDE 'tlist.h'
+#ifdef TT
+      INCLUDE 'tt.h'
+#endif
 
       INTEGER IUNIT, IRORW
       CHARACTER*10 FILE_I
@@ -221,6 +224,14 @@
      *       NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,NLSTDELAY(1),
      *       (NLSTDELAY(K),K=2,NLSTDELAY(1)+1)
 
+#ifdef TT
+*** FlorentR
+      read (IUNIT) ttunit, nbtt, ttmode
+      read (IUNIT) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
+     *    ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
+     *    (tttime(i),i=1,nbtt)
+#endif
+
 *     --06/21/14 10:41-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 *      print*,'TPREV,TBLOCK,DTK,KEV,',TPREV,TBLOCK,DTK(64),NAMEM(1)
@@ -299,6 +310,15 @@
       DO i=1,ntot
          write(10,*) list(1:list(1,i)+2,i)
       END DO
+
+#ifdef TT
+*** FlorentR
+      write (10,*) ttunit, nbtt, ttmode
+      write (10,*) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
+     *      ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
+     *      (tttime(i),i=1,nbtt)
+*** FRenaud
+#endif
 
       END FILE 10
       CLOSE (UNIT=10)
@@ -459,6 +479,14 @@
       DO i=1,ntot
          read(10,*) list(1,i),list(2:list(1,i)+1,i)
       END DO
+
+#ifdef TT
+*** FlorentR
+      read (10,*) ttunit, nbtt, ttmode
+      read (10,*) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
+     *     ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
+     *     (tttime(i),i=1,nbtt)
+#endif
       
 *     Write new binary data
       WRITE(FILE_I,20) IUNIT
@@ -544,6 +572,15 @@
       write(IUNIT) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
      *     (NLSTDELAY(K),K=1,NLSTDELAY(1)+1)
+
+#ifdef TT
+*** FlorentR
+      write (IUNIT) ttunit, nbtt, ttmode
+      write (IUNIT) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
+     *     ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
+     *     (tttime(i),i=1,nbtt)
+*** FRenaud
+#endif
 
       END FILE IUNIT
       CLOSE (UNIT=IUNIT)

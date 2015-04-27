@@ -313,7 +313,6 @@ C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
       end if
 *     --11/08/13 23:15-lwang-end----------------------------------------*
 #endif
-     
 *       Set new time and save block time (for regularization terminations).
       TIME = TMIN
       TBLOCK = TIME

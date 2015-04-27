@@ -68,6 +68,11 @@
 *NB6  IF (KZ(27).EQ.0) THEN
 *         TSTAR = TSCALE
 *     END IF
+*     --03/22/15 19:35-lwang-paulina-test-------------------------------*
+***** Note:Make all star BHs-------------------------------------------**
+C      KSTAR(1:2) = 14
+C      KSTAR(1:N) = 14
+*     --03/22/15 19:35-lwang-paulina-end-test---------------------------*
 *
 *       Obtain optional stellar evolution parameters.
       IF (KZ(19).GE.3) THEN

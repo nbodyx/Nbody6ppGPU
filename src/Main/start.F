@@ -67,6 +67,11 @@
 *       Initial massive black hole input
       IF (KZ(24).EQ.1) CALL IMBHINIT
 *
+*     --03/20/15 21:27-lwang-paulina-test-------------------------------*
+***** Note:------------------------------------------------------------**
+C      BODY(1) = 15/ZMBAR
+C      BODY(2) = 8/ZMBAR
+*     --03/20/15 21:27-lwang-paulina-test-end---------------------------*
 *       Set sequential name, maximum mass & primary velocity, initial single/binary total mass
       BODY1 = 0.0
       ZSMASS0 = 0.0

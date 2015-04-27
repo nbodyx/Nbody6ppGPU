@@ -5,8 +5,14 @@
 *       ----------------------
 *
       INCLUDE 'common6.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+      REAL*8 DSAVE(20)
+#else
+      REAL*8 DSAVE(17)
+#endif
       COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
-      REAL*8 TPRED,TRES,DSAVE(17)
+      REAL*8 TPRED,TRES
       LOGICAL ipredall
 *      EXTERNAL RENAME
 *
@@ -69,6 +75,9 @@ c$$$      call flush(6)
           DSAVE(15) = ZLMSTY(I)
           DSAVE(16) = TPRED(I)
           DSAVE(17) = STEP(I)
+#ifdef POSTNEWTON
+          DSAVE(18:20) = SPN(1:3,I)
+#endif
           NAMEI = NAME(I)
           KSI = KSTAR(I)
 *
@@ -94,6 +103,9 @@ c$$$      call flush(6)
               D3R(K,I) = D3R(K,J)
               X(K,J) = DSAVE(K)
               X0DOT(K,J) = DSAVE(K+3)
+#ifdef POSTNEWTON
+              SPN(K,I) = SPN(K,J)
+#endif
     4     CONTINUE
 *
           TPRED(I) = TPRED(J)
@@ -130,6 +142,9 @@ c$$$      call flush(6)
           NAME(J) = NAMEI
           KSTAR(J) = KSI
           STEP(J) = DSAVE(17)
+#ifdef POSTNEWTON
+          SPN(1:3,J) = DSAVE(18:20)
+#endif
 
 #ifdef SIMD
 *     Update Particle data in AVX/SSE library

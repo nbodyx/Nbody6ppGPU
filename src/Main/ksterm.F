@@ -5,12 +5,19 @@
 *       ---------------------------------
 *
       INCLUDE 'common6.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+#endif
       COMMON/SLOW0/  RANGE,ISLOW(10)
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
      &                NAMEM(MMAX),NAMEG(MMAX),KSTARM(MMAX),IFLAG(MMAX)
-      REAL*8  DSAVE(16)
       COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
+#ifdef POSTNEWTON      
+      REAL*8  DSAVE(19)
+#else
+      REAL*8  DSAVE(16)
+#endif 
       LOGICAL ipredall
       REAL*8 TPRED
 *
@@ -186,6 +193,50 @@ c$$$     &     'N',(NAME(LIST(2+K,I1)),K=1,5)
 *  16 FORMAT (' CORRECT:    POT1 BE3 POT1-POT2  ',2F10.6,F10.6)
 *     end if
 *
+#ifdef POSTNEWTON
+
+      IF (KZ(45).GT.0) THEN
+c$$$         PREVRELENERGY = PREVRELENERGY - RELENERGY(IPAIR)
+*         IF (ICOLLISION.EQ.1) THEN
+*            DO 373 II = 1,KMAX
+*               IF(ESCRELCOR(II).EQ.0.0) THEN
+*                  ESCRELCOR(IPAIR) = RELENERGY1(IPAIR) 
+*     &                 + RELENERGY2(IPAIR) + RELENERGY2_5(IPAIR)
+*                  write (*,373) TIME+TOFF,ETOT,PREVRELENERGY,
+*     &                 ESCRELCOR(IPAIR),RELENERGY1(IPAIR),
+*     &                 RELENERGY2(IPAIR),RELENERGY2_5(IPAIR)
+* 373              format('PN merger energy check: TIME',f10.2,
+*     &                 ' ETOT = ',e15.6,' PREVRELENERGY = ',e15.6,
+*     &                 ' ESCRELCOR = ',e15.6,' PN1_energy = ',e15.6,
+*     &                 ' PN2_energy = ',e15.6,' PN2.5_energy = ',e15.6)
+*               END IF
+* 373           CONTINUE
+* Add the relativistic energy back in order to see if this takes care
+* of the energy conservation problem at merger
+*               PREVRELENERGY = PREVRELENERGY + ESCRELCOR(IPAIR)
+*
+c$$$         WRITE (*,*) ' '
+c$$$         WRITE (6,273) TIME+TOFF,RELENERGY(IPAIR),PREVRELENERGY
+c$$$ 273     FORMAT ('Rel Energy: TIME = ',f12.4,' PN ENERGY = ',e15.6,
+c$$$     &           ' PREVRELENERGY = ',e15.6)
+*
+C         ICOLLISION = 0
+*
+         
+         RFLAG(IPAIR) = RFLAG(NPAIRS)
+         RELENERGY(IPAIR) = RELENERGY(NPAIRS)
+C         RELTSTEP(IPAIR) = RELTSTEP(NPAIRS)
+         ESCRELCOR(IPAIR) = ESCRELCOR(NPAIRS)
+
+*
+         RFLAG(NPAIRS) = 0
+         RELENERGY(NPAIRS) = 0.0
+C         RELTSTEP(NPAIRS) = 0.0
+         ESCRELCOR(NPAIRS) = 0.0
+*
+      END IF
+#endif
+      
 *       Modify c.m. neighbour radius by density contrast and set new values.
       NNB = LIST(1,ICM) + 1
 *       Check predicted neighbour number and form volume ratio.
@@ -262,6 +313,9 @@ c$$$     &     'N',(NAME(LIST(2+K,I1)),K=1,5)
           DSAVE(14) = SPIN(I)
           DSAVE(15) = ZLMSTY(I)
           DSAVE(16) = TPRED(I)
+#ifdef POSTNEWTON          
+          DSAVE(17:19) = SPN(1:3,I)
+#endif   
           NAMEI = NAME(I)
           KSI = KSTAR(I)
 *
@@ -285,6 +339,9 @@ c$$$     &     'N',(NAME(LIST(2+K,I1)),K=1,5)
           NAME(I) = NAME(J)
           KSTAR(I) = KSTAR(J)
           STEP(I) = STEP(J)
+#ifdef POSTNEWTON          
+          SPN(1:3,I) = SPN(1:3,J)
+#endif
           T0(I) = T0(J)
           K = LIST(1,J) + 1
           IF (K.EQ.1) K = 2
@@ -305,6 +362,9 @@ c$$$     &     'N',(NAME(LIST(2+K,I1)),K=1,5)
           SPIN(J) = DSAVE(14)
           ZLMSTY(J) = DSAVE(15)
           TPRED(J) = DSAVE(16)
+#ifdef POSTNEWTON          
+          SPN(1:3,J) = DSAVE(17:19)
+#endif    
           NAME(J) = NAMEI
           KSTAR(J) = KSI
 

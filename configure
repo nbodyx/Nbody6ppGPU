@@ -701,6 +701,7 @@ enable_gpu
 enable_simd
 enable_hdf5
 enable_tt
+enable_pn
 enable_tools
 enable_openmp
 with_cuda
@@ -1351,6 +1352,8 @@ Optional Features:
                           extension imported from NBODY6TT. (Ref: Renaud, F.,
                           et al., 2011, MNRAS, 418, 759; Renaud, F. & Gieles,
                           M., 2015, MNRAS, 448, 3416)
+  --enable-pn             Enable postnewton terms (spin-spin and spin orbits)
+                          support
   --enable-tools          Compile extral tools for data analysis, see
                           User_manual.pdf for detail
   --disable-openmp        do not use OpenMP
@@ -2520,11 +2523,20 @@ else
 fi
 
 
+
 # Check whether --enable-tt was given.
 if test "${enable_tt+set}" = set; then :
   enableval=$enable_tt;
 else
   enable_tt=no
+fi
+
+
+# Check whether --enable-pn was given.
+if test "${enable_pn+set}" = set; then :
+  enableval=$enable_pn;
+else
+  enable_pn=no
 fi
 
 
@@ -6011,6 +6023,12 @@ if test "x$enable_debug" != xno; then :
       RESULT=$RESULT'.db'
 fi
 
+# PN
+if test "x$enable_pn" != xno; then :
+  FCFLAGS=$FCFLAGS' $(PN_FLAGS)'
+        EXTRASRC=$EXTRASRC' $(PN_FSOURCES)'
+        RESULT=$RESULT'.pn'
+fi
 
 # params.h
 
@@ -6211,6 +6229,8 @@ $as_echo "$as_me:      Debug mode:     $enable_debug" >&6;}
 $as_echo "$as_me:      HDF5 format:    $enable_hdf5" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:      TT package:     $enable_tt" >&5
 $as_echo "$as_me:      TT package:     $enable_tt" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:      PN calculation: $enable_pn" >&5
+$as_echo "$as_me:      PN calculation: $enable_pn" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: --Compilers:" >&5
 $as_echo "$as_me: --Compilers:" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:      C++ compiler:      $CXX" >&5

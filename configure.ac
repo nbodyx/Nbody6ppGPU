@@ -77,11 +77,18 @@ AC_ARG_ENABLE([hdf5],
      [],
      [enable_hdf5=no])
 
+
 AC_ARG_ENABLE([tt],
      [AS_HELP_STRING([--enable-tt],
          [Enable tidal tensor and analytical potential extension imported from NBODY6TT. (Ref: Renaud, F., et al., 2011, MNRAS, 418, 759; Renaud, F. & Gieles, M., 2015, MNRAS, 448, 3416)])],
      [],
      [enable_tt=no])
+
+AC_ARG_ENABLE([pn],
+     [AS_HELP_STRING([--enable-pn],
+         [Enable postnewton terms (spin-spin and spin orbits) support])],
+     [],
+     [enable_pn=no])
 
 AC_ARG_ENABLE([tools],
     [AS_HELP_STRING([--enable-tools],
@@ -379,6 +386,11 @@ AS_IF([test "x$enable_debug" != xno],
       FCFLAGS=$FCFLAGS' $(DEBUG_FLAGS)'
       RESULT=$RESULT'.db')
 
+# PN
+AS_IF([test "x$enable_pn" != xno],
+       [FCFLAGS=$FCFLAGS' $(PN_FLAGS)'
+        EXTRASRC=$EXTRASRC' $(PN_FSOURCES)'
+        RESULT=$RESULT'.pn'])
 
 # params.h
 AC_ARG_WITH([par], 
@@ -540,6 +552,7 @@ AC_MSG_NOTICE([     OpenMP option:  $OPENMP_FCFLAGS])
 AC_MSG_NOTICE([     Debug mode:     $enable_debug])
 AC_MSG_NOTICE([     HDF5 format:    $enable_hdf5])
 AC_MSG_NOTICE([     TT package:     $enable_tt])
+AC_MSG_NOTICE([     PN calculation: $enable_pn])
 AC_MSG_NOTICE([--Compilers:])
 AC_MSG_NOTICE([     C++ compiler:      $CXX])
 AC_MSG_NOTICE([     Fortran compiler:  $FC])

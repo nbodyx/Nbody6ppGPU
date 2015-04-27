@@ -6,6 +6,9 @@
 *
       INCLUDE 'common6.h'
       INCLUDE 'timing.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+#endif
 
 *      REAL*8  A(8)
       CHARACTER*1 CHAR(80)
@@ -206,6 +209,25 @@
       end if
       call flush(6)
 *
+#ifdef POSTNEWTON
+*     PN spin initialization
+      IF (KZ(45).GT.0) THEN
+         DO I = 1,N
+            IF (SPNMAG.LE.1.0) THEN
+               SPN(3,I) = SPNMAG
+            ELSE
+*     draw random orientation and random magnitude
+               SPNABS = RAN2(IDUM)
+               PHI = TWOPI*RAN2(IDUM)
+               THETA = 3.14159*RAN2(IDUM)
+               SPN(1,I) = SPNABS*SIN(THETA)*COS(PHI)
+               SPN(2,I) = SPNABS*SIN(THETA)*SIN(PHI)
+               SPN(3,I) = SPNABS*COS(THETA)
+            END IF
+         END DO
+      END IF
+#endif
+
       RETURN
 *
       END

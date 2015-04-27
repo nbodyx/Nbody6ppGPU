@@ -297,7 +297,15 @@ c$$$  #endif
                      IQ = IPHASE
                      IF (IQ.LT.0) THEN
                         IQCOLL = -2
-                        CALL CMBODY(2)
+#ifdef POSTNEWTON
+                        IF(IQ.EQ.-2) THEN
+                           CALL MERGREL(KSPAIR)
+                        ELSE
+#endif
+                           CALL CMBODY(2)
+#ifdef POSTNEWTON
+                        END IF
+#endif
                         TIME = TBLOCK
                         RETURN
                      END IF
@@ -641,7 +649,15 @@ c$$$               if(emerge.ge.100)  stop
                         IQCOLL = -2
 *     Ensure block-step time for normal continuation.
                         TIME = TBLOCK
-                        CALL CMBODY(2)
+#ifdef POSTNEWTON
+                        IF(IQ.EQ.-2) THEN
+                           CALL MERGREL(KSPAIR)
+                        ELSE
+#endif
+                           CALL CMBODY(2)
+#ifdef POSTNEWTON
+                        END IF
+#endif
                         TIME = TBLOCK
                         RETURN
                      END IF

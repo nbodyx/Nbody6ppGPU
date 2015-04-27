@@ -5,7 +5,12 @@
 *     ----------------------
 *     
       INCLUDE 'common6.h'
+#ifdef POSTNEWTON
+      INCLUDE 'postnewton.h'
+      REAL*8 DSAVE(20)
+#else
       REAL*8 DSAVE(17)
+#endif
       REAL*8  Q(3),RDOT(3),UI(4),A1(3,4)
 *     EXTERNAL RENAME
 *     
@@ -35,6 +40,9 @@
          DSAVE(14) = SPIN(I)
          DSAVE(15) = ZLMSTY(I)
          DSAVE(17) = STEP(I)
+#ifdef POSTNEWTON
+         DSAVE(18:20) = SPN(1:3,I)
+#endif
          NAMEI = NAME(I)
          KSI = KSTAR(I)
 *     
@@ -80,6 +88,9 @@
          T0(I) = T0(J)
          TIMENW(I) = T0(I) + STEP(I)
          T0R(I) = T0R(J)
+#ifdef POSTNEWTON
+         SPN(1:3,I) = SPN(1:3,J)
+#endif
          K = LIST(1,J) + 1
          DO 5 L = 1,K
             LIST(L,I) = LIST(L,J)
@@ -96,7 +107,9 @@
          NAME(J) = NAMEI
          KSTAR(J) = KSI
          STEP(J) = DSAVE(17)
-
+#ifdef POSTNEWTON
+         SPN(1:3,J) = DSAVE(18:20)
+#endif
  10   CONTINUE
 
 *     Increase pair index, total number & single particle index.

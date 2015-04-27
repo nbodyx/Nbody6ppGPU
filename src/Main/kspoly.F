@@ -215,6 +215,10 @@
       H0(IPAIR) = H(IPAIR)
 *
 *       Skip Stumpff part and use ZMOD*TK for unperturbed binary.
+#ifdef POSTNEWTON
+      IF(KZ(45).GT.0.AND.(KSTAR(I1).EQ.13.OR.KSTAR(I1).EQ.14).AND.
+     &     (KSTAR(I2).EQ.13.OR.KSTAR(I2).EQ.14)) GO TO 75
+#endif      
       IF (LIST(1,I1).EQ.0.AND.SEMI.GT.0.0) THEN
           TK = TWOPI*SEMI*SQRT(SEMI/BODY(I))
           STEP(I1) = MIN(TK,STEP(I))
@@ -242,6 +246,10 @@
 *       Initialize step & time and include possible slow-down factor.
    80 DTAU(IPAIR) = DTU
       T0(I1) = TIME
+#ifdef POSTNEWTON
+      IF(KZ(45).GT.0.AND.(KSTAR(I1).EQ.13.OR.KSTAR(I1).EQ.14).AND.
+     &     (KSTAR(I2).EQ.13.OR.KSTAR(I2).EQ.14)) IMOD = 0
+#endif      
       IF (IMOD.GT.1) THEN
           STEP(I1) = ZMOD*STEP(I1)
       END IF

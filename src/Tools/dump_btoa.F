@@ -6,8 +6,13 @@
       IMPLICIT REAL*8  (A-H,O-Z)
       INCLUDE 'params.h'
       INCLUDE 'tlist.h'
+
 #ifdef TT
       INCLUDE 'tt.h'
+#endif
+
+#ifdef POSTNEWTON
+      include 'postnewton.h'
 #endif
 
       INTEGER IUNIT, IRORW
@@ -232,6 +237,15 @@
      *    (tttime(i),i=1,nbtt)
 #endif
 
+#ifdef POSTNEWTON
+      read (IUNIT) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
+     &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
+     &       GAMREL(1:8,1:KMAX),PN1ENERGY(1:2,1:KMAX),DIFFS(1:10),
+     &       DE25(1:2,1:KMAX),GAMMAREL,PREVRELENERGY,SRELENERGY,
+     &       BETAREL,DTUPN,VOVERC,CLIGHTPN,CLIN,SPNMAG,RELSUM,
+     &       PREVRELPOTENERGY,PLOTTIME,IPLOTCOUNT
+#endif
+
 *     --06/21/14 10:41-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 *      print*,'TPREV,TBLOCK,DTK,KEV,',TPREV,TBLOCK,DTK(64),NAMEM(1)
@@ -306,6 +320,15 @@
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
      *     (NLSTDELAY(K),K=1,NLSTDELAY(1)+1)
 
+#ifdef POSTNEWTON
+      write (10,*) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
+     &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
+     &       GAMREL(1:8,1:KMAX),PN1ENERGY(1:2,1:KMAX),DIFFS(1:10),
+     &       DE25(1:2,1:KMAX),GAMMAREL,PREVRELENERGY,SRELENERGY,
+     &       BETAREL,DTUPN,VOVERC,CLIGHTPN,CLIN,SPNMAG,RELSUM,
+     &       PREVRELPOTENERGY,PLOTTIME,IPLOTCOUNT
+#endif
+      
 *     LIST
       DO i=1,ntot
          write(10,*) list(1:list(1,i)+2,i)
@@ -475,6 +498,14 @@
       read(10,*) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
      *     (NLSTDELAY(K),K=1,NLSTDELAY(1)+1)
+#ifdef POSTNEWTON
+      read(10,*) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
+     &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
+     &       GAMREL(1:8,1:KMAX),PN1ENERGY(1:2,1:KMAX),DIFFS(1:10),
+     &       DE25(1:2,1:KMAX),GAMMAREL,PREVRELENERGY,SRELENERGY,
+     &       BETAREL,DTUPN,VOVERC,CLIGHTPN,CLIN,SPNMAG,RELSUM,
+     &       PREVRELPOTENERGY,PLOTTIME,IPLOTCOUNT
+#endif
 *     LIST
       DO i=1,ntot
          read(10,*) list(1,i),list(2:list(1,i)+1,i)
@@ -580,6 +611,15 @@
      *     ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
      *     (tttime(i),i=1,nbtt)
 *** FRenaud
+#endif
+
+#ifdef POSTNEWTON
+      write(IUNIT) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
+     &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
+     &       GAMREL(1:8,1:KMAX),PN1ENERGY(1:2,1:KMAX),DIFFS(1:10),
+     &       DE25(1:2,1:KMAX),GAMMAREL,PREVRELENERGY,SRELENERGY,
+     &       BETAREL,DTUPN,VOVERC,CLIGHTPN,CLIN,SPNMAG,RELSUM,
+     &       PREVRELPOTENERGY,PLOTTIME,IPLOTCOUNT
 #endif
 
       END FILE IUNIT

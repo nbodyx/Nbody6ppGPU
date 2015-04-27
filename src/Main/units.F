@@ -5,6 +5,9 @@
 *       ------------------------------------------
 *
       INCLUDE 'common6.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+#endif
 *
 *
 *       Define GM & PC in cgs units and #AU in pc (2008 IAU values).
@@ -41,12 +44,29 @@
 *       Copy TSTAR to secondary time-scale factor.
       TSCALE = TSTAR
 *
+#ifdef POSTNEWTON
+*       Scale clight into NB unit
+      CLIGHTPN = CLIN/VSTAR
+#endif
 *       Physical scaling: X, M, V, T from RBAR*X, ZMBAR*M, VSTAR*V, TSTAR*T.
       if(rank.eq.0)
      &WRITE (6,10)  RBAR, ZMBAR, VSTAR, TSTAR, BODYM*ZMBAR, SU
  10   FORMAT (/,12X,1P,'PHYSICAL SCALING:    R* =',E21.12,'  M* =',
      &     E21.12,'  V* =',E21.12,'  T* =',E21.12,'  <M> =',E21.12,
      &     '  SU =',E21.12)
+#ifdef POSTNEWTON
+      if(rank.eq.0) THEN
+*     Real light speed in km/s
+         creal=299792.458
+*     Input light speed / real light speed
+         cratio=clin/creal
+         WRITE (6,15) CLIGHTPN,RBAR*cratio**2,TSCALE*cratio**3,
+     &        VSTAR/cratio,ZMBAR
+ 15      FORMAT (/,12X,1P,'PHYSICAL SCALING FOR POSTNEWTON:',
+     &        '  Clight[NB] =',E21.12, '  R* =',E21.12,
+     &        '  T* =',E21.12,'  V* =',E21.12,'  M* =',E21.12)
+      end if
+#endif
 *
 *       Define relevant parameter for the GR case (RZ = 6*<m>/c^2).
       IF (KZ(27).EQ.3.OR.KZ(28).GT.0) THEN

@@ -19,6 +19,12 @@
       INTEGER JHIST,JHISTR,LSHORT(NMAX)
       INTEGER IREG(NMAX),IMINR(NMAX),IMINR_TMP(NMAX)
       REAL*8 FIRR_SIMD(3,NMAX),FD_SIMD(3,NMAX)
+#ifdef DEBUG
+*     --10/03/14 19:40-lwang-debug--------------------------------------*
+***** Note: For interuption of simulations------------------------------------------------------------**
+      COMMON/adt/ adtime,dumptime,dprintt,dtprint,namep
+*     --10/03/14 19:41-lwang-end----------------------------------------*
+#endif
 #ifdef PARALLEL
       integer inum(maxpe),ista(maxpe),NXTLST_MPI(NMAX+500),NPIECE
       integer istart_lst,iend_lst
@@ -226,6 +232,26 @@
           CALL SHORT(NXTLEN,NXTLST,LSHORT)
       END IF
 *
+#ifdef DEBUG
+*     --11/08/13 23:15-lwang-debug--------------------------------------*
+***** Note: Interupt the simulation -----------------------------------**
+      if(time.ge.dumptime) then
+         if(rank.eq.0) call mydump(1,1)
+#ifdef PARALLEL
+         call mpi_barrier(MPI_COMM_WORLD,ierr)
+#endif
+         stop
+      end if
+      if(time.ge.adtime) then
+         call adjust
+         call flush(6)
+#ifdef PARALLEL
+         call mpi_barrier(MPI_COMM_WORLD,ierr)
+#endif
+         stop
+      end if
+*     --11/08/13 23:15-lwang-end----------------------------------------*
+#endif
 *       Set new time and save block time (for regularization terminations).
       TIME = TMIN
       TBLOCK = TIME
@@ -367,6 +393,43 @@ c$$$  END IF
 *       Block-Step Level Diagnostics (R.Sp. 29.Apr. 1993)
       IF(KZ(33).GT.0)JHIST(NXTLEN) = JHIST(NXTLEN) + 1
 *
+#ifdef DEBUG
+*     --08/27/13 16:38-lwang-debug--------------------------------------*
+***** Note: Before nbint-----------------------------------------------**
+      if(time.ge.dprintt) then
+        do L=1,NXTLEN
+           J = NXTLST(L)
+           if(namep.le.-NTOT.or.name(j).eq.namep) then
+              write(100+rank,*) 'NXTLEN',NXTLEN,'NREG',NREG,'NPAIR',
+     &             NPAIRS,'N',N,'NTOT',NTOT,'T',TIME
+              write(100+rank,109),l,j,name(j),x0(1,j),x0dot(1,j),
+     *             t0(j),t0r(j),step(j),stepr(j),
+     *             f(1,j),fdot(1,j),fi(1,j),fidot(1,j),
+     *             d0(1,j),d1(1,j),
+     *             d2(1,j),d3(1,j),d0r(1,j),d1r(1,j),
+     *             d2r(1,j),d3r(1,j),body(j),time,list(1,j)
+C            write(100+rank,*)'LIST',LIST(1:LIST(1,J)+1,J)
+              call flush(100+rank)
+           end if
+        end do
+ 109    format(/,'L',I7,' J',I7,'  N',I7,'  X0',3E25.17,'  X0D',3E25.17,
+     &       '  T0',F21.17,'  T0R',F21.17,'  STEP',F20.17,
+     &       '  STEPR',F20.17,'  F',3E25.17,' FD',3E25.17,
+     &       '  FI',3E25.17,'  FIDOT',3E25.17,'  D0',3E25.17,
+     &       '  D1',3E25.17,'  D2',3E25.17,'  D3',3E25.17,
+     &       '  D0R',3E25.17,'  D1R',3E25.17,'  D2R',3E25.17,
+     &       '  D3R',3E25.17,'  M',E25.17,'  T',F21.17,'  NB',I4)
+#ifdef PARALLEL
+C        print*,'rank',rank,'bar count:',ibarcount,'nstepi',nstepi
+        call flush(6)
+C        call mpi_barrier(MPI_COMM_WORLD,ierr)
+#endif
+C        if (TCCT.gt.2.0) stop
+        dprintt = TIME + dtprint
+      end if
+*     --08/27/13 16:38-lwang-end-debug----------------------------------*
+#endif
+      
 *     Do full prediction when regular block step come
       ipredall = .false.
       IF(NREG.GT.0) THEN

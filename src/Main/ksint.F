@@ -1037,6 +1037,14 @@ c$$$      print*,rank,'rmax',rmax
 *
 *       See whether KS slow-down procedure should be (re)-checked (no Chaos).
       IF (KZ(26).GT.0.AND.KSTAR(I).GE.0) THEN
+#ifdef POSTNEWTON
+*       Avoid increasing time step for PN case.
+      IF (KZ(45).GT.0.AND.(KSTAR(I1).EQ.13.OR.KSTAR(I1).EQ.14).AND.
+     &     (KSTAR(I2).EQ.13.OR.KSTAR(I2).EQ.14)) THEN
+         KMOD = 1
+         KSLOW(IPAIR) = 1
+      END IF
+#endif      
           KMOD = INT(RANGE*GMIN/MAX(GI,1.0D-10))
           IF (KMOD.GT.1.OR.IMOD.GT.1) THEN
               CALL KSMOD(IPAIR,KMOD)

@@ -24,7 +24,7 @@
 #ifdef DEBUG
 *     --10/03/14 19:40-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-      COMMON/adt/ adtime,dumptime,dprintt
+      COMMON/adt/ adtime,dumptime,dprintt,dtprint,namep
 *     --10/03/14 19:41-lwang-end----------------------------------------*
 #endif
       EXTERNAL MERGE
@@ -74,11 +74,13 @@
 #ifdef DEBUG
 *     --10/03/14 19:41-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-      if(rank.eq.0) read(5,*) adtime,dumptime,dprintt
+      if(rank.eq.0) read(5,*) adtime,dumptime,dprintt,dtprint,namep
 #if MPIINIT
       CALL MPI_BCAST(adtime,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(dumptime,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(dprintt,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(dtrintt,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(namep,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 #endif      
 *     --10/03/14 19:41-lwang-end----------------------------------------*
 #endif

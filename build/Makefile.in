@@ -23,6 +23,7 @@ MPI_FLAGS = -D PARALLEL -D PUREMPI
 GPU_FLAGS = -D GPU
 SIMD_FLAGS = -D SIMD
 HDF5_FLAGS = -D H5OUTPUT
+PN_FLAGS= -D POSTNEWTON
 INTEL_FLAGS= -D __USE_INTEL
 
 FFLAGS = @FCFLAGS@
@@ -33,6 +34,7 @@ LDFLAGS = -o $(RESULT)
 MPI_FSOURCES= energy_mpi.f fpoly1_mpi.f fpoly2_mpi.f
 GPU_FSOURCES= phicor.f
 HDF5_FSOURCES= custom_output.f custom_output_facility.f ksres_op.f
+PN_FSOURCES= ksrel.f mergrel.f crossp.f ksrel_energy.f ksrel_finspin.f ksrel_output.f
 
 IRRAVX_OBJECTS=irr.avx.o
 IRRSSE_OBJECTS=irr.sse.o
@@ -121,7 +123,7 @@ libinitial.so: initial.h initial.cpp
 libnb6out3.so: nb6out3.h nb6out3.cxx
 	$(CXX) -shared $(CXXFLAGS) ../src/Tools/nb6out3.cxx -o libnb6out3.so
 
-nb6++dumpb2a: dump_btoa.f 
+nb6++dumpb2a: dump_btoa.F 
 	$(FC) $(FFLAGS) $^ -o nb6++dumpb2a
 
 nb6++snapshot: libinitial.so libnb6out3.so snapshot.cpp

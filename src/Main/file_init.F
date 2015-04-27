@@ -78,6 +78,10 @@ C      FRAG(4) = 'bdat'
       FILE(44) = 'hinc.44   '
       FILE(45) = 'mbh.45    '
       FILE(46) = 'mbhnb.46  '
+#ifdef POSTNEWTON
+      FILE(50) = 'pn.50     '
+      FILE(51) = 'mergrel.51'
+#endif      
 *      FILE(52) = 'itid3.52  '
       FILE(54) = 'hypcep.54 '
       FILE(55) = 'hypcec.55 '
@@ -286,6 +290,14 @@ C     &             ACCESS='APPEND')
 C      IF (KZ(14).EQ.3)
 C     &OPEN (UNIT=52,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(44),
 C     &             ACCESS='APPEND')
+#ifdef POSTNEWTON
+      IF (KZ(45).GT.0)
+     &OPEN (UNIT=50,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(50),
+     &             ACCESS='APPEND')
+      IF (KZ(45).GT.0)
+     &OPEN (UNIT=51,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(51),
+     &             ACCESS='APPEND')
+#endif
       IF (KZ(14).EQ.3)
      &OPEN (UNIT=54,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(54),
      &             ACCESS='APPEND')

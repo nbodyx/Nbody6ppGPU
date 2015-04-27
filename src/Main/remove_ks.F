@@ -5,6 +5,9 @@
 *       -----------------
 *
       INCLUDE 'common6.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+#endif
       COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
       REAL*8 TPRED,DSAVE
       LOGICAL ipredall
@@ -48,6 +51,9 @@
       D1R(1:3,ICM) = D1R(1:3,J)
       D2R(1:3,ICM) = D2R(1:3,J)
       D3R(1:3,ICM) = D3R(1:3,J)
+#ifdef POSTNEWTON
+      SPN(1:3,ICM) = SPN(1:3,J)
+#endif
 *
       TPRED(ICM) = TPRED(J)
       BODY(ICM) = BODY(J)
@@ -119,6 +125,12 @@
       SF(6,IPAIR) = SF(6,LPAIR)
       SF(7,IPAIR) = SF(7,LPAIR)
       H0(IPAIR) = H0(LPAIR)
+#ifdef POSTNEWTON
+      RFLAG(IPAIR) = RFLAG(LPAIR)
+      RELENERGY(IPAIR) = RELENERGY(LPAIR)
+C      RELTSTEP(IPAIR) = RELTSTEP(LPAIR)
+      ESCRELCOR(IPAIR) = ESCRELCOR(LPAIR)
+#endif
 *
 *     Move TRES of last pair to ipair
       TRES(IPAIR) = TRES(LPAIR)

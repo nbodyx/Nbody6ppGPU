@@ -30,6 +30,7 @@ install: $(RESULT) $(EXTRAOBJS)
 
 
 installtools: @EXTRARESULT@
+	@[ -d $(INSTALLDIR)/bin ] || mkdir $(INSTALLDIR)/bin
 	@[ -d $(INSTALLDIR)/include ] || mkdir $(INSTALLDIR)/include
 	@[ -d $(INSTALLDIR)/lib ] || mkdir $(INSTALLDIR)/lib
 	cp ./build/nb6++dumpb2a $(INSTALLDIR)/bin

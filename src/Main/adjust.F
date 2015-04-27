@@ -6,6 +6,10 @@
 *     
       INCLUDE 'common6.h'
       INCLUDE 'timing.h'
+#ifdef POSTNEWTON
+      INCLUDE 'postnewton.h'
+      REAL*8 TOTALSPIN(3)
+#endif          
 *     INTEGER JHIST,JHISTR
       COMMON/ECHAIN/  ECH
       COMMON/STSTAT/  TINIT,NIR,NIB,NRGL,NKS
@@ -100,8 +104,35 @@ c$$$      end if
       END IF
       E(3) = ETOT
 *     
+#ifdef POSTNEWTON
+* --------------------------
+* Energy calculation with PN
+* --------------------------
+      SRELENERGY = 0.0
+      SRELPOTENERGY = 0.0
+      TOTALSPIN(1) = 0.0
+      TOTALSPIN(2) = 0.0
+      TOTALSPIN(3) = 0.0
+*      DO 500 KK = 1,KMAX
+*         SRELENERGY = SRELENERGY + RELENERGY(KK)
+C 500  CONTINUE
+*     --03/19/15 23:48-debug--------------------------------------------*
+C      IF (TIME.GT.PLOTTIME) THEN
+C         PLOTTIME = PLOTTIME+10.0
+C         DO 503 KK = 1,NTOT
+C            WRITE (IPLOTCOUNT,898) X(1,KK),X(2,KK),X(3,KK)
+C 898        FORMAT (3E13.5)
+C 503     CONTINUE
+C         IPLOTCOUNT = IPLOTCOUNT + 1
+C      END IF
+*     --03/19/15 23:48-debug--------------------------------------------*
+#endif
 *     Include KS pairs, triple, quad, mergers, collisions & chain.
       ETOT = ETOT + EBIN + ESUB + EMERGE + ECOLL + EMDOT + ECDOT
+#ifdef POSTNEWTON      
+*     Add PN energy correction
+      IF(KZ(45).GT.0) ETOT = ETOT + PREVRELENERGY
+#endif
       IF (NCH.GT.0) THEN
          ETOT = ETOT + ECH
       END IF
@@ -244,17 +275,24 @@ c$$$     &        EBIN,EMERGE
          WRITE(6,50) TTOT, ttot*tscale, Q, DE, DELTA1,DETOT, E(3),
      &        ZKIN, POT, ETIDE,
      &        BE(3),EBIN,EMERGE,ESUB,ECOLL,EMDOT,ECDOT
+#ifdef POSTNEWTON
+     &        ,PREVRELENERGY
+#endif
  50      FORMAT (/,' ADJUST:  TIME',1P,D15.5,0P,'  T[Myr]',
      &        F8.2,'  Q',F5.2,'  DE',1P,E12.3,' DELTA',E12.3,
      &        ' DETOT',E12.3,' E',E12.3,' EKIN',E12.3,' POT',E12.3,
      &        ' ETIDE',E12.3,' ETOT', E12.3,
      &        ' EBIN',E12.3,' EMERGE',E12.3,' ESUB',E12.3, 
-     &        ' ECOLL',E12.3,' EMDOT',E12.3,' ECDOT',E12.3)
+     &        ' ECOLL',E12.3,' EMDOT',E12.3,' ECDOT',E12.3
+#ifdef POSTNEWTON
+     &        ,' EREL',E12.3
+#endif
+     &        )
 *     
          write(6,51) RMIN, DTMIN, RHOM, RSCALE, RSMIN, ECLOSE, ICR
  51      FORMAT (/, '  RMIN =',1PE8.1,'  DTMIN =',E8.1,' RHOM =',E8.1,
      &        ' RSCALE =',E8.1,' RSMIN =',E8.1,'  ECLOSE =',
-     &        0PF5.2,'  TC =',I5)
+     &        0PF5.2,'  TC =',I10)
 *     
          WRITE(6,55)
  55      FORMAT('  PE       N        Total     Inti.    Intgrt',

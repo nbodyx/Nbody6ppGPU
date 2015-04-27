@@ -700,6 +700,7 @@ enable_debug
 enable_gpu
 enable_simd
 enable_hdf5
+enable_pn
 enable_tools
 enable_openmp
 with_cuda
@@ -1345,6 +1346,8 @@ Optional Features:
                           Extensions; --> no: switch off SIMD; (default is
                           autodetecting)
   --enable-hdf5           Enable HDF5 output format support
+  --enable-pn             Enable postnewton terms (spin-spin and spin orbits)
+                          support
   --enable-tools          Compile extral tools for data analysis, see
                           User_manual.pdf for detail
   --disable-openmp        do not use OpenMP
@@ -2513,6 +2516,13 @@ else
   enable_hdf5=no
 fi
 
+
+# Check whether --enable-pn was given.
+if test "${enable_pn+set}" = set; then :
+  enableval=$enable_pn;
+else
+  enable_pn=no
+fi
 
 
 # Check whether --enable-tools was given.
@@ -5986,6 +5996,13 @@ if test "x$enable_hdf5" != xno; then :
         RESULT=$RESULT'.hdf5'
 fi
 
+# PN
+if test "x$enable_pn" != xno; then :
+  FCFLAGS=$FCFLAGS' $(PN_FLAGS)'
+        EXTRASRC=$EXTRASRC' $(PN_FSOURCES)'
+        RESULT=$RESULT'.pn'
+fi
+
 # params.h
 
 # Check whether --with-par was given.
@@ -6183,6 +6200,8 @@ $as_echo "$as_me:      OpenMP option:  $OPENMP_FCFLAGS" >&6;}
 $as_echo "$as_me:      Debug mode:     $enable_debug" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:      HDF5 format:    $enable_hdf5" >&5
 $as_echo "$as_me:      HDF5 format:    $enable_hdf5" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:      PN calculation: $enable_pn" >&5
+$as_echo "$as_me:      PN calculation: $enable_pn" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: --Compilers:" >&5
 $as_echo "$as_me: --Compilers:" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:      C++ compiler:      $CXX" >&5

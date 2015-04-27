@@ -30,6 +30,10 @@
       call jpred(I,TIME,TIME)
       I1 = 2*IPAIR - 1
       I2 = I1 + 1
+#ifdef POSTNEWTON
+      IF(KZ(45).GT.0.AND.((KSTAR(I1).EQ.13).OR.(KSTAR(I1).EQ.14)).AND.
+     &     ((KSTAR(I2).EQ.13).OR.(KSTAR(I2).EQ.14))) GO TO 100
+#endif
       NTTRY = NTTRY + 1
       PERT1 = 0.0
       PERT2 = 0.0

@@ -6,6 +6,9 @@
 *
       INCLUDE 'common6.h'
       INCLUDE 'tlist.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+#endif
       COMMON/BLKLVL/JHIST(0:NMAX),JHISTR(0:NMAX),JHISTU(0:NMAX)
       COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
       LOGICAL ipredall
@@ -101,6 +104,11 @@
           TEV(J) = 0.0
           TEV0(J) = 0.0
           KSTAR(J) = 0
+#ifdef POSTNEWTON
+          SPN(1,J) = 0.0
+          SPN(2,J) = 0.0
+          SPN(3,J) = 0.0
+#endif
    40 CONTINUE
 *
       DO 50 K = 1,3
@@ -128,6 +136,24 @@
 *
 *     For TLIST
       NLSTDELAY(1) = 0
+
+#ifdef POSTNEWTON
+* Initialization of PN variables
+      PLOTTIME = 0.0D0
+      IPLOTCOUNT = 1000
+
+      DO 500 K = 1,KMAX
+         RFLAG(K) = 0
+         RELENERGY(K) = 0.0
+         RELPOTENERGY(K) = 0.0
+C         RELTSTEP(K) = 0.0
+         ESCRELCOR(K) = 0.0
+ 500  CONTINUE
+
+      PREVRELENERGY = 0.0
+      PREVRELPOTENERGY = 0.0
+      RELSUM = 0.0
+#endif
 
       RETURN
 *

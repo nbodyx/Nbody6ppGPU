@@ -7,6 +7,9 @@
       Include 'kspars.h'
       INCLUDE 'common6.h'
       include 'timing.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+#endif
 *     Safe for parallel, no value change, used value: tmdis,namem,nameg,kstarm
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
@@ -21,6 +24,23 @@
 *      COMMON/GAMDOT/  DGAM
       REAL*8  UI(4),UIDOT(4),XI(6),VI(6),FP(6),FD(6)
       LOGICAL IQ
+#ifdef POSTNEWTON
+*     PN variables
+      REAL*8 FRELP(3),FRELD(3),VBIN,VWHOLE,DTUREL,SAK,SBK,A_EIN
+      REAL*8 XX12(3),VV12(3)
+C     REAL*8 DTUCLASS,GREL
+C      REAL*8 SPINTEMP,E_CORRECT,LPN2,LPN3
+C     INTEGER RELORNOT
+*     APPLY = -1: No PN
+*     APPLY = 0: Do not calculate derivs and don't apply, only check acc and timestep
+*     APPLY = 1: Calculate everything and apply
+*     APPLY = 2: Calculate only derivs because acc already there
+*     from the criterion check and then apply
+      INTEGER APPLY
+      APPLY = -1
+      FRELP(1:3) = 0.
+      FRELD(1:3) = 0.
+#endif
 *     --01/02/14 20:43-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 c$$$      COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
@@ -65,6 +85,17 @@ c$$$      end if
 *
 *       Check for further unperturbed motion.
       IF (NNB0.EQ.0.AND.H(IPAIR).LT.0.0) THEN
+#ifdef POSTNEWTON
+         IF (KZ(45).GT.0) THEN
+C         SEMI = -0.5*BODY(I)/H(IPAIR)
+C         E2 = (1.0 - R(IPAIR)/SEMI)**2 + TDOT2(IPAIR)**2/(BODY(I)*SEMI)
+C         ECC = SQRT(E2)
+C         IF ((SEMI*(1-ECC).LT.
+C     &        (200.0*(BODY(I1)+BODY(I2))/CLIGHTPN/CLIGHTPN)).AND.
+            IF(((KSTAR(I1).EQ.13).OR.(KSTAR(I1).EQ.14)).AND.
+     &           ((KSTAR(I2).EQ.13).OR.(KSTAR(I2).EQ.14))) GO TO 777
+         END IF
+#endif
 c$$$*       Include possible eccentricity modulation of hierarchical binary.
 c$$$          IF (NAME(I).LT.0) THEN
 c$$$              IM = 0
@@ -117,7 +148,7 @@ c$$$          END IF
       END IF
 *
 *       Perform KS prediction of U, UDOT & H.
-      CALL KSPRED(IPAIR,I1,I,BODYIN,UI,UIDOT,XI,VI)
+ 777  CALL KSPRED(IPAIR,I1,I,BODYIN,UI,UIDOT,XI,VI)
 *
 *     --01/02/14 13:42-lwang-debug--------------------------------------*
 ***** Note: check predicted value--------------------------------------**
@@ -170,11 +201,172 @@ c$$$         call flush(6)
 c$$$         call mpi_barrier(MPI_COMM_WORLD,ierr)
 c$$$      end if
 *     --09/25/13 14:23-lwang-end----------------------------------------*
+#ifdef POSTNEWTON
+* ---------------------------------------
+* Check if there is a relativistic merger
+* ---------------------------------------
+*
+*     Escape PN check
+      IF(KZ(45).EQ.0.OR.(KSTAR(I1).NE.13.AND.KSTAR(I1).NE.14).OR.
+     &     (KSTAR(I2).NE.13.AND.KSTAR(I2).NE.14)) GO TO 810
+
+      TTOT = TIME + TOFF
+      
+*       Obtain VOVERC (relative velocity VBIN) for PN activation
+      DO K = 1,3
+         XI(K) = XI(K) - X(K,I)
+         XI(K+3) = XI(K+3) - X(K,I)
+         VI(K) = VI(K) - XDOT(K,I)
+         VI(K+3) = VI(K+3) - XDOT(K,I)
+      END DO
+      
+      VBIN = (VI(1)-VI(4))*(VI(1)-VI(4))+(VI(2)-VI(5))*(VI(2)-VI(5))+
+     &       (VI(3)-VI(6))*(VI(3)-VI(6))
+      VBIN = SQRT(VBIN)
+      VOVERC = VBIN/CLIGHTPN
+
+      RIJ2 = (XI(1)-XI(4))*(XI(1)-XI(4))
+     &     + (XI(2)-XI(5))*(XI(2)-XI(5))+(XI(3)-XI(6))*(XI(3)-XI(6))
+      RIJ = SQRT(RIJ2)
+      
+      CL2 = CLIGHTPN*CLIGHTPN
+*     
+*     PN problematic for high mass ratios. Make merger criterion ratio
+*     dependente
+      RATIO = MAX(BODY(I1)/BODY(I2),BODY(I2)/BODY(I1))
+*
+*     Criterion is crude, simple Schwarzchild radius overlap.
+*     For 3PN 3.5PN use 15 times SchwSchild because of divergence of PN
+ 798  IF (RIJ.LT.30.0*(BODY(I1)+BODY(I2))/CL2.OR.APPLY.EQ.3) THEN
+         IF(rank.eq.0)
+     &        WRITE(*,556) TIME+TOFF,NAME(I1),NAME(I2), BODY(I1)+
+     &        BODY(I2),RIJ, 2.0*(BODY(I1)+BODY(I2))/CL2,H(IPAIR),
+     &        VWHOLE,MAX(BODY(I1)/BODY(I2),
+     &        BODY(I2)/BODY(I1)),KSTAR(I1),KSTAR(I2)
+ 556     FORMAT ('Relativistic merger -->  TIME = ',F12.5,'  I = ',
+     &        I6,'  J = ',I6,'  TOT_MASS = ',e15.6,'  RIJ = ',e15.6,
+     &        '  R_SCHWARTZ = ',e15.6,' H = ',e15.6,
+     &        '  MAX{|V1|,|V2|} = ',e15.6,'  MASS RATIO = ',e15.6,
+     &        '  STELLAR_TYPE_I = ',I2,'  STELLAR_TYPE_J = ',I2)
+         CALL FLUSH(6)
+*     Obtain KS variables at pericenter before merging into one body
+C     CALL KSPERI(IPAIR)
+C         KSPAIR = IPAIR
+*     Get final spin for new body  in AFIN.
+         CALL KSREL_FINSPIN(TTOT,I1,BODY(I1),BODY(I2),XI,VI)
+*     Perform relativistic merger
+C        CALL KSPERI(IPAIR)
+C        KSPAIR = IPAIR
+C        IQCOLL = -2
+C        CALL MERGREL(IPAIR)
+         IPHASE = -2
+*     Set merger flag so that energy check is skipped in the next adjust.
+C         IWASMERGER = 1
+*
+*     Since binary is merged there is no application of PN corrections
+*     and KS regularization is terminated.
+         GO TO 100
+      END IF
+
+*     This is GI without PN
+      GI_NOPN = SQRT(FP(1)**2 + FP(2)**2 + FP(3)**2)*R(IPAIR)**2*BODYIN
+*     Initialize GI of PN
+      GI_PN = 0.0
+*
+* -----------------------------------------------
+* Determine and apply PN correction if neccessary
+* -----------------------------------------------
+*
+      XX12(1) = XI(1)-XI(4)
+      XX12(2) = XI(2)-XI(5)
+      XX12(3) = XI(3)-XI(6)
+      VV12(1) = VI(1)-VI(4)
+      VV12(2) = VI(2)-VI(5)
+      VV12(3) = VI(3)-VI(6)         
+      V1_22 = VV12(1)**2+VV12(2)**2+VV12(3)**2
+      AM1 = (XX12(2)*VV12(3)-XX12(3)*VV12(2))
+      AM2 = (XX12(3)*VV12(1)-XX12(1)*VV12(3))
+      AM3 = (XX12(1)*VV12(2)-XX12(2)*VV12(1)) 
+      AL2 = (AM1**2+AM2**2+AM3**2) !/(MU)**2
+      ECC2 = 1.+(2.*H(IPAIR)*AL2)/(BODY(I)**2)
+
+*     Semi-major axis and eccentricity check
+      SEMI = -0.5*BODY(I)/H(IPAIR)
+C      ECC2 = (1.0 - R(IPAIR)/SEMI)**2 + TDOT2(IPAIR)**2/(BODY(I)*SEMI)
+*     Einstein shift criterion to trigger PN
+      A_EIN = 3.0*TWOPI*BODY(I)/(SEMI*CL2*(1-ECC2))
+*     --04/13/15 14:48-lwang-debug--------------------------------------*
+***** Note:------------------------------------------------------------**
+C      IF(ECC2.GE.1.0) print*,'T',TIME,'A_EIN',A_EIN,'STEP',STEP(I1),
+C     &     'ECC2',ECC2,'SEMI',SEMI
+*     --04/13/15 14:48-lwang-end----------------------------------------*
+      IF (VOVERC.GT.BETAREL/5.0.OR.A_EIN.GT.1.0D-4) THEN
+         APPLY = 1
+         IF (VOVERC.GT.BETAREL.OR.A_EIN.GT.1.0D-4) APPLY = 1
+C*     Get Forces and apply later
+         CALL KSREL(IPAIR,I1,BODY(I1),BODY(I2),XI,VI,STEP(I1),
+     &        FRELP,FRELD,VWHOLE,APPLY,SAK,SBK)
+         GI_PN = SQRT(FRELP(1)**2 + 
+     &        FRELP(2)**2 + FRELP(3)**2)*R(IPAIR)**2*BODYIN
+C         GREL = GAMREL(1,IPAIR)+GAMREL(2,IPAIR)+GAMREL(3,IPAIR)
+C     &        +GAMREL(4,IPAIR)+GAMREL(5,IPAIR)+GAMREL(6,IPAIR)+
+C     &        GAMREL(7,IPAIR)+GAMREL(8,IPAIR)
+         IF (GI_PN.GT.GAMMAREL.AND.APPLY.EQ.0) THEN
+            APPLY = 2
+            CALL KSREL(IPAIR,I1,BODY(I1),BODY(I2),XI,VI,STEP(I1),
+     &           FRELP,FRELD,VWHOLE,APPLY,SAK,SBK)
+         END IF
+*     Energy correction
+         IF(APPLY.EQ.1.OR.APPLY.EQ.2) THEN
+            CALL KSREL_ENERGY(IPAIR,BODY(I1),BODY(I2),XI,VI,STEP(I1),
+     &           FRELP,FRELD,KZ(45),TTOT)
+            IF (rank.eq.0.and.GREL.GT.1.0)THEN
+               WRITE(6,*)'GREL>1: TIME', TTOT, 'NAME(I1)', NAME(I1), 
+     &              'NAME(I2)', NAME(I2), 'GREL', GREL, 'H',H(IPAIR),
+     &              'RIJ',RIJ,'STEP(I1)',STEP(I1),'VIJ',VBIN
+*     Just merge for that big of a perturbation
+               APPLY = 3
+               GO TO 798
+            END IF
+         END IF
+      ELSE
+         APPLY = -1
+      END IF
+*     
+*     Apply corrections if...
+      IF (APPLY.GT.0) THEN
+         DO 337 KK = 1,3
+            FP(KK) = FP(KK) + FRELP(KK)
+            FD(KK) = FD(KK) + FRELD(KK)
+ 337     CONTINUE
+C         IF (rank.eq.0.and.(NSTEPU.EQ.0.OR.MOD(NSTEPU,10).EQ.0)) THEN
+C      END IF
+C         IF (rank.eq.0) THEN
+            CALL KSREL_OUTPUT(TTOT,XI,VI,NAME(I1),NAME(I2),BODY(I1),
+     &           BODY(I2),STEP(I1),LIST(1,I1),H(IPAIR),GI_PN,GI_NOPN)
+C         END IF
+      END IF
+#endif               
+
 *       Save old radial velocity & relative perturbation and set new GAMMA.
-      RDOT = TDOT2(IPAIR)
+ 810  RDOT = TDOT2(IPAIR)
 *     G0 = GAMMA(IPAIR)
-      GI = SQRT(FP(1)**2 + FP(2)**2 + FP(3)**2)*R(IPAIR)**2*BODYIN
+      GI = SQRT(FP(1)**2 + FP(2)**2 + FP(3)**2)*
+     &     R(IPAIR)**2*BODYIN
+*     Add Grel for timestep calculation if PN force is not used
+#ifdef POSTNEWTON
+      IF(APPLY.EQ.0) GI = GI + GI_PN
+      IF(KZ(45).GT.0.AND.((KSTAR(I1).EQ.13).OR.(KSTAR(I1).EQ.14)).AND.
+     &     ((KSTAR(I2).EQ.13).OR.(KSTAR(I2).EQ.14))) THEN
+         GAMMA(IPAIR) = GI_NOPN
+      ELSE
+         GAMMA(IPAIR) = GI
+      END IF
+#else
       GAMMA(IPAIR) = GI
+#endif
+
+
 *
 *     --09/25/13 14:22-lwang-debug--------------------------------------*
 ***** Note: To test after correct
@@ -207,8 +399,8 @@ c$$$      end if
       T0(I1) = TIME
 *     --09/25/13 14:22-lwang-debug--------------------------------------*
 ***** Note: To test after correct
-c$$$      if(tblock.eq.29.053588867187500.and.name(i1).eq.1759) then
-c$$$         write(125+rank,*)'KSCORR I1',I1,'IPAIR',ipair,
+c$$$      if(time.gt.62.0798.and.name(i1).eq.25701) then
+c$$$         write(125+rank,*)'TIME',time,'step',step(i1),
 c$$$     &        'U',U(1,IPAIR),'U0',U0(1,IPAIR),
 c$$$     &        'UDOT',UDOT(1,ipair),'FU',FU(1,ipair),
 c$$$     &        'FT',FUDOT(1,ipair),'FT2',FUDOT2(1,ipair),
@@ -217,17 +409,19 @@ c$$$     &        'FD0',FD0(1,ipair),'H',H(ipair),'HT',HDOT(ipair),
 c$$$     &        'HT2',HDOT2(ipair),'HT3',HDOT3(ipair),
 c$$$     &        'HT4',HDOT4(ipair),'dt',DTAU(ipair),
 c$$$     &        'TD2',TDOT2(ipair),'TD3',TDOT3(ipair),
-c$$$     &        'R',R(ipair),'R0',r0(ipair),
+c$$$     &        'GI',GI,'H',H(ipair),'R',R(ipair),'GREL',GREL,
+c$$$     &        'RSW',2*(BODY(I1)+BODY(I2))/CL2,'FRELP',FRELP(1:3),
+c$$$     &        'FP',FP(1:3),'APPLY',APPLY,'RIJ',RIJ,'R0',r0(ipair),
 c$$$     &        'Gamma',GAMMA(ipair),'H0',h0(ipair),
 c$$$     &        'SF',sf(1,ipair),'kslow',kslow(ipair),
-c$$$     &        'nnb',LIST(1,i1),'list',list(2,i1)
-c$$$     &        ,'step',step(i1),'t0',t0(i1),'tblock',tblock,'t',time
+c$$$     &        'nnb',LIST(1,i1),'list',list(2,i1),
+c$$$     &        't0',t0(i1),'tblock',tblock
 c$$$         print*,rank,'kscorr I1',i1,'ipair',ipair,
 c$$$     &        'U',u(1,ipair),'UDOT',udot(1,ipair),
 c$$$     &        't',time,'t0',t0(i1)
 c$$$         call flush(125+rank)
-c$$$         call mpi_barrier(MPI_COMM_WORLD,ierr)
-c$$$         if(time.ge.29.047067570490370) stop
+C         call mpi_barrier(MPI_COMM_WORLD,ierr)
+C         if(time.ge.29.047067570490370) stop
 c$$$      end if
 *     --09/25/13 14:23-lwang-end----------------------------------------*
 c$$$*       Check for early return during termination (called from KSTERM).
@@ -240,8 +434,8 @@ c$$$      IF (IPHASE.NE.0) GO TO 100
 *       Initialize termination indicator and check for large perturbation.
       IQ = .FALSE.
 *     Reduce the criterion from 0.25 to 0.1 to reduce the energy error
-      IF (GI.GT.0.10) GO TO 2
-      IF (GI.LT.0.03) THEN
+      IF (GAMMA(IPAIR).GT.0.10) GO TO 2
+      IF (GAMMA(IPAIR).LT.0.03) THEN
           JCOMP = 0
           GO TO 20
       END IF
@@ -280,27 +474,27 @@ c$$$      IF (IPHASE.NE.0) GO TO 100
    10 CONTINUE
 *
 *       Set termination if strong perturber <= N forms dominant pair.
-      IF (JCOMP.GT.0.OR.GI.GT.1.0) THEN
+      IF (JCOMP.GT.0.OR.GAMMA(IPAIR).GT.1.0) THEN
 *       Check optional binary search.
 *         IF (KZ(4).GT.0) THEN
-*             DGAM = GI - G0
+*             DGAM = GAMMA(IPAIR) - G0
 *             K = KZ(4)
 *             CALL EVOLVE(IPAIR,K)
 *         END IF
 *       Terminate the binary when close particle is KS pair
          IF (JCOMP.GT.N) IQ = .TRUE.
-         IF (JCOMP.LE.N.OR.GI.GT.1.0) IQ = .TRUE.
+         IF (JCOMP.LE.N.OR.GAMMA(IPAIR).GT.1.0) IQ = .TRUE.
       END IF
 *
 *       Check termination of hyperbolic encounter (R > R0 or R > 2*RMIN).
    20 IF (HI.GT.0.0D0.AND.NAME(I).GT.0) THEN
-          IF ((RI.GT.R0(IPAIR).AND.GI.GT.GMAX).OR.RI.GT.2.0*RMIN.OR.
-     &        (GI.GT.0.5.AND.TD2.GT.0.0)) THEN
+         IF ((RI.GT.R0(IPAIR).AND.GAMMA(IPAIR).GT.GMAX).OR.
+     &        RI.GT.2.0*RMIN.OR.(GAMMA(IPAIR).GT.0.5
+     &        .AND.TD2.GT.0.0)) THEN
 *       Skip termination delay in case of velocity kick (cf. routine KSTERM).
-              IF (HI.LT.100.0.OR.GI.GT.0.1.OR.RI.GT.5.0*RMIN) THEN
-                  IQ = .TRUE.
-              END IF
-          END IF
+            IF (HI.LT.100.0.OR.GAMMA(IPAIR).GT.0.1.OR.RI.GT.5.0*RMIN)
+     &           IQ = .TRUE.
+         END IF
       END IF
 *
 *       Choose basic regularized step using binding energy or lower limit.
@@ -336,6 +530,40 @@ c$$$      IF (IPHASE.NE.0) GO TO 100
       DTU = ETAU*W2
       DTU = MIN(1.2*DTAU(IPAIR),DTU)
 *
+#ifdef POSTNEWTON
+* Relativistic timestep critirion differnet, PN not a tidal force
+      IF (KZ(45).GT.0.AND.APPLY.GE.0) THEN
+*     Compute relativistic correction with old timestep
+*     Seems to make more sense at this Point (Patrick)
+C            E_CORRECT = DIFFS(3)*STEP(I1)
+C            IF (E_CORRECT.GT.0.) THEN
+C               RELENERGY(IPAIR) = RELENERGY(IPAIR) + E_CORRECT
+C            ELSE
+C               RELENERGY(IPAIR) = RELENERGY(IPAIR) - E_CORRECT
+C            END IF
+C     &        + DIFFS(4)*STEP(I1)*STEP(I1)
+*
+         DTUREL = ETAU/(1.0+DTUPN*(SQRT((BODY(I1)+BODY(I2))/RIJ)
+     &        /CLIGHTPN))
+*
+* Record if reletivistic timestep is used (for diagnositics only)
+C            IF (DTUREL.LT.DTU) THEN
+C               RELORNOT = 1
+C               DTUCLASS = DTU
+C            ELSE IF (DTUREL.GE.DTU) THEN
+C               RELORNOT = 0
+C               DTUCLASS = DTU
+C            END IF
+         DTUCLASS = DTU
+* Determine if classical or PN dynamics dominate the timestep
+         DTU = MIN(DTUREL,DTU)
+*
+* Output timestep data for diagnostic purposes
+C         WRITE (136,234) TIME+TOFF,DTUREL,DTUCLASS
+C 234     FORMAT (4E15.7,I3)
+
+      END IF
+#endif
 *       Include convergence criterion DH = H'*DTU + H''*DTU**2/2 = 0.001*|H|.
       IF (GI.GT.1.0D-04) THEN
           DH = 1.0E-03*MAX(ABS(H(IPAIR)),ECLOSE)
@@ -406,6 +634,10 @@ c$$$      end if
       END IF
       DTAU(IPAIR) = DTU
 *
+*#ifdef POSTNEWTON
+* Set timestep for relativistic energy calculation (see ksrel.f)
+C      RELTSTEP(IPAIR) = STEP(I1)
+*#endif
 *       See whether the KS slow-down procedure is activated.
       IMOD = KSLOW(IPAIR)
       ZMOD = 0
@@ -430,24 +662,25 @@ c$$$      end if
 *              A0 = SEMI*(1.0 + SQRT(ECC2))/RI
 *       Replace eccentricity calculation with typical value.
               A0 = 1.5*SEMI/RI
-              GA = GI*A0*A0*A0
+              GA = GAMMA(IPAIR)*A0*A0*A0
               IF (GA.GT.0.25.AND.RI.GT.SEMI) IQ = .TRUE.
 *       Terminate wide orbits if perturber number is relatively large.
               IF (RI.GT.20*RMIN.AND.NNB0.GT.0.8*LIST(1,I)) IQ = .TRUE.
-*              IF (GI.GT.0.1.AND.RI.GT.RMIN) IQ = .TRUE.
-              IF (GI.GT.0.25) IQ = .TRUE.
+*              IF (GAMMA(IPAIR).GT.0.1.AND.RI.GT.RMIN) IQ = .TRUE.
+              IF (GAMMA(IPAIR).GT.0.25) IQ = .TRUE.
               IF (MIN(BODY(I1),BODY(I2)).LT.0.05*BODYM) THEN
-                  IF (GI.GT.2.0D-04) IQ = .TRUE.
+                  IF (GAMMA(IPAIR).GT.2.0D-04) IQ = .TRUE.
               END IF
           ELSE
-              IF (TD2.GT.0.0.AND.(GI.GT.GMAX.OR.RI.GT.RMIN)) IQ = .TRUE.
+              IF (TD2.GT.0.0.AND.(GAMMA(IPAIR).GT.GMAX.OR.RI.GT.RMIN))
+     &            IQ = .TRUE.
           END IF
           IF (.NOT.IQ) GO TO 60
       END IF
 *
 *     For massive black hole ks, try to avoid terminated with large seperation
       IF(KZ(24).EQ.1.AND.BODY(I)/BODYM.GT.200.AND.RI.GT.10.0*RMIN) THEN
-         IQ = .true.
+         IQ = .false.
       END IF
 
 *       Delay termination until end of block for large perturbations.
@@ -469,7 +702,7 @@ c$$$     &        ' T',E15.7,' T0',E15.7)
 *     IF (RI.GT.R0(IPAIR)) THEN
       IF (RI.GT.R0(IPAIR).AND.RI.GT.2.0*RMIN.AND..NOT.IQ) THEN
 *       See whether termination can be delayed for sufficient perturbers.
-          IF (NNB0.LT.0.80*LIST(1,I).AND.GI.LT.0.1) GO TO 60
+          IF (NNB0.LT.0.80*LIST(1,I).AND.GAMMA(IPAIR).LT.0.1) GO TO 60
 *     --11/20/13 16:26-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 c$$$         if(rank.eq.0.and.name(i1).eq.230) then
@@ -481,7 +714,7 @@ c$$$         end if
 c$$$          IF (RI.GT.RMIN) THEN
 c$$$              A3 = RMIN*ABS(HI)*BODYIN
 c$$$              GIMAX = A3*A3*A3
-c$$$              IF (GI.LT.GIMAX) GO TO 60
+c$$$              IF (GAMMA(IPAIR).LT.GIMAX) GO TO 60
 *       Check updating of R0 for newly hardened binary orbit.
           IF (HI.LT.-ECLOSE) THEN
              SEMI = -0.5*BODY(I)/HI
@@ -491,10 +724,10 @@ c$$$              IF (GI.LT.GIMAX) GO TO 60
 c$$$          END IF
 *
 *         IF (KZ(4).GT.0.AND.GI.GT.GPRINT(1)) THEN
-*             DGAM = GI - G0
+*             DGAM = GAMMA(IPAIR) - G0
 *             K = KZ(4)
 *             DO 55 L = 2,K
-*                 IF (GI.LT.GPRINT(L)) THEN
+*                 IF (GAMMA(IPAIR).LT.GPRINT(L)) THEN
 *                     CALL EVOLVE(IPAIR,L-1)
 *                     GO TO 90
 *                 END IF
@@ -605,7 +838,7 @@ c$$$                          CALL CMBODY(2)
 *
 *     K = KZ(4)
 *     DO 65 L = 1,K
-*         IF ((G0 - GPRINT(L))*(GI - GPRINT(L)).LE.0.0) THEN
+*         IF ((G0 - GPRINT(L))*(GAMMA(IPAIR) - GPRINT(L)).LE.0.0) THEN
 *             IF (L.EQ.1) THEN
 *                 W1 = -0.5*BODY(I)/HI
 *                 W2 = W1*BODYIN
@@ -615,14 +848,14 @@ c$$$                          CALL CMBODY(2)
 *       Estimate smallest permitted output interval at new level.
 *             DTCRIT = TK*ORBITS(L)
 *             IF (TIME - TLASTB(L).LT.DTCRIT) GO TO 70
-*             DGAM = GI - G0
+*             DGAM = GAMMA(IPAIR) - G0
 *             CALL EVOLVE(IPAIR,L)
 *             GO TO 70
 *         END IF
 *  65 CONTINUE
 *
 *       Check for partial reflection during approach (NB! only IMOD = 1).
-*  70 IF (GI.LT.GMIN.AND.TD2.LT.0.0D0) THEN
+*  70 IF (GAMMA(IPAIR).LT.GMIN.AND.TD2.LT.0.0D0) THEN
 *       Skip apocentre position itself.
 *         IF (RDOT.LT.0.0D0.AND.IMOD.EQ.1) THEN
 *             IF (KZ(25).GT.0) CALL FREEZE(IPAIR)
@@ -790,13 +1023,13 @@ c$$$      print*,rank,'rmax',rmax
       END IF
 *
 *       Produce diagnostics for any circularizing perturbed binary.
-      IF (KSTAR(I).EQ.-2.AND.GI.GT.0.01) THEN
+      IF (KSTAR(I).EQ.-2.AND.GAMMA(IPAIR).GT.0.01) THEN
           ECC = RI/SEMI - 1.0
           QPS = SEMI*(1.0 - ECC)/MAX(RADIUS(I1),RADIUS(I2))
           ZM = BODY(I1)/BODY(I2)
           if(rank.eq.0)
      &    WRITE (21,80)  TTOT, NAME(I1), NAME(I2), KSTAR(I1), KSTAR(I2),
-     &                   LIST(1,I1), QPS, ZM, GI, ECC, SEMI
+     &                   LIST(1,I1), QPS, ZM, GAMMA(IPAIR), ECC, SEMI
    80     FORMAT (' PERT SPIRAL    T NAM K* NP QP/S M1/M2 G E A ',
      &                             F11.4,2I6,3I3,2F5.1,2F8.4,1P,E10.2)
           CALL FLUSH(21)
@@ -823,7 +1056,15 @@ c$$$      print*,rank,'rmax',rmax
       END IF
 *
 *       Select new perturbers (J = N adopted for unperturbed Chaos).
+#ifdef POSTNEWTON
+*     Save step(I1) first
+      DTMP = STEP(I1)
+#endif
       CALL KSLIST(IPAIR)
+#ifdef POSTNEWTON
+*     Avoid step(i1) is enlarged to unperturbed KS case for PN treatment
+      IF(APPLY.GE.0) STEP(I1) = DTMP
+#endif
 *
 *       Check rectification of chaotic spiral at start of unperturbed motion.
       IF (KSTAR(I).EQ.-2.AND.LIST(1,I1).EQ.0) THEN

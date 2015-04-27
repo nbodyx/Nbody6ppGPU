@@ -5,6 +5,9 @@
 *       ----------------
 *
       INCLUDE 'common6.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+#endif
       EXTERNAL VERIFY
 *
 #ifdef PARALLEL
@@ -28,6 +31,10 @@ C Termination time in physical units, TCRITP, read in nbody6.F
      &               QE, RBAR, ZMBAR
          READ (5,*)  (KZ(J),J=1,50)
          READ (5,*)  DTMIN, RMIN, ETAU, ECLOSE, GMIN, GMAX, SMAX
+#ifdef POSTNEWTON
+         IF(KZ(45).GT.0)
+     &        READ (5,*) BETAREL,DTUPN,CLIN,GAMMAREL,SPNMAG
+#endif
       END IF
 
 *     Check SMAX to make sure it have correct value
@@ -56,6 +63,15 @@ C Termination time in physical units, TCRITP, read in nbody6.F
 *
       CALL MPI_BCAST(KZ(1),50,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 *
+#ifdef POSTNEWTON
+      IF (KZ(45).GT.0) THEN
+         CALL MPI_BCAST(BETAREL,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+         CALL MPI_BCAST(DTUPN,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+         CALL MPI_BCAST(CLIN,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+         CALL MPI_BCAST(GAMMAREL,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+         CALL MPI_BCAST(SPNMAG,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+      END IF
+#endif
       CALL MPI_BCAST(ETAI,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(ETAR,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(RS0,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
@@ -111,6 +127,13 @@ C New: (Aug.1998, P.Kroupa)
      &        '      GMAX     SMAX')
          WRITE (6,30)  DTMIN, RMIN, ETAU, ECLOSE, GMIN, GMAX, SMAX
    30    FORMAT (/,9X,1P7E10.1)
+#ifdef POSTNEWTON
+         IF(KZ(45).GT.0) THEN
+            WRITE (6,32)  BETAREL, DTUPN, CLIN
+ 32         FORMAT (/,7X,'                   BETAREL = ',F7.3,
+     &           ' DTUPN = ',E10.2,' CLIGHTPN[km/s] = ',F10.3,/)
+         END IF
+#endif
       end if
       call flush(6)
 *

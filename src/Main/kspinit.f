@@ -10,7 +10,7 @@
 
       TIME0 = TIME
 !$omp parallel do 
-!$omp& private(ipair,icm,i1,i2,eb,semi,tk,vi,ui,tp,time,imod,K)
+!$omp& private(ipair,icm,i1,i2,eb,semi,tk,vi,ui,tp,imod,K)
       DO IPAIR = 1, NPAIRS
          ICM = IPAIR + N
          I2 = 2*IPAIR
@@ -55,6 +55,7 @@
          END IF
 
 *     Obtain polynomials for perturbed KS motion (standard case & merger).
+         TIME = TIME0
          CALL KSPOLY(IPAIR,IMOD)
 
          LIST(2,I2) = -1
@@ -68,7 +69,7 @@ c     &           ' GAMMA',1P,E17.5,0P,'  IMOD',I3)
 c         end if
       END DO
 !$omp end parallel do      
-
+      TIME = TIME0
 
       RETURN
 

@@ -17,6 +17,9 @@
       INCLUDE 'common6.h'
       INCLUDE 'timing.h'
       include 'omp_lib.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+#endif
       COMMON/STSTAT/  TINIT,NIR,NIB,NRGL,NKS
 #ifdef DEBUG
 *     --10/03/14 19:40-lwang-debug--------------------------------------*
@@ -152,6 +155,14 @@
  30          FORMAT (/,7X,'                      ETAI =',F7.3,
      &            '  ETAR =',F7.3,'  ETAU =',F7.3,'  DTMIN =',1PE9.1,
      &            '  RMIN =',E9.1,' NNBOPT =',I5,/)
+#ifdef POSTNEWTON
+             IF(KZ(45).GT.0) THEN
+                WRITE (6,40)  ETOT, PREVRELENERGY
+ 40             FORMAT (/,7X,'ENERGY CARRYOVER:   ETOT = ',E15.7,
+     &               ' PREVRELENERGY = ',E15.7,/)
+             END IF
+#endif    
+
           end if
 *
 *       Find massive back hole after restart

@@ -1,7 +1,14 @@
 //transform bdat.9, bwdat.19, sev.83, bew.82 and conf.3 to specific format//
+//
+// Output option 1:
+// x1(1:3)[pc], v1(1:3)[km/s], x2(1:3)[pc], v2(1:3)[km/s], m1[M_sun], m2[M_sun], log10[L1[L_sun]), log10(L2[L_sun]), rs1[R_sun], rs2[R_sun], K1, K2, a[R_sun], eccentricity, xcm(1:3)[pc], vcm(1:3)[km/s]
+// Here L1/2 is luminosity, rs1/2 is stellar radius, a is semi-major axis.
+//   In binary case, x1/2,v1/2 are the two components positions and velocities, xcm, vcm are the center-of-mass positions and velocities.
+//   In single case, x1 and xcm are same, v1 and vcm are same. the data for *2 are zero
+//
 // Output option 2:
-// single star data: mass[M_sun], x(1:3)[NB],v(1:3)[NB]
-// binary star data: eccentricity, log10(a[R_sun]), mass1[M_sun], mass2[M_sun], xcm(1:3)[NB], vcm(1:3)[NB]
+//   single star data: mass[M_sun], x(1:3)[NB],v(1:3)[NB]
+//   binary star data: eccentricity, log10(a[R_sun]), mass1[M_sun], mass2[M_sun], xcm(1:3)[NB], vcm(1:3)[NB]
 
 #include <stdio.h>
 #include <cstring>
@@ -16,7 +23,7 @@
 
 //new data structure================================//
 struct ndata{
-  double x1[3],v1[3],x2[3],v2[3],m1,m2,L1,L2,rs1,rs2;  //x/v(1/2): binary component(1/2) or single star(1)[NB], m1/2: mass[Msub], L1/2, log10 luminocity[Lsun], rs1/2, star radius[R_sun]
+  double x1[3],v1[3],x2[3],v2[3],m1,m2,L1,L2,rs1,rs2;  //x/v(1/2): binary component(1/2) or single star(1)[NB], m1/2: mass[M_sun], L1/2: log10 luminocity[L_sun], rs1/2: star radius[R_sun]
   int k1,k2; //k1/2: stellar type
   double a,e,x[3],v[3]; //a: semi-major[R_sun], e: eccentricity, x/v: binary c.m. or single star[NB]
   ndata() {}

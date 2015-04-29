@@ -110,6 +110,7 @@ c      DATA  G1,G2,G3,G4  /0.28,1.14,0.010,0.1/
               BODY0(2*I) = ZMB/(1.0 + RATIO**0.4)
               BODY0(2*I-1) = ZMB - BODY0(2*I)
           END IF
+C*       Use mass ratio of O stars based on observations (Kiminki & Kobulnicky 2012; Sana et al. 2012; Kobulnicky et al. 2014)
  22       KSTAR(2*I-1) = KCM(2*JB-1)
           KSTAR(2*I) = KCM(2*JB)
    30 CONTINUE

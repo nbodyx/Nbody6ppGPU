@@ -718,7 +718,19 @@ c$$$            end if
       IF(KACC.EQ.2)THEN
 *
          DTXMIN = MIN(DTX(1),DTX(2))
+#ifdef POSTNEWTON
+*     Escape PN check
+         IF(KZ(45).GT.0.AND.((KSTAR(JX(1)).EQ.13).OR.
+     &        (KSTAR(JX(1)).EQ.14)).AND.((KSTAR(JX(2)).EQ.13)
+     &        .OR.(KSTAR(JX(2)).EQ.14))) THEN
+            DJGR = 0.0
+            DELET = 0.0
+         ELSE
+#endif
          CALL GRRAD(MASS(1),MASS(2),SEP,ECC,JORB,DJGR,DELET)
+#ifdef POSTNEWTON
+         END IF
+#endif         
          DJORB = DJT + DJGR
 *        if(rank.eq.0)
 *    &   write(*,*)' grrad ',sep,ecc,djgr,delet,dtxmin

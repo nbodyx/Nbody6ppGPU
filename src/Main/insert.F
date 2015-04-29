@@ -100,7 +100,7 @@ c$$$          end if
               LI = LI - 1
               GO TO 50
           END IF
-          IF (TI.LT.T0(J) + STEP(J)) GO TO 20
+          IF (TI.LT.T0(J) + STEP(J).AND.LSTAR.GT.1) GO TO 20
           LSTAR = LSTAR + 1
 *       Ensure that current index LI is not chosen due to round-off.
           LSTAR = MAX(LSTAR,LI+1)

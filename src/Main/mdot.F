@@ -1320,7 +1320,7 @@ c$$$      end if
          IF (KW.EQ.15) THEN
             T0(I) = TADJ + DTADJ
 *       Remove I in NXTLST
-            call remove_tlist(I,STEP,DTK)
+            call delay_remove_tlist(I,STEP,DTK)
             call shrink_tlist
             STEP(I) = 2*DTK(1)
 *       Add I to ghost

@@ -512,13 +512,13 @@ c$$$     &           nmerge,name(j1),name(j2),name(icm)
          call string_left(TCHAR,TTOT,DELTAT)
          write(OUTFILE,118) TCHAR
  118     format('conf.3_',A20)
-#ifdef H5OUTPUT
+
          IF(KZ(46).GT.0) THEN
             if(rank.eq.0.AND.TTOT.GT.0.0D0) THEN
                call custom_update_file(TTOT,DELTAT)
             END IF
          END IF
-#endif
+
          OPEN (UNIT=3,STATUS='UNKNOWN',FORM='UNFORMATTED',FILE=OUTFILE)
          
          WRITE (3)  NTOT, MODEL, NRUN, NK

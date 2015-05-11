@@ -33,10 +33,10 @@
       DATA LSHORT(1) /0/
       DATA IQ,ICALL,LSTEPM,STEPM,IPSTART /0,2,.FALSE.,0.03125,.true./
       SAVE IQ,ICALL,LSTEPM,STEPM,IPSTART,TMIN
-#ifdef H5OUTPUT
-      REAL*8 DTH5OUT
-      SAVE DTH5OUT
-#endif
+
+      REAL*8 DTOUT
+      SAVE DTOUT
+
 
 *
 *       Update quantized value of STEPM for large N (first time only).
@@ -67,21 +67,21 @@
             IF(NGHOSTS.GT.0) NXTLST(NXTLIMIT+1:NXTLIMIT+NGHOSTS) 
      &           = NXTLST(NMAX-NGHOSTS+1:NMAX)
 
-#ifdef H5OUTPUT
+            IF(KZ(46).GT.0) THEN
 *     Initial NMINR
-            IMINR(1:NTOT) = 1
-            DO I = IFIRST,2*NBIN0
-               IF(NAME(I).LE.2*NBIN0) THEN
-                  IF(MOD(I,2).EQ.0.AND.NAME(I-1).EQ.NAME(I)-1) THEN
-                     IMINR(I) = I - 1
-                  ELSE IF(MOD(I,2).EQ.1.AND.NAME(I+1).EQ.NAME(I)+1) THEN
-                     IMINR(I) = I + 1
+               IMINR(1:NTOT) = 1
+               DO I = IFIRST,2*NBIN0
+                  IF(NAME(I).LE.2*NBIN0) THEN
+                     IF(MOD(I,2).EQ.0.AND.NAME(I-1).EQ.NAME(I)-1) THEN
+                        IMINR(I) = I - 1
+                     ELSE IF(MOD(I,2).EQ.1
+     &                       .AND.NAME(I+1).EQ.NAME(I)+1) THEN
+                        IMINR(I) = I + 1
+                     END IF
                   END IF
-               END IF
-            END DO
+               END DO
 
 *     HDF5 format output initialization                  
-            IF(KZ(46).GT.0) THEN
 *     At the first time, full dataset need to be stored,
                if(rank.eq.0) then
                   IF(KZ(46).eq.1)
@@ -91,10 +91,10 @@
      &                 write(6,*) 'HDF5 output all particles ',
      &                 'with time interval ',DTK(KZ(47)+1)
                   IF(KZ(46).eq.2)
-     &                 write(6,*) 'CSV output active particles ',
+     &                 write(6,*) 'Binary output active particles ',
      &                 'with time interval ',DTK(KZ(47)+1)
                   IF(KZ(46).eq.4)
-     &                 write(6,*) 'CSV output all particles  ',
+     &                 write(6,*) 'Binary output all particles  ',
      &                 'with time interval ',DTK(KZ(47)+1)
                   IF(KZ(46).GE.3.AND.KZ(46).LE.4.AND.SMAX.GT.
      &                 DTK(KZ(47)+1)) then
@@ -110,7 +110,6 @@
                CALL custom_output(NXTLEN,NXTLST,
      &              NXTLIMIT,NGHOSTS,IMINR)
             END IF
-#endif
 
 *     Sorting NXTLST
             call sort_tlist(STEP,DTK,.true.)
@@ -118,20 +117,20 @@
 
 *     Initial tcheck block step level
          END IF
-#ifdef H5OUTPUT
+
 *     Initial output interval
          IF(KZ(47).GE.0) THEN
-            DTH5OUT = 1.0D0
+            DTOUT = 1.0D0
             DO K = 1, KZ(47)
-               DTH5OUT = 0.5D0*DTH5OUT
+               DTOUT = 0.5D0*DTOUT
             END DO
          ELSE
-            DTH5OUT = DTK(64)
+            DTOUT = DTK(64)
          END IF
          IF(rank.eq.0.and.TOFF+TIME.NE.0.D0) THEN
             call custom_update_file(TTOT,DELTAT)
          END IF
-#endif
+
 
 #ifdef GPU
          NN = NTOT + 10
@@ -1115,15 +1114,15 @@ c$$$         ttmov = ttmov +(tt334-tt333)*60
       ttsimdsend = ttsimdsend + (ttirrs2-ttirrs1)*60.
 #endif
 
-#ifdef H5OUTPUT
+
 *     custom output
       call cputim(ttiout1)
-      IF(KZ(46).GT.0.AND.DMOD(TIME,DTH5OUT).EQ.0) THEN
+      IF(KZ(46).GT.0.AND.DMOD(TIME,DTOUT).EQ.0) THEN
          call custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS,IMINR)
       END IF
       call cputim(ttiout2)
       ttout = ttout + (ttiout2 - ttiout1)*60.
-#endif
+
 
 *     Resorting the NXTLST
       call cputim(tt335)

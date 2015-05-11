@@ -106,10 +106,10 @@
      &                 'with time interval ',DTK(KZ(47)+1)
 #endif                  
                   IF(KZ(46).eq.2)
-     &                 write(6,*) 'CSV output active particles ',
+     &                 write(6,*) 'Binary output active particles ',
      &                 'with time interval ',DTK(KZ(47)+1)
                   IF(KZ(46).eq.4)
-     &                 write(6,*) 'CSV output all particles  ',
+     &                 write(6,*) 'Binary output all particles  ',
      &                 'with time interval ',DTK(KZ(47)+1)
                   IF(KZ(46).GE.3.AND.KZ(46).LE.4.AND.SMAX.GT.
      &                 DTK(KZ(47)+1)) then

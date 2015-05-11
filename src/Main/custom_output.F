@@ -1,7 +1,7 @@
       subroutine custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS,IMINR)
 *
 *
-*     Custom output with HDF5/CSV format
+*     Custom output with HDF5/binary format  (Long Wang)
 *-----------------------------------------------------------------------------------
 *     single: NAME, M[M*], X(1:3)[pc], V(1:3)[km/s],
 *             K*, RS[R*], L[L*], Teff[K], MCORE[M*], RSCORE[R*]

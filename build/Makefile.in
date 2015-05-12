@@ -124,7 +124,7 @@ libinitial.so: initial.h initial.cpp
 libnb6out3.so: nb6out3.h nb6out3.cxx
 	$(CXX) -shared $(CXXFLAGS) ../src/Tools/nb6out3.cxx -o libnb6out3.so
 
-nb6++dumpb2a: dump_btoa.f 
+nb6++dumpb2a: dump_btoa.F 
 	$(FC) $(FFLAGS) $^ -o nb6++dumpb2a
 
 nb6++snapshot: libinitial.so libnb6out3.so snapshot.cpp

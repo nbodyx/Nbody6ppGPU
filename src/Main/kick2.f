@@ -33,13 +33,14 @@
       CALL KSREG
 *
 *       Check neighbour step reduction to compensate for velocity increase.
-      NNB = ILIST(1)
+      NNB = LIST(1,NTOT)
       DO 10 L = 2,NNB+1
-          J = ILIST(L)
+          J = LIST(L,NTOT)
           IF (T0(J) + 0.5*STEP(J).GT.TIME) THEN
 *     shift particle one step deeper
-              call shift_tlist(J,STEP(J),1,DTK)
+              call delay_remove_tlist(J,STEP,DTK)
               STEP(J) = 0.5*STEP(J)
+              call delay_store_tlist(J)
               TIMENW(J) = T0(J) + STEP(J)
           END IF
    10 CONTINUE

@@ -450,8 +450,8 @@ C     &                FILE='ROCHE')
      &               MASS0(2),MASS(2),MASSC(2),AJ(2),JSPIN(2),KW2,
      &               ECC,SEP,COALS)
          if(rank.eq.0)
-     &   WRITE (6,25)  MASS, KW1, KW2, SEP
-   25    FORMAT (' END CE    M K A ',2F7.3,2I3,F9.3)
+     &   WRITE (6,25)  MASS, KW1, KW2, SEP, MASSC(1), MASSC(2)
+   25    FORMAT (' END CE    M K A MC',2F7.3,2I3,3F9.3)
 *
 * Next step should be made without changing the time.
 *

@@ -152,6 +152,9 @@ c$$$      call mpi_barrier(MPI_COMM_WORLD,ierr)
 *       Initialize perturber list for integration of chain c.m.
       CALL CHLIST(ICH)
 *
+*       Initialize XC and UC
+      CALL XCPRED(0)
+      
 *       Perform differential F & FDOT corrections due to perturbers.
       DO 25 K = 1,3
           FIRR(K) = 0.0D0

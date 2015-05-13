@@ -458,11 +458,11 @@
 *
 * Include collision criterion at the end (note RC1 = 0 for main sequence).
       IF (RC1.EQ.0.0D0) THEN
-          IF (R1 + RCC2.LT.SEP*(1.0 - ECC)) THEN
+          IF (R1 + RCC2.GE.SEP*(1.0 - ECC)) THEN
               COEL = .TRUE.
           END IF
       ELSE
-          IF (RC1 + RCC2.LT.SEP*(1.0 - ECC)) THEN
+          IF (RC1 + RCC2.GE.SEP*(1.0 - ECC)) THEN
               COEL = .TRUE.
           END IF
       END IF

@@ -71,20 +71,20 @@
 *
 *       Obtain the tidal potential energy for linearized external field. 
       IF (KZ(14).EQ.0) THEN
-*       Note: ETIDE holds accumulated tidal energy if KZ(14) = 3.
-          ETIDE = 0.0D0
+*       Note: EPL holds accumulated tidal energy if KZ(14) = 3.
+          EPL = 0.0D0
       ELSE
 *       Employ general expression sum {m*r*F} for virial energy.
           CALL XTRNLV(1,N)
-*       Form tidal energy with Plummer potential (note ETIDE use for #14=3).
-          IF (KZ(14).EQ.4) THEN
-              ETIDE = 0.0
+*       Form tidal energy with Plummer potential (note EPL use for #14=3).
+          IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
+              EPL = 0.0
               DO 50 I = 1,N
                   RI2 = AP2
                   DO 45 K = 1,3
                       RI2 = RI2 + X(K,I)**2
    45             CONTINUE
-                  ETIDE = ETIDE - BODY(I)*MP/SQRT(RI2)
+                  EPL = EPL - BODY(I)*MP/SQRT(RI2)
    50         CONTINUE
           END IF
       END IF
@@ -95,7 +95,7 @@
           POT = POT + DP
       END IF
 *
-*       Total energy = ZKIN - POT + ETIDE + EBIN + ESUB + EMERGE + ECOLL.
+*       Total energy = ZKIN - POT + EPL + EBIN + ESUB + EMERGE + ECOLL.
 *
       RETURN
 *

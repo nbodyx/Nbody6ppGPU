@@ -240,7 +240,7 @@
           EESC = EI/BODY(I)
           VB2 = 2.0*ZKIN/ZMASS
 *       Distinguish between tidal field and isolated system (ECRIT at RTIDE).
-          IF (KZ(14).GT.0) THEN
+          IF (KZ(14).GT.0.AND.KZ(14).LE.2) THEN
               ECRIT = -1.5*(TIDAL(1)*ZMASS**2)**0.3333
               EESC = 2.0*(EESC - ECRIT)/VB2
               BESC = ZMBAR*BODY(I)

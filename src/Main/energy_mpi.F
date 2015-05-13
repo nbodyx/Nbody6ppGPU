@@ -259,10 +259,23 @@ c$$$         print*, 'phi: ',phidbl(ifirst:ifirst+5)
 *
       ZKIN = 0.5D0*ZKIN
 *
-*       Obtain the tidal potential if external field is present.
-      ETIDE = 0.0D0
-      IF (KZ(14).GT.0) THEN
-          CALL XTRNLV(1,N)
+*       Obtain the tidal potential energy for linearized external field. 
+      IF (KZ(14).EQ.0) THEN
+*       Note: EPL holds accumulated tidal energy if KZ(14) = 3.
+         EPL = 0.0D0
+      ELSE
+         CALL XTRNLV(1,N)
+*       Form tidal energy with Plummer potential (note EPL use for #14=3).
+         IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
+            EPL = 0.0
+            DO 50 I = 1,N
+               RI2 = AP2
+               DO 45 K = 1,3
+                  RI2 = RI2 + X(K,I)**2
+ 45            CONTINUE
+               EPL = EPL - BODY(I)*MP/SQRT(RI2)
+ 50         CONTINUE
+         END IF
       END IF
 *
 *       Check differential potential energy due to chain subsystem.
@@ -271,7 +284,7 @@ c$$$         print*, 'phi: ',phidbl(ifirst:ifirst+5)
           POT = POT + DP
       END IF
 *
-*       Total energy = ZKIN - POT + ETIDE + EBIN + ESUB + EMERGE + ECOLL.
+*       Total energy = ZKIN - POT + EPL + EBIN + ESUB + EMERGE + ECOLL.
 *
       RETURN
 *

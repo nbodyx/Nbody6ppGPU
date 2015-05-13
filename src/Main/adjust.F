@@ -81,24 +81,30 @@ c$$$      end if
 *     Subtract the kinetic energy of c.m. due to possible cloud effects.
       IF (KZ(13).GT.0) ZKIN = ZKIN - 0.5*ZMASS*CMRDOT(4)**2
 *     
-*     Form virial ratio using single particles & c.m. (isolated or tidal).
-      IF (KZ(14).EQ.0) THEN
-         Q = ZKIN/POT
-      ELSE
-*     Use Chandrasekhar eq. (5.535) for virial ratio.
-         ZKVIR = ZKIN + 0.5*TIDAL(4)*AZ
-         Q = ZKVIR/(POT - 2.0*ETIDE)
-*     Modify angular momentum integral using Chandrasekhar eq. (5.530).
-         AZ = AZ + 0.5*TIDAL(4)*ZM
+*       Include non-zero virial energy for Plummer potential and/or 3D case.
+      VIR = POT - VIR
+*       Note angular momentum term is contained in virial energy (#14=1/2).
+      Q = ZKIN/VIR
+      E(3) = ZKIN - POT + EPL
+
+*       Modify single particle energy by tidal energy (except pure 3D).
+      IF (KZ(14).NE.3) THEN
+          E(3) = E(3) + ETIDE
+      END IF
+
+*       Modify angular momentum integral using Chandrasekhar eq. (5.530).
+      IF (KZ(14).EQ.1.OR.KZ(14).EQ.2) THEN
+          AZ = AZ + 0.5*TIDAL(4)*ZM
       END IF
 *     
+*       Define crossing time using single particle energy (cf. option 14).
+      TCR = ZMASS**2.5/(2.0*ABS(E(3)))**1.5
 *     Define crossing time and save single particle energy.
-      ETOT = ZKIN - POT + ETIDE
-      TCR = ZMASS**2.5/(2.0*ABS(ETOT))**1.5
-      IF (Q.GT.1.0) THEN
+      IF (Q.GT.1.0.AND.KZ(14).LT.3) THEN
          TCR = TCR*SQRT(2.0*Q)
       END IF
-      E(3) = ETOT
+*     Form provisional total energy.
+      ETOT = ZKIN - POT + ETIDE + EPL
 *     
 *     Include KS pairs, triple, quad, mergers, collisions & chain.
       ETOT = ETOT + EBIN + ESUB + EMERGE + ECOLL + EMDOT + ECDOT

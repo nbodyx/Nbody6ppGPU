@@ -22,6 +22,12 @@
       INTEGER JHIST,JHISTR,LSHORT(NMAX)
       INTEGER IREG(NMAX),IMINR(NMAX),IMINR_TMP(NMAX)
       REAL*8 FIRR_SIMD(3,NMAX),FD_SIMD(3,NMAX)
+#ifdef DEBUG
+*     --10/03/14 19:40-lwang-debug--------------------------------------*
+***** Note: For interuption of simulations------------------------------------------------------------**
+      COMMON/adt/ adtime,dumptime,dprintt,dtprint,namep
+*     --10/03/14 19:41-lwang-end----------------------------------------*
+#endif
 #ifdef PARALLEL
       integer inum(maxpe),ista(maxpe),NXTLST_MPI(NMAX+500),NPIECE
       integer istart_lst,iend_lst
@@ -204,6 +210,50 @@
 
 *     Determine NXTLEN, TMIN and NXTLEVEL
       call next_tlist(TMIN,DTK,T0)
+#ifdef DEBUG
+*     --07/07/14 23:44-lwang-debug--------------------------------------*
+***** Note: Check time step--------------------------------------------**
+      DO L = 1, NXTLEN
+         J=NXTLST(L)
+         IF(T0(J)+STEP(J).NE.TMIN) then
+            print*,'ERROR: T0+STEP .NE. TMIN for particle: ',
+     &           'I',J,'N',NAME(J),'TMIN',TMIN,'T0+STEP',T0(J)+STEP(J),
+     &           'TIME',TIME,'TPREV',TPREV,'T0',T0(J),'STEP',STEP(J),
+     &           'T0(1)',T0(NXTLST(1)),'NDTMAX',NDTMAX,DTK(NDTMAX),
+     &           'NXTLEVEL',NXTLEVEL,'NXTLEN',NXTLEN,'I_NXTLST',L,
+     &           'NXTLIMIT',NXTLIMIT,'T0(2)',T0(NXTLST(2))
+            print*,'NDTK',(K,NDTK(K),DTK(K),K=1,NDTMAX)
+            call flush(6)
+            call abort()
+         END IF
+         IF(BODY(J).EQ.0.D0) THEN
+            print*,'ERROR: Ghost particle in nxtlst: L',L,
+     &           'I',J,'N',NAME(J),'T0+STEP',T0(J)+STEP(J),
+     &           'TIME',TIME,'T0',T0(J),'STEP',STEP(J),
+     &           'T0(1)',T0(NXTLST(1)),'NDTMAX',NDTMAX,DTK(NDTMAX),
+     &           'NXTLIMIT',NXTLIMIT,'M0',BODY0(J),'X',X(1,J),
+     &           'XD',XDOT(1,J),'K',KSTAR(J),'TEV',TEV(J)
+            print*,'NGHOST',NXTLST(NXTLIMIT+1:NXTLIMIT+NGHOSTS)
+            call flush(6)
+            call abort()
+         END IF
+C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
+      END DO
+      DO L = NXTLEN+1,NXTLIMIT
+         J = NXTLST(L)
+         IF(T0(J)+STEP(J).LE.TMIN) THEN
+            print*,'ERROR: Lost integrating particle: ',
+     &           'I',J,'N',NAME(J),'TMIN',TMIN,'T0+STEP',T0(J)+STEP(J),
+     &           'T0',T0(J),'STEP',STEP(J),'NDTMAX',NDTMAX,DTK(NDTMAX),
+     &           'NXTLEVEL',NXTLEVEL,'NXTLEN',NXTLEN,'I_NXTLST',L
+            print*,'NDTK',(K,NDTK(K),DTK(K),K=1,NDTMAX)
+            call flush(6)
+            call abort()
+         END IF
+C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
+      END DO
+*     --07/07/14 23:44-lwang-end----------------------------------------*
+#endif
 
 *     Determine MPI NXTLST and Regular block
       NREG = 0
@@ -229,6 +279,27 @@
           CALL SHORT(NXTLEN,NXTLST,LSHORT)
       END IF
 *
+#ifdef DEBUG
+*     --11/08/13 23:15-lwang-debug--------------------------------------*
+***** Note: Interupt the simulation -----------------------------------**
+      if(time.ge.dumptime) then
+         if(rank.eq.0) call mydump(1,1)
+#ifdef PARALLEL
+         call mpi_barrier(MPI_COMM_WORLD,ierr)
+#endif
+         stop
+      end if
+      if(time.ge.adtime) then
+         call adjust
+         call flush(6)
+#ifdef PARALLEL
+         call mpi_barrier(MPI_COMM_WORLD,ierr)
+#endif
+         stop
+      end if
+*     --11/08/13 23:15-lwang-end----------------------------------------*
+#endif
+     
 *       Set new time and save block time (for regularization terminations).
       TIME = TMIN
       TBLOCK = TIME
@@ -381,6 +452,43 @@ c$$$  END IF
 *       Block-Step Level Diagnostics (R.Sp. 29.Apr. 1993)
       IF(KZ(33).GT.0)JHIST(NXTLEN) = JHIST(NXTLEN) + 1
 *
+#ifdef DEBUG
+*     --08/27/13 16:38-lwang-debug--------------------------------------*
+***** Note: Before nbint-----------------------------------------------**
+      if(time.ge.dprintt) then
+        do L=1,NXTLEN
+           J = NXTLST(L)
+           if(namep.le.-NTOT.or.name(j).eq.namep) then
+              write(100+rank,*) 'NXTLEN',NXTLEN,'NREG',NREG,'NPAIR',
+     &             NPAIRS,'N',N,'NTOT',NTOT,'T',TIME
+              write(100+rank,109),l,j,name(j),x0(1,j),x0dot(1,j),
+     *             t0(j),t0r(j),step(j),stepr(j),
+     *             f(1,j),fdot(1,j),fi(1,j),fidot(1,j),
+     *             d0(1,j),d1(1,j),
+     *             d2(1,j),d3(1,j),d0r(1,j),d1r(1,j),
+     *             d2r(1,j),d3r(1,j),body(j),time,list(1,j)
+C            write(100+rank,*)'LIST',LIST(1:LIST(1,J)+1,J)
+              call flush(100+rank)
+           end if
+        end do
+ 109    format(/,'L',I7,' J',I7,'  N',I7,'  X0',E25.17,'  X0D',E25.17,
+     &       '  T0',F21.17,'  T0R',F21.17,'  STEP',F20.17,
+     &       '  STEPR',F20.17,'  F',E25.17,' FD',E25.17,
+     &       '  FI',E25.17,'  FIDOT',E25.17,'  D0',E25.17,
+     &       '  D1',E25.17,'  D2',E25.17,'  D3',E25.17,
+     &       '  D0R',E25.17,'  D1R',E25.17,'  D2R',E25.17,
+     &       '  D3R',E25.17,'  M',E25.17,'  T',F21.17,'  NB',I4)
+#ifdef PARALLEL
+C        print*,'rank',rank,'bar count:',ibarcount,'nstepi',nstepi
+        call flush(6)
+C        call mpi_barrier(MPI_COMM_WORLD,ierr)
+#endif
+C        if (TCCT.gt.2.0) stop
+        dprintt = TIME + dtprint
+      end if
+*     --08/27/13 16:38-lwang-end-debug----------------------------------*
+#endif
+
 *     Do full prediction when regular block step come
       ipredall = .false.
       IF(NREG.GT.0) THEN
@@ -1132,6 +1240,46 @@ c$$$         ttmov = ttmov +(tt334-tt333)*60
       ttintb =ttintb + (tt336-tt335)*60
       ttnewt = ttnewt + (tt336 - tt335)*60.      
 *
+#ifdef DEBUG
+*     --07/08/14 15:38-lwang-debug--------------------------------------*
+***** Note: Check time step--------------------------------------------**
+      DO L = 1, NDTMAX
+         IF(NDTK(L).LT.NDTK(L+1)) then
+            print*,'Error: L',L,'NDTK(L)',NDTK(L),'NDTK(L+1)',NDTK(L+1)
+            call flush(6)
+            call abort()
+         END IF
+      END DO
+      IF(NGHOSTS.GT.0) THEN
+         DO L = 1, NGHOSTS
+            J = NXTLST(NXTLIMIT+L)
+            IF(STEP(J).LE.DTK(1)) THEN
+               print*,'Error: Ghost particle with normal step! J',J,
+     &              'L',L,'STEP',STEP(J),'T',TIME,'NGHOSTS',
+     &              NXTLST(NXTLIMIT+1:NXTLIMIT+NGHOSTS)
+               call flush(6)
+               call abort()
+            END IF
+         END DO
+      END IF
+c$$$      J = 230
+c$$$      K=K_STEP(STEP(J),DTK)
+c$$$      DO L = NDTK(K+1)+1, NDTK(K)
+c$$$c      DO L = 1,NXTLIMIT
+c$$$         IF(NXTLST(L).EQ.J) THEN
+c$$$            print*,'J',J,'N',NAME(J),'STEP',STEP(J),'T',TIME,'NXTLEVEL',
+c$$$     &           NXTLEVEL,'L',L,'DTK',DTK(K),'K',K,'IPHASE',IPHASE
+c$$$C            GO TO 1022
+c$$$         end if
+c$$$      END DO
+c$$$      print*,'J',J,'N',NAME(J),'NOT FIND STEP',STEP(J),'K',K,'NXTLEVEL',
+c$$$     &     NXTLEVEL,'IPHASE',IPHASE
+c$$$      call flush(6)
+c$$$C      call abort()
+c$$$ 1022 continue
+*     --07/08/14 15:38-lwang-end----------------------------------------*
+#endif
+
 *     Output of Massive black hole data
       IF (KZ(24).EQ.1) then
          call BHPLOT

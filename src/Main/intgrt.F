@@ -84,17 +84,26 @@
 *     HDF5 format output initialization                  
 *     At the first time, full dataset need to be stored,
                if(rank.eq.0) then
+#ifdef H5OUTPUT
                   IF(KZ(46).eq.1)
      &                 write(6,*) 'HDF5 output active particles ',
      &                 'with time interval ',DTK(KZ(47)+1)
                   IF(KZ(46).eq.3)
      &                 write(6,*) 'HDF5 output all particles ',
      &                 'with time interval ',DTK(KZ(47)+1)
-                  IF(KZ(46).eq.2)
+#else
+                  IF(KZ(46).eq.1)
      &                 write(6,*) 'Binary output active particles ',
      &                 'with time interval ',DTK(KZ(47)+1)
+                  IF(KZ(46).eq.3)
+     &                 write(6,*) 'Binary output all particles ',
+     &                 'with time interval ',DTK(KZ(47)+1)
+#endif                  
+                  IF(KZ(46).eq.2)
+     &                 write(6,*) 'CSV output active particles ',
+     &                 'with time interval ',DTK(KZ(47)+1)
                   IF(KZ(46).eq.4)
-     &                 write(6,*) 'Binary output all particles  ',
+     &                 write(6,*) 'CSV output all particles  ',
      &                 'with time interval ',DTK(KZ(47)+1)
                   IF(KZ(46).GE.3.AND.KZ(46).LE.4.AND.SMAX.GT.
      &                 DTK(KZ(47)+1)) then

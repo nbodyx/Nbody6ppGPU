@@ -113,7 +113,7 @@ AS_IF([test "x$enable_mpi" != xno],
       local_fcflags=$local_fcflags' -I../extra_inc/nompi'])
 
 AS_IF([test "x$enable_debug" != xno],
-     [FCFLAGS=$local_fcflags" -g"
+     [FCFLAGS=$local_fcflags' -g'
       AX_FC_CHECK_BOUNDS
       AX_CHECK_COMPILE_FLAG([-fbacktrace],[FCFLAGS=$FCFLAGS" -fbacktrace"])
       AX_CHECK_COMPILE_FLAG([-Wall],[FCFLAGS=$FCFLAGS" -Wall"])],
@@ -326,7 +326,6 @@ AS_IF([test "x$enable_gpu" != xno],
      ])
 
 #FLAGS
-
 # MPI FLAGS
 AS_IF([test "x$enable_mpi" != xno],
       FCFLAGS=$FCFLAGS' $(MPI_FLAGS)'
@@ -374,6 +373,12 @@ AS_IF([test "x$enable_tt" != xno],
        [FCFLAGS=$FCFLAGS' $(TT_FLAGS)'
         EXTRASRC=$EXTRASRC' $(TT_FSOURCES)'
 	RESULT=$RESULT'.tt'])
+
+# DEBUG FLAGS
+AS_IF([test "x$enable_debug" != xno],
+      FCFLAGS=$FCFLAGS' $(DEBUG_FLAGS)'
+      RESULT=$RESULT'.db')
+
 
 # params.h
 AC_ARG_WITH([par], 

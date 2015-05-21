@@ -3123,7 +3123,7 @@ fi
 
 
 if test "x$enable_debug" != xno; then :
-  FCFLAGS=$local_fcflags" -g"
+  FCFLAGS=$local_fcflags' -g'
       ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
@@ -5943,7 +5943,6 @@ fi
 fi
 
 #FLAGS
-
 # MPI FLAGS
 if test "x$enable_mpi" != xno; then :
   FCFLAGS=$FCFLAGS' $(MPI_FLAGS)'
@@ -6005,6 +6004,13 @@ if test "x$enable_tt" != xno; then :
         EXTRASRC=$EXTRASRC' $(TT_FSOURCES)'
 	RESULT=$RESULT'.tt'
 fi
+
+# DEBUG FLAGS
+if test "x$enable_debug" != xno; then :
+  FCFLAGS=$FCFLAGS' $(DEBUG_FLAGS)'
+      RESULT=$RESULT'.db'
+fi
+
 
 # params.h
 

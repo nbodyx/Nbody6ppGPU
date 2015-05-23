@@ -24,7 +24,7 @@
 #ifdef DEBUG
 *     --10/03/14 19:40-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-      COMMON/adt/ adtime,dumptime,dprintt
+      COMMON/adt/ adtime,dumptime,dprintt,dtprint,namep
 *     --10/03/14 19:41-lwang-end----------------------------------------*
 #endif
       EXTERNAL MERGE

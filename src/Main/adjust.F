@@ -88,7 +88,7 @@ c$$$      end if
       E(3) = ZKIN - POT + EPL
 
 *       Modify single particle energy by tidal energy (except pure 3D).
-      IF (KZ(14).NE.3) THEN
+      IF (KZ(14).NE.3.AND.KZ(14).NE.9) THEN
           E(3) = E(3) + ETIDE
       END IF
 

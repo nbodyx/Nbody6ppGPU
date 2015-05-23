@@ -57,6 +57,13 @@
       IF (IPSTART) THEN
          FNTLOOP = .false.
 
+*     Initial output interval
+         IF(KZ(47).GE.0) THEN
+            DTOUT = DTK(KZ(47)+1)
+         ELSE
+            DTOUT = DTK(64)
+         END IF
+
 *     Initial nxtlst
          IF(TIME+TOFF.EQ.0.D0) THEN
             NXTLIMIT = 0
@@ -120,7 +127,11 @@
                   END IF
                end if
                if(rank.eq.0) then
-                  call custom_update_file(TTOT,DELTAT)
+                  IF(KZ(46).EQ.1.OR.KZ(46).EQ.3) THEN
+                     call custom_update_file(TTOT,DELTAT)
+                  ELSE IF(KZ(46).EQ.2.OR.KZ(46).EQ.4) THEN
+                     call custom_update_file(TTOT,DTOUT)
+                  END IF
                end if
                CALL custom_output(NXTLEN,NXTLST,
      &              NXTLIMIT,NGHOSTS,IMINR)
@@ -133,17 +144,12 @@
 *     Initial tcheck block step level
          END IF
 
-*     Initial output interval
-         IF(KZ(47).GE.0) THEN
-            DTOUT = 1.0D0
-            DO K = 1, KZ(47)
-               DTOUT = 0.5D0*DTOUT
-            END DO
-         ELSE
-            DTOUT = DTK(64)
-         END IF
          IF(rank.eq.0.and.TOFF+TIME.NE.0.D0) THEN
-            call custom_update_file(TTOT,DELTAT)
+            IF(KZ(46).EQ.1.OR.KZ(46).EQ.3) THEN
+               call custom_update_file(TTOT,DELTAT)
+            ELSE IF(KZ(46).EQ.2.OR.KZ(46).EQ.4) THEN
+               call custom_update_file(TTOT,DTOUT)
+            END IF
          END IF
 
 

@@ -4,19 +4,20 @@
 *     Custom output with HDF5/binary format  (Long Wang)
 *-----------------------------------------------------------------------------------
 *     single: NAME, M[M*], X(1:3)[pc], V(1:3)[km/s],
-*             K*, RS[R*], L[L*], Teff[K], MCORE[M*], RSCORE[R*]
+*             RS[R*], L[L*], Teff[K], MCORE[M*], RSCORE[R*], K*
 
-*     binary: NAME(ICM), NAME1, NAME2, M1[M*], M2[M*], XCM(1:3)[pc], 
+*     binary: NAME1, NAME2, NAME(ICM), M1[M*], M2[M*], XCM(1:3)[pc], 
 *             VCM(1:3)[km/s], XREL(1:3)[AU], VREL(1:3)[km/s],
-*              semi[AU], ecc, P[days], K*(ICM), K*1, K*2, 
+*             semi[AU], ecc, P[days],
 *             RS1[R*], RS2[R*], L1[L*], L2[L*], Teff1[K], Teff2[K],
-*             MCORE1[M*], iMCORE2[M*], RSCORE1[R*], RSCORE2[R*]
+*             MCORE1[M*], MCORE2[M*], RSCORE1[R*], RSCORE2[R*],
+*             K*1, K*2, K*(ICM)
 
-*     merger: NAME(INCM), NAME1,NAME2,NAME3, M1[M*], M2[M*], M3[*],
+*     merger: NAME1,NAME2,NAME3,NAME(INCM), M1[M*], M2[M*], M3[*],
 *             XCM(1:3)[pc], VCM(1:3)[km/s], XREL0(1:3)[AU], VREL0(1:3)[km/s],
 *             XREL1(1:3)[AU], VREL1(1:3)[km/s],
 *             semi0[AU], ecc0, P0[days], semi1[AU], ecc1, P1[days],
-*             K*(INCM), K*1, K*2, K*3,
+*             K*1, K*2, K*3, K*(INCM), 
 *             RS1[R*], RS2[R*], RS3[R*], L1[L*], L2[L*], L3[L*], Teff1[K], Teff2[K], Teff3[K],
 *             MCORE1[M*], MCORE2[M*], MCORE3[M*], RSCORE1[R*], RSCORE2[R*], RSCORE3[R*]
 *     (binary parameter: 0 means inner binary, 1 means outer component )
@@ -607,13 +608,13 @@ c$$$     &     'S_L',S_L(1:5),'S_TE',S_TE(1:5),'S_MC',S_MC(1:5),'S_RC',
 c$$$     &     S_RC(1:5)
 *     --10/25/14 22:16-lwang-end----------------------------------------*
 
-      if(rank.eq.0) call output_single(TTOT,N_SINGLE,KZ(12))
+      if(rank.eq.0) call output_single(TTOT,N_SINGLE,KZ(12),KZ(46))
 c$$$     &     NS_NAM,
 c$$$     &     S_M,S_X1,S_X2,S_X2,S_V1,S_V2,S_V3,
 c$$$     &     S_F1,S_F2,S_F3,
 c$$$     &     NS_KW,S_RS,S_L,S_TE,S_MC,S_RC)
 
-      if(rank.eq.0) call output_binary(TTOT,N_BINARY,KZ(12))
+      if(rank.eq.0) call output_binary(TTOT,N_BINARY,KZ(12),KZ(46))
 c$$$     &     NS_NAMC,NS_NAM1,NS_NAM2,
 c$$$     &     B_M1,B_M2,B_XC1,B_XC2,B_XC3,B_VC1,B_VC2,B_VC3,
 c$$$     &     B_XR1,B_XR2,B_XR3,B_VR1,B_VR2,B_VR3,
@@ -622,7 +623,7 @@ c$$$     &     B_A,B_ECC,B_P,
 c$$$     &     NB_KWC,NB_KW1,NB_KW2,B_RS1,B_RS2,B_L1,B_L2,
 c$$$     &     B_TE1,B_TE2,B_MC1,B_MC2,B_RC1,B_RC2)
 
-      if(rank.eq.0) call output_merger(TTOT,N_MERGER,KZ(12))
+      if(rank.eq.0) call output_merger(TTOT,N_MERGER,KZ(12),KZ(46))
 c$$$     &     NM_NAMC,NM_NAM1,NM_NAM2,NM_NAM3,
 c$$$     &     M_M1,M_M2,M_M3,M_XC1,M_XC2,M_XC3,M_VC1,M_VC2.M_VC3,
 c$$$     &     M_XR01,M_XR02,M_XR03,M_VR01,M_VR02,M_VR03,

@@ -513,7 +513,7 @@ c$$$     &           nmerge,name(j1),name(j2),name(icm)
          write(OUTFILE,118) TCHAR
  118     format('conf.3_',A20)
 
-         IF(KZ(46).GT.0) THEN
+         IF(KZ(46).EQ.1.OR.KZ(46).EQ.3) THEN
             if(rank.eq.0.AND.TTOT.GT.0.0D0) THEN
                call custom_update_file(TTOT,DELTAT)
             END IF

@@ -181,17 +181,19 @@ c      call flush(6)
 c*
 c#endif      
 
-*     Obtain second & third force derivatives and set time-steps.
-      call cputim(tt1)
-#ifdef PARALLEL
-      CALL FPOLY2_MPI(IFIRST,NTOT,0)
-#else
-      CALL FPOLY2(IFIRST,NTOT,0)
-#endif
-      call cputim(tt2)
-      if(rank.eq.0) write(6,54) (tt2-tt1)*60.0
- 54   format(/,' Fpoly2 Timing: ',F15.6)
-      call flush(6)
+c$$$*     Obtain second & third force derivatives and set time-steps.
+c$$$      call cputim(tt1)
+c$$$#ifdef PARALLEL
+c$$$      CALL FPOLY2_MPI(IFIRST,NTOT,0)
+c$$$#else
+c$$$      CALL FPOLY2(IFIRST,NTOT,0)
+c$$$#endif
+c$$$      call cputim(tt2)
+c$$$      if(rank.eq.0) write(6,54) (tt2-tt1)*60.0
+c$$$ 54   format(/,' Fpoly2 Timing: ',F15.6)
+c$$$      call flush(6)
+*     Obtain time step only based on xdot, F and Fdot
+      CALL STEPS2(IFIRST,NTOT)
 *
 *     Generate perturber list for KS
       CALL KSPINIT

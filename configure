@@ -6249,8 +6249,8 @@ $as_echo "$as_me:   in your pre-configure script of shell (such as ~/.bashrc if 
     { $as_echo "$as_me:${as_lineno-$LINENO}: -----------------------------------------------------------" >&5
 $as_echo "$as_me: -----------------------------------------------------------" >&6;}
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: Reference paper: Wang, L., et al., MNRAS accepted (http://arxiv.org/abs/1504.03687)" >&5
-$as_echo "$as_me: Reference paper: Wang, L., et al., MNRAS accepted (http://arxiv.org/abs/1504.03687)" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Reference paper: Wang, L., et al., 2015, MNRAS, 450, 4070 (http://arxiv.org/abs/1504.03687)" >&5
+$as_echo "$as_me: Reference paper: Wang, L., et al., 2015, MNRAS, 450, 4070 (http://arxiv.org/abs/1504.03687)" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: Email: Long Wang<longwang.astro@gmail.com>" >&5
 $as_echo "$as_me: Email: Long Wang<longwang.astro@gmail.com>" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: -----------------------------------------------------------" >&5

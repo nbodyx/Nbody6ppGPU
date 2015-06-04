@@ -559,7 +559,7 @@ AS_IF([test "x$enable_tools" != xno],
     AC_MSG_NOTICE([     LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$prefix/lib])
     AC_MSG_NOTICE([  in your pre-configure script of shell (such as ~/.bashrc if you use bash)])
     AC_MSG_NOTICE([-----------------------------------------------------------])])
-AC_MSG_NOTICE([Reference paper: Wang, L., et al., MNRAS accepted (http://arxiv.org/abs/1504.03687)])
+AC_MSG_NOTICE([Reference paper: Wang, L., et al., 2015, MNRAS, 450, 4070 (http://arxiv.org/abs/1504.03687)])
 AC_MSG_NOTICE([Email: Long Wang<longwang.astro@gmail.com>])
 AC_MSG_NOTICE([-----------------------------------------------------------])
 

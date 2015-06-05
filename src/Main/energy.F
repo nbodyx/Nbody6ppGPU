@@ -26,6 +26,41 @@
 *       Calculate the potential energy.
       ZKIN = 0.D00
       POT = 0.0
+#ifdef GPU
+*     Use GPU to get potential
+      NNT = NTOT - IFIRST + 1
+      CALL GPUPOT(rank,1,NNT,NNT,BODY(IFIRST),X(1,IFIRST)
+     &     ,phidbl(ifirst))
+
+*       Move the table entries down to give room for any KS components.
+      I2 = 2*NPAIRS
+      IF (NPAIRS.GT.0) THEN
+*       Copy c.m. potential to the components.
+          DO IPAIR = 1,NPAIRS
+              I1 = 2*IPAIR - 1
+              PHIDBL(I1) = PHIDBL(N+IPAIR)
+              PHIDBL(I1+1) = PHIDBL(N+IPAIR)
+           END DO
+      END IF
+
+*       Sum individual contributions after differential correction.
+      DO 20 I = IFIRST,NTOT
+          CALL PHICOR(I,DPHI1,DPHI2)
+          IF (I.LE.N) THEN
+              PHIDBL(I) = PHIDBL(I) + DPHI1
+              POT = POT + BODY(I)*PHIDBL(I)
+          ELSE
+              I1 = 2*(I - N) - 1
+              PHIDBL(I1) = PHIDBL(I1) + DPHI1
+              PHIDBL(I1+1) = PHIDBL(I1+1) + DPHI2
+              POT = POT + BODY(I1)*PHIDBL(I1) + BODY(I1+1)*PHIDBL(I1+1)
+          END IF
+   20 CONTINUE
+*
+*       Take half the value because of double counting.
+      POT = 0.5*POT
+
+#else
 !$omp parallel do private(I,JMIN,IPAIR,POTI,POTJ,A1,A2,A3,A4) 
 !$omp& reduction(+:POT)
       DO 20 I = 1,NTOT
@@ -57,10 +92,12 @@
             IF(J.GE.JMIN)POTJ = POTJ + A4
  30      CONTINUE
 *     Store potential in shared vector first (R.Sp.)
-         PHIDBL(I) = POTI
+         PHIDBL(I) = -POTI
          POT = POT + BODY(I)*POTJ
    20 CONTINUE
 !$omp end parallel do
+#endif
+
 *
 *       Sum the kinetic energy (include c.m. bodies but not components).
       DO 40 I = IFIRST,NTOT

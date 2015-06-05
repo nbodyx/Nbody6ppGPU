@@ -38,7 +38,7 @@ C       --------------------------------------
 
         DO 100 i=ifirst,ntot
         etoti(i-ifirst+1) = 0.5D0 * (xdot(1,i)**2 + xdot(2,i)**2 +
-     &                         xdot(3,i)**2) + phidbl(i)
+     &                         xdot(3,i)**2) - phidbl(i)
 100     CONTINUE
 
 C      calculate number of bound particles

@@ -78,7 +78,7 @@ c$$$      end if
 *     --05/17/13 9:13-lwang-gpupot-------------------------------------*
 ***** Note:Use gpupot here---------------------------------------------**
 *       Evaluate individual potentials on GPU (including all c.m.).
-      VIR = 0.0
+C      VIR = 0.0
       POT = 0.0
       NN = iend - istart + 1
       NNT = NTOT - IFIRST + 1
@@ -131,7 +131,7 @@ C
             IF(J.GE.JMIN)POTJ = POTJ + A4
  30      CONTINUE
 *     Store potential in shared vector first (R.Sp.)
-         PHIDBL(I) = POTI
+         PHIDBL(I) = -POTI
          SHPOT(I) = BODY(I)*POTJ
  220  CONTINUE
 !$omp end parallel do
@@ -194,7 +194,7 @@ C
  1001  continue
 #ifdef GPU       
       else
-         VIR = 0.0
+C         VIR = 0.0
          POT = 0.0
          NNT = NTOT - IFIRST + 1
 *     --11/10/13 23:30-lwang-check--------------------------------------*

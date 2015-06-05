@@ -42,7 +42,13 @@
 *
       IF(KZ(23).LE.2) THEN
 *       See whether escape is indicated (retain ghost particles).
+C#ifdef TT
+*       Use energy as escaper criterion
+C         IF ((RI2.GT.RESC2.OR.VI2.GT.4*PHIDBL(I)).AND.RI2.LT.1.0D+10)
+C     &        THEN
+C#else
          IF (RI2.GT.RESC2.AND.RI2.LT.1.0D+10) THEN
+C#endif
             RJMIN2 = 1.0D+10
 *     Find distance to the nearest neighbour and calculate potential.
             POTI = 0.0D0
@@ -147,7 +153,7 @@
 *
       IF(KZ(23).GE.3)THEN
           VI2 = XDOT(1,JMIN)**2 + XDOT(2,JMIN)**2 + XDOT(3,JMIN)**2
-          EI = 0.5*VI2 + PHIDBL(JMIN) + ETID
+          EI = 0.5*VI2 - PHIDBL(JMIN) + ETID
           IF(EI.GT.0.D0) GO TO 40
       END IF
 *

@@ -357,7 +357,7 @@ c$$$              END IF
           BODYS(I) = REAL(BODY(I))
           RHOS(I) = REAL(RHO(I))
           XNS(I) = REAL(XNDBL(I))
-          PHI(I) = REAL(PHIDBL(I))
+          PHI(I) = REAL(-PHIDBL(I))
           DO 85 K = 1,3
               XS(K,I) = REAL(X(K,I))
               VS(K,I) = REAL(XDOT(K,I))

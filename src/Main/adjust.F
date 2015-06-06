@@ -6,6 +6,9 @@
 *     
       INCLUDE 'common6.h'
       INCLUDE 'timing.h'
+#ifdef TT
+      include 'tt.h'
+#endif
 *     INTEGER JHIST,JHISTR
       COMMON/ECHAIN/  ECH
       COMMON/STSTAT/  TINIT,NIR,NIB,NRGL,NKS
@@ -230,7 +233,15 @@ c$$$      END IF
       IF (KZ(14).EQ.0) RTIDE = 10.0*RSCALE
 #ifdef TT
 *** FlorentR - set the tidal radius
-      IF (KZ(14).EQ.9) RTIDE = 10.0*RSCALE
+      IF (KZ(14).EQ.9) THEN
+*     In tidal tensor case
+         IF(TTMODE.EQ.1) THEN
+         RTIDE = (3.0*ZMASS/abs(TTEFF(1,1)+TTEFF(2,2)+TTEFF(3,3)))**ONE3
+         ELSE
+*     Temporary solution, need to be checked in the future
+            RTIDE = 10.*RSCALE
+         END IF
+      END IF
 *** FRenaud
 #endif
 *     Redefine the crossing time for 3D cluster orbit or Plummer model.

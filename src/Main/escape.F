@@ -5,6 +5,9 @@
 *       ----------------
 *
       INCLUDE 'common6.h'
+#ifdef TT
+      include 'tt.h'
+#endif
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
      &                NAMEM(MMAX),NAMEG(MMAX),KSTARM(MMAX),IFLAG(MMAX)
@@ -41,14 +44,15 @@
       IF (RI2.LT.RTIDE2) NCRIT1 = NCRIT1 + 1
 *
       IF(KZ(23).LE.2) THEN
+         VI2 = XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2
 *       See whether escape is indicated (retain ghost particles).
-C#ifdef TT
-*       Use energy as escaper criterion
-C         IF ((RI2.GT.RESC2.OR.VI2.GT.4*PHIDBL(I)).AND.RI2.LT.1.0D+10)
-C     &        THEN
-C#else
+#ifdef TT
+*       Use energy as escaper criterion also to avoid tidal shock
+         IF (RI2.GT.RESC2.AND.VI2.GT.4*PHIDBL(I).AND.RI2.LT.1.0D+10)
+     &        THEN
+#else
          IF (RI2.GT.RESC2.AND.RI2.LT.1.0D+10) THEN
-C#endif
+#endif
             RJMIN2 = 1.0D+10
 *     Find distance to the nearest neighbour and calculate potential.
             POTI = 0.0D0
@@ -62,7 +66,6 @@ C#endif
                   JMIN = J
                END IF
  8          CONTINUE
-            VI2 = XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2
 *     Check escape criterion for tidal case or isolated system.
             EI = 0.5*VI2 - POTI
 
@@ -210,14 +213,17 @@ C#endif
           CALL XTRNLV(I,I)
           ZK = ZK + HT
           RTIDE = (ZMASS/TIDAL(1))**0.3333
-#ifdef TT
       ELSE IF (KZ(14).EQ.4.OR.KZ(14).EQ.3) THEN
-*** FlorentR - include case of tidal tensor
-* make the escape criterion in KZ(14).eq.3 (=next line) the same as for KZ(14).eq.9 (a few lines below)
-*          RTIDE = RTIDE0*ZMASS**0.3333
-          RTIDE = 10.*RSCALE
+          RTIDE = RTIDE0*ZMASS**0.3333
+#ifdef TT
       ELSE IF (KZ(14).EQ.9) THEN
-          RTIDE = 10.*RSCALE
+*     In tidal tensor case
+         IF(TTMODE.EQ.1) THEN
+         RTIDE = (3.0*ZMASS/abs(TTEFF(1,1)+TTEFF(2,2)+TTEFF(3,3)))**ONE3
+         ELSE
+*     Temporary solution, need to be checked in the future
+            RTIDE = 10.*RSCALE
+         END IF
 *** FRenaud
 #endif
       END IF

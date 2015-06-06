@@ -22,10 +22,6 @@
         END DO
       END DO
 
-* Set the tidal radius to an arbitrary constant since it is not known
-* in the general case
-      RTIDE = 10.0*RSCALE
-      RTIDE0 = RTIDE
 
 * Ensure there is no other component
 !      GMG = 0.0
@@ -110,6 +106,13 @@
           END DO
         END DO
         CALL TTCAL
+*     Use tensor trace to estimate the tidal radius
+        RTIDE = (3.0*ZMASS/abs(TTEFF(1,1)+TTEFF(2,2)+TTEFF(3,3)))**ONE3
+        RTIDE0 = RTIDE
+
+        WRITE(6,11) RTIDE,TTEFF(1,1),TTEFF(2,2),TTEFF(3,3)
+ 11     format(/, 12X, 'Tidal radius estimation: ', F9.3, 
+     &       'Tensor (k,k):',3E14.3)
           
       ELSE
 ************************** TTMODE B
@@ -124,6 +127,11 @@
           RG(I) = RG(I)*1000.0/RBAR
           VG(I) = VG(I)/VSTAR
         END DO
+
+* Set the tidal radius to an arbitrary constant since it is not known
+* in the general case
+        RTIDE = 10.*RSCALE
+        RTIDE0 = RTIDE
 
         WRITE (6,20)  RG(1), RG(2), RG(3), VG(1), VG(2), VG(3)
    20   FORMAT (/,12X,'TIDAL TENSOR MODE B:  RG =',1P,E10.3,E10.3,E10.3,

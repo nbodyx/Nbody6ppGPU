@@ -8,26 +8,25 @@
       INCLUDE 'common6.h'
       INCLUDE 'tt.h'
       REAL*8 DT21,DT32,DT31,TTA,TTB,T1,T2,T3, TNOW
-      REAL*8 SAVETNOW
-      INTEGER INDTT
       LOGICAL FIRST
 
-      SAVE FIRST, INDTT, SAVETNOW
+      SAVE FIRST
       DATA FIRST /.TRUE./
 
 * INDTT saves the id of the tensor whose timestamp is immediatly after
 *   the current time, set in TNOW
       TNOW = TIME+TOFF
       
-      IF(FIRST) THEN
+      IF(FIRST.AND.TNOW.EQ.0.0D0) THEN
         INDTT=2
+        TNOWSAVE = TNOW
         FIRST=.FALSE.
       ELSE
 * If the time has not been updated, the tensor is up-to-date: do nothing and exit
-        IF(TNOW.EQ.SAVETNOW) RETURN
+        IF(TNOW.EQ.TNOWSAVE) RETURN
       ENDIF
 
-      SAVETNOW = TNOW
+      TNOWSAVE = TNOW
 
       IF(TNOW.GT.TTTIME(NBTT)) THEN
 *  When TNOW is after the timestamp of the last tensor:
@@ -60,6 +59,6 @@
      &        -TTTIME(INDTT))
         END DO
       END DO
-      
+*
       RETURN
       END

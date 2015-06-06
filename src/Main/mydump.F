@@ -123,7 +123,7 @@
 *
 #ifdef TT
 *** FlorentR
-        write (J) ttunit, nbtt, ttmode
+        write (J) ttunit,tnowsave,ttmode,nbtt,indtt,ikeypot(1:11)
         write (J) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
      *      ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
      *      (tttime(i),i=1,nbtt)
@@ -254,7 +254,7 @@ C           END IF
 
 #ifdef TT
 *** FlorentR
-        read (J) ttunit, nbtt, ttmode
+        read (J) ttunit,tnowsave,ttmode,nbtt,indtt,ikeypot(1:11)
         if (nbtt.gt.nbttmax.AND.TTMODE.EQ.1) then
            write (*,*) "DANGER NBTT > NBTTMAX !"
            stop
@@ -394,8 +394,11 @@ C           END IF
 *
 #ifdef TT
        CALL MPI_BCAST(ttunit,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
-       CALL MPI_BCAST(nbtt,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(tnowsave,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
        CALL MPI_BCAST(ttmode,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(nbtt,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(INDTT,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(ikeypot(1),11,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
        CALL MPI_BCAST(ttens(1,1,1),9*nbtt,MPI_REAL8,0,MPI_COMM_WORLD,
      &      ierr)
        CALL MPI_BCAST(tteff(1,1),9,MPI_REAL8,0,MPI_COMM_WORLD,ierr)

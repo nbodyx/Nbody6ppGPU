@@ -5,7 +5,7 @@
 *       ----------------------------
 *
       IMPLICIT NONE
-      REAL*8  XDOT(3),F(3),FDOT(3),F2DOT(3),F3DOT(3)
+      REAL*8  XDOT(3),F(3),FDOT(3)
       REAL*8 F2,FDOT2,V2,ETA
 *
 *       Obtain new integration step using composite expression.

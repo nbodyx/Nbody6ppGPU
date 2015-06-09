@@ -35,7 +35,7 @@ LDFLAGS = -o $(RESULT)
 MPI_FSOURCES= energy_mpi.f fpoly1_mpi.f fpoly2_mpi.f
 GPU_FSOURCES= phicor.f
 HDF5_FSOURCES= custom_output.f custom_output_facility.f ksres_op.f
-TT_FSOURCES= ttforce.f ttgalaxy.f ttinit.f ttcal.f
+TT_FSOURCES= ttforce.f ttgalaxy.f ttinit.f ttcal.f jacobi_transform.f 
 
 IRRAVX_OBJECTS=irr.avx.o
 IRRSSE_OBJECTS=irr.sse.o

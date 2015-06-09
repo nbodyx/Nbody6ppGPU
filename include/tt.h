@@ -1,8 +1,10 @@
 *** FlorentR - New block used for tt treatment
       PARAMETER (NBTTMAX=100000)
       COMMON/TT/     TTENS(3,3,NBTTMAX),TTEFF(3,3),DTTEFF(3,3),
-     &               TTTIME(NBTTMAX), TTUNIT, TNOWSAVE,
+     &               TTTIME(NBTTMAX), TTEIGEN(3),TTEIGENV(3,3),
+     &               TTRTIDE(3),TTUNIT, TNOWSAVE,
      &               TTMODE, NBTT, INDTT,IKEYPOT(11)
 *** FRenaud
       INTEGER TTMODE,NBTT,IKEYPOT,INDTT
       REAL*8 TTENS,TTEFF,DTTEFF,TTTIME,TTUNIT,TNOWSAVE
+      REAL*8 TTEIGEN,TTEIGENV,TTRTIDE

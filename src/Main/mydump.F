@@ -125,8 +125,9 @@
 *** FlorentR
         write (J) ttunit,tnowsave,ttmode,nbtt,indtt,ikeypot(1:11)
         write (J) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
-     *      ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
-     *      (tttime(i),i=1,nbtt)
+     *       ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
+     *       (tttime(i),i=1,nbtt),(tteigen(k),k=1,3),
+     &       ((tteigenv(k,i),k=1,3),i=1,3),(ttrtide(k),k=1,3)
 *** FRenaud
 #endif
 
@@ -261,8 +262,10 @@ C           END IF
         end if
 
         read (J) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
-     *    ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
-     *    (tttime(i),i=1,nbtt)
+     *       ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
+     *       (tttime(i),i=1,nbtt),(tteigen(k),k=1,3),
+     *       ((tteigenv(k,i),k=1,3),i=1,3),(ttrtide(k),k=1,3)
+
 #endif
 
         end if
@@ -404,6 +407,9 @@ C           END IF
        CALL MPI_BCAST(tteff(1,1),9,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
        CALL MPI_BCAST(dtteff(1,1),9,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
        CALL MPI_BCAST(tttime(1),nbtt,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(tteigen(1),3,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(tteigenv(1,1),9,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(ttrtide(1),3,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
 #endif
        call cputim(tt998)
        CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)

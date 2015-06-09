@@ -234,12 +234,21 @@ c$$$      END IF
 #ifdef TT
 *** FlorentR - set the tidal radius
       IF (KZ(14).EQ.9) THEN
-*     In tidal tensor case
-         IF(TTMODE.EQ.1) THEN
-         RTIDE = (3.0*ZMASS/abs(TTEFF(1,1)+TTEFF(2,2)+TTEFF(3,3)))**ONE3
-         ELSE
+         IF(TTMODE.NE.1) THEN
 *     Temporary solution, need to be checked in the future
             RTIDE = 10.*RSCALE
+         ELSE
+            write(6,200) TTOT
+ 200        format(/,12X,'Time[NB] ',E25.17,
+     &           ' Tidal tensor eigenvalues:')
+            DO K=1,3
+               write(6,210) K,TTEIGEN(K),TTEIGENV(1:3,K),TTRTIDE(K)
+ 210           format('E',I1,' Eigenvalue: ',E18.10,' vector: ',3E18.10,
+     &              ' Tidal radius: ',E18.10)
+            END DO
+            write(6,22) TTEIGEN(1)+TTEIGEN(2)+TTEIGEN(3),
+     &           TTEFF(1,1)+TTEFF(2,2)+TTEFF(3,3)
+ 22         format('  Trace: tensor ',E12.4,'  eigen ',E12.4)
          END IF
       END IF
 *** FRenaud

@@ -106,8 +106,8 @@
           END DO
         END DO
         CALL TTCAL
-*     Use tensor trace to estimate the tidal radius
-        RTIDE = (3.0*ZMASS/abs(TTEFF(1,1)+TTEFF(2,2)+TTEFF(3,3)))**ONE3
+
+*     Initial RTIDE0
         RTIDE0 = RTIDE
 
         WRITE(6,11) RTIDE,TTEFF(1,1),TTEFF(2,2),TTEFF(3,3)

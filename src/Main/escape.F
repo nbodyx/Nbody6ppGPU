@@ -14,6 +14,9 @@
       COMMON/POTDEN/  RHO(NMAX),XNDBL(NMAX),PHIDBL(NMAX)
       CHARACTER*11  WHICH1
       LOGICAL FIRST
+#ifdef TT
+      LOGICAL RFLAG
+#endif
       SAVE FIRST
       DATA FIRST/.true./
 *
@@ -47,9 +50,20 @@
          VI2 = XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2
 *       See whether escape is indicated (retain ghost particles).
 #ifdef TT
+         RFLAG = .false.
+         IF (TTMODE.EQ.1) THEN
+*     Consider distance along different tensor eigenvector direction for escape criterion
+            DO K=1,3
+               RTIDEX = X(1,I)*TTEIGENV(1,K) + X(2,I)*TTEIGENV(2,K) 
+     &              + X(3,I)*TTEIGENV(3,K)
+               IF(ABS(RTIDEX).GT.2*TTRTIDE(K).AND.TTRTIDE(K).GT.0) 
+     &              RFLAG = .true.
+            END DO
+         ELSE
+            IF (RI2.GT.RESC2) RFLAG = .true.
+         END IF
 *       Use energy as escaper criterion also to avoid tidal shock
-         IF (RI2.GT.RESC2.AND.VI2.GT.4*PHIDBL(I).AND.RI2.LT.1.0D+10)
-     &        THEN
+         IF (RFLAG.AND.VI2.GT.4*PHIDBL(I).AND.RI2.LT.1.0D+10) THEN
 #else
          IF (RI2.GT.RESC2.AND.RI2.LT.1.0D+10) THEN
 #endif
@@ -217,10 +231,7 @@
           RTIDE = RTIDE0*ZMASS**0.3333
 #ifdef TT
       ELSE IF (KZ(14).EQ.9) THEN
-*     In tidal tensor case
-         IF(TTMODE.EQ.1) THEN
-         RTIDE = (3.0*ZMASS/abs(TTEFF(1,1)+TTEFF(2,2)+TTEFF(3,3)))**ONE3
-         ELSE
+         IF(TTMODE.NE.1) THEN
 *     Temporary solution, need to be checked in the future
             RTIDE = 10.*RSCALE
          END IF

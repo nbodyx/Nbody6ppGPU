@@ -8,6 +8,7 @@
       INCLUDE 'common6.h'
       INCLUDE 'tt.h'
       REAL*8 DT21,DT32,DT31,TTA,TTB,T1,T2,T3, TNOW
+      integer nrotjac
       LOGICAL FIRST
 
       SAVE FIRST
@@ -60,5 +61,28 @@
         END DO
       END DO
 *
+*     Get the eigenvalues and eigenvectors for current tensor
+      call jacobi_transform(tteff,3,3,tteigen,tteigenv,nrotjac)
+* 
+      RTIDE = 0.0
+      NK = 0
+      DO K=1,3
+         TTRTIDE(K) = (ZMASS/abs(TTEIGEN(k)))**ONE3
+         IF (TTEIGEN(K).LT.0) THEN
+            TTRTIDE(K) = -TTRTIDE(K)
+         ELSE
+            RTIDE = RTIDE + TTRTIDE(K)
+            NK = NK + 1
+         END IF
+      END DO
+
+      IF(NK.GT.0) THEN
+         RTIDE = RTIDE/float(NK)
+      ELSE
+*     If tidal force not expand cluster, just use huge value of RTIDE
+         RTIDE = 1.0E6*RSCALE
+      END IF
+
       RETURN
+
       END

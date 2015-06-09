@@ -1197,7 +1197,7 @@ C      REAL*4 M_FC1, M_FC2, M_FC3
        WRITE (40,*) '## N_MERGER ',N_MERGER, ' Time[NB]', TTOT
        IF(KSEV.GT.0) THEN
           DO K=1,N_MERGER
-             WRITE (40) NM_NAM1(K), NM_NAM2(K),
+             WRITE (40,*) NM_NAM1(K), NM_NAM2(K),
      &            NM_NAM3(K), NM_NAMC(K),
      &            M_M1(K), M_M2(K), M_M3(K),
      &            M_XC1(K), M_XC2(K), M_XC3(K),
@@ -1218,7 +1218,7 @@ C      REAL*4 M_FC1, M_FC2, M_FC3
           END DO
        ELSE
           DO K=1,N_MERGER
-             WRITE (40) NM_NAM1(K), NM_NAM2(K),
+             WRITE (40,*) NM_NAM1(K), NM_NAM2(K),
      &            NM_NAM3(K), NM_NAMC(K),
      &            M_M1(K), M_M2(K), M_M3(K),
      &            M_XC1(K), M_XC2(K), M_XC3(K),

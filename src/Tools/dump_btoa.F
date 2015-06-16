@@ -6,6 +6,9 @@
       IMPLICIT REAL*8  (A-H,O-Z)
       INCLUDE 'params.h'
       INCLUDE 'tlist.h'
+#ifdef POSTNEWTON
+      include 'postnewton.h'
+#endif
 
 #ifdef TT
       INCLUDE 'tt.h'
@@ -229,14 +232,6 @@
      *       NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,NLSTDELAY(1),
      *       (NLSTDELAY(K),K=2,NLSTDELAY(1)+1)
 
-#ifdef TT
-*** FlorentR
-      read (IUNIT) ttunit, nbtt, ttmode
-      read (IUNIT) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
-     *    ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
-     *    (tttime(i),i=1,nbtt)
-#endif
-
 #ifdef POSTNEWTON
       read (IUNIT) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
      &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
@@ -245,6 +240,15 @@
      &       BETAREL,DTUPN,VOVERC,CLIGHTPN,CLIN,SPNMAG,RELSUM,
      &       PREVRELPOTENERGY,PLOTTIME,IPLOTCOUNT
 #endif
+
+#ifdef TT
+*** FlorentR
+      read (IUNIT) ttunit, nbtt, ttmode
+      read (IUNIT) (((ttens(k,i,kk),k=1,3),i=1,3),kk=1,nbtt),
+     *    ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
+     *    (tttime(i),i=1,nbtt)
+#endif
+
 
 *     --06/21/14 10:41-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
@@ -320,6 +324,12 @@
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
      *     (NLSTDELAY(K),K=1,NLSTDELAY(1)+1)
 
+*     LIST
+      DO i=1,ntot
+         write(10,*) list(1:list(1,i)+2,i)
+      END DO
+
+
 #ifdef POSTNEWTON
       write (10,*) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
      &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
@@ -329,11 +339,6 @@
      &       PREVRELPOTENERGY,PLOTTIME,IPLOTCOUNT
 #endif
       
-*     LIST
-      DO i=1,ntot
-         write(10,*) list(1:list(1,i)+2,i)
-      END DO
-
 #ifdef TT
 *** FlorentR
       write (10,*) ttunit, nbtt, ttmode
@@ -498,6 +503,12 @@
       read(10,*) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
      *     (NLSTDELAY(K),K=1,NLSTDELAY(1)+1)
+*     LIST
+      DO i=1,ntot
+         read(10,*) list(1,i),list(2:list(1,i)+1,i)
+      END DO
+
+
 #ifdef POSTNEWTON
       read(10,*) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
      &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
@@ -506,10 +517,6 @@
      &       BETAREL,DTUPN,VOVERC,CLIGHTPN,CLIN,SPNMAG,RELSUM,
      &       PREVRELPOTENERGY,PLOTTIME,IPLOTCOUNT
 #endif
-*     LIST
-      DO i=1,ntot
-         read(10,*) list(1,i),list(2:list(1,i)+1,i)
-      END DO
 
 #ifdef TT
 *** FlorentR
@@ -604,6 +611,15 @@
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
      *     (NLSTDELAY(K),K=1,NLSTDELAY(1)+1)
 
+#ifdef POSTNEWTON
+      write(IUNIT) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
+     &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
+     &       GAMREL(1:8,1:KMAX),PN1ENERGY(1:2,1:KMAX),DIFFS(1:10),
+     &       DE25(1:2,1:KMAX),GAMMAREL,PREVRELENERGY,SRELENERGY,
+     &       BETAREL,DTUPN,VOVERC,CLIGHTPN,CLIN,SPNMAG,RELSUM,
+     &       PREVRELPOTENERGY,PLOTTIME,IPLOTCOUNT
+#endif
+
 #ifdef TT
 *** FlorentR
       write (IUNIT) ttunit, nbtt, ttmode
@@ -613,14 +629,6 @@
 *** FRenaud
 #endif
 
-#ifdef POSTNEWTON
-      write(IUNIT) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
-     &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
-     &       GAMREL(1:8,1:KMAX),PN1ENERGY(1:2,1:KMAX),DIFFS(1:10),
-     &       DE25(1:2,1:KMAX),GAMMAREL,PREVRELENERGY,SRELENERGY,
-     &       BETAREL,DTUPN,VOVERC,CLIGHTPN,CLIN,SPNMAG,RELSUM,
-     &       PREVRELPOTENERGY,PLOTTIME,IPLOTCOUNT
-#endif
 
       END FILE IUNIT
       CLOSE (UNIT=IUNIT)

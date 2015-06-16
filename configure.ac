@@ -77,7 +77,6 @@ AC_ARG_ENABLE([hdf5],
      [],
      [enable_hdf5=no])
 
-
 AC_ARG_ENABLE([tt],
      [AS_HELP_STRING([--enable-tt],
          [Enable tidal tensor and analytical potential extension imported from NBODY6TT. (Ref: Renaud, F., et al., 2011, MNRAS, 418, 759; Renaud, F. & Gieles, M., 2015, MNRAS, 448, 3416)])],
@@ -381,16 +380,16 @@ AS_IF([test "x$enable_tt" != xno],
         EXTRASRC=$EXTRASRC' $(TT_FSOURCES)'
 	RESULT=$RESULT'.tt'])
 
-# DEBUG FLAGS
-AS_IF([test "x$enable_debug" != xno],
-      FCFLAGS=$FCFLAGS' $(DEBUG_FLAGS)'
-      RESULT=$RESULT'.db')
-
 # PN
 AS_IF([test "x$enable_pn" != xno],
        [FCFLAGS=$FCFLAGS' $(PN_FLAGS)'
         EXTRASRC=$EXTRASRC' $(PN_FSOURCES)'
         RESULT=$RESULT'.pn'])
+
+# DEBUG FLAGS
+AS_IF([test "x$enable_debug" != xno],
+      FCFLAGS=$FCFLAGS' $(DEBUG_FLAGS)'
+      RESULT=$RESULT'.db')
 
 # params.h
 AC_ARG_WITH([par], 

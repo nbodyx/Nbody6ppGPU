@@ -16,8 +16,8 @@
 
 #ifdef POSTNEWTON
       include 'postnewton.h'
-
 #endif
+
       PARAMETER  (NA=84,NB=168,NC=530,ND=392+MLR+MLD+MLV,NE=24,NM=40,
      &    NG=132,NL=99,NO=20*MCL+16,NP=32*NTMAX,NQ=31*MMAX,
      &    NS=44*MMAX)
@@ -266,6 +266,7 @@ C           END IF
         read (J) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *       NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,NLSTDELAY(1),
      *       (NLSTDELAY(K),K=2,NLSTDELAY(1)+1)
+
 #ifdef POSTNEWTON
         read (J) SPN(1:3,1:NMAX),RELENERGY(1:KMAX),ESCRELCOR(1:KMAX),
      &       RELTSTEP(1:KMAX),RFLAG(1:KMAX),RELPOTENERGY(1:KMAX),
@@ -287,7 +288,6 @@ C           END IF
      *       ((tteff(k,i),k=1,3),i=1,3),((dtteff(k,i),k=1,3),i=1,3),
      *       (tttime(i),i=1,nbtt),(tteigen(k),k=1,3),
      *       ((tteigenv(k,i),k=1,3),i=1,3),(ttrtide(k),k=1,3)
-
 #endif
 
         end if

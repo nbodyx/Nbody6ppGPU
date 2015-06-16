@@ -115,8 +115,11 @@ c$$$      end if
       END IF
 *     Form provisional total energy.
       ETOT = ZKIN - POT + ETIDE + EPL
-*     
-#ifdef POSTNEWTON
+
+*     Include KS pairs, triple, quad, mergers, collisions & chain.
+      ETOT = ETOT + EBIN + ESUB + EMERGE + ECOLL + EMDOT + ECDOT
+#ifdef POSTNEWTON      
+*     Add PN energy correction
 * --------------------------
 * Energy calculation with PN
 * --------------------------
@@ -128,21 +131,6 @@ c$$$      end if
 *      DO 500 KK = 1,KMAX
 *         SRELENERGY = SRELENERGY + RELENERGY(KK)
 C 500  CONTINUE
-*     --03/19/15 23:48-debug--------------------------------------------*
-C      IF (TIME.GT.PLOTTIME) THEN
-C         PLOTTIME = PLOTTIME+10.0
-C         DO 503 KK = 1,NTOT
-C            WRITE (IPLOTCOUNT,898) X(1,KK),X(2,KK),X(3,KK)
-C 898        FORMAT (3E13.5)
-C 503     CONTINUE
-C         IPLOTCOUNT = IPLOTCOUNT + 1
-C      END IF
-*     --03/19/15 23:48-debug--------------------------------------------*
-#endif
-*     Include KS pairs, triple, quad, mergers, collisions & chain.
-      ETOT = ETOT + EBIN + ESUB + EMERGE + ECOLL + EMDOT + ECDOT
-#ifdef POSTNEWTON      
-*     Add PN energy correction
       IF(KZ(45).GT.0) ETOT = ETOT + PREVRELENERGY
 #endif
       IF (NCH.GT.0) THEN

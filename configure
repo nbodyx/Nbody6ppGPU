@@ -2523,7 +2523,6 @@ else
 fi
 
 
-
 # Check whether --enable-tt was given.
 if test "${enable_tt+set}" = set; then :
   enableval=$enable_tt;
@@ -6017,17 +6016,17 @@ if test "x$enable_tt" != xno; then :
 	RESULT=$RESULT'.tt'
 fi
 
-# DEBUG FLAGS
-if test "x$enable_debug" != xno; then :
-  FCFLAGS=$FCFLAGS' $(DEBUG_FLAGS)'
-      RESULT=$RESULT'.db'
-fi
-
 # PN
 if test "x$enable_pn" != xno; then :
   FCFLAGS=$FCFLAGS' $(PN_FLAGS)'
         EXTRASRC=$EXTRASRC' $(PN_FSOURCES)'
         RESULT=$RESULT'.pn'
+fi
+
+# DEBUG FLAGS
+if test "x$enable_debug" != xno; then :
+  FCFLAGS=$FCFLAGS' $(DEBUG_FLAGS)'
+      RESULT=$RESULT'.db'
 fi
 
 # params.h

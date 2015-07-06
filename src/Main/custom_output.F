@@ -3,6 +3,7 @@
 *
 *     Custom output with HDF5/binary format  (Long Wang)
 *-----------------------------------------------------------------------------------
+*     IF(KZ(19).EQ.0.AND.KZ(12).EQ.-1) The output is not scaled
 *     single: NAME, M[M*], X(1:3)[pc], V(1:3)[km/s],
 *             RS[R*], L[L*], Teff[K], MCORE[M*], RSCORE[R*], K*
 
@@ -98,6 +99,8 @@ C      REAL*4 M_FC1, M_FC2, M_FC3
       REAL*4 M_A0, M_ECC0, M_P0, M_A1, M_ECC1, M_P1
       INTEGER NM_KW1, NM_NAM1, NM_KW2, NM_NAM2
       INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
+
+      REAL*8 RSCALE_OUT,MSCALE_OUT,VSCALE_OUT,RAU_OUT,TSCALE_OUT
 *      
       INTEGER NXTLST(NMAX),IMINR(NMAX),IWBINC
       INTEGER N_SINGLE,N_BINARY,N_MERGER, IMLST(4,30),NIMLST
@@ -110,6 +113,21 @@ C      REAL*4 M_FC1, M_FC2, M_FC3
       N_SINGLE = 0
       N_BINARY = 0
       N_MERGER = 0
+
+*     Try no scaling output if KZ(46)
+      IF (KZ(19).EQ.0.AND.KZ(12).EQ.-1) THEN
+         RSCALE_OUT=1.0
+         MSCALE_OUT=1.0
+         VSCALE_OUT=1.0
+         RAU_OUT=1.0
+         TSCALE_OUT=1.0
+      else
+         RSCALE_OUT=RBAR
+         MSCALE_OUT=ZMBAR
+         VSCALE_OUT=VSTAR
+         RAU_OUT=RAU
+         TSCALE_OUT=TSTAR
+      END IF
 
 *     choose full or active particles output
       NLOOP = NXTLEN
@@ -170,20 +188,20 @@ c$$$         END IF
             NB_NAM1(IK) = NAME(J1)
             NB_NAM2(IK) = NAME(J2)
 *     Dynamic information
-            B_M1(IK) = REAL(BODY(J1)*ZMBAR)
-            B_M2(IK) = REAL(BODY(J2)*ZMBAR)
-            B_XC1(IK) = REAL(X(1,I)*RBAR) 
-            B_XC2(IK) = REAL(X(2,I)*RBAR) 
-            B_XC3(IK) = REAL(X(3,I)*RBAR) 
-            B_VC1(IK) = REAL(XDOT(1,I)*VSTAR) 
-            B_VC2(IK) = REAL(XDOT(2,I)*VSTAR) 
-            B_VC3(IK) = REAL(XDOT(3,I)*VSTAR) 
-            B_XR1(IK) = REAL(XIREL(1)*RAU) 
-            B_XR2(IK) = REAL(XIREL(2)*RAU) 
-            B_XR3(IK) = REAL(XIREL(3)*RAU) 
-            B_VR1(IK) = REAL(VIREL(1)*VSTAR) 
-            B_VR2(IK) = REAL(VIREL(2)*VSTAR) 
-            B_VR3(IK) = REAL(VIREL(3)*VSTAR) 
+            B_M1(IK) = REAL(BODY(J1)*MSCALE_OUT)
+            B_M2(IK) = REAL(BODY(J2)*MSCALE_OUT)
+            B_XC1(IK) = REAL(X(1,I)*RSCALE_OUT) 
+            B_XC2(IK) = REAL(X(2,I)*RSCALE_OUT) 
+            B_XC3(IK) = REAL(X(3,I)*RSCALE_OUT) 
+            B_VC1(IK) = REAL(XDOT(1,I)*VSCALE_OUT) 
+            B_VC2(IK) = REAL(XDOT(2,I)*VSCALE_OUT) 
+            B_VC3(IK) = REAL(XDOT(3,I)*VSCALE_OUT) 
+            B_XR1(IK) = REAL(XIREL(1)*RAU_OUT) 
+            B_XR2(IK) = REAL(XIREL(2)*RAU_OUT) 
+            B_XR3(IK) = REAL(XIREL(3)*RAU_OUT) 
+            B_VR1(IK) = REAL(VIREL(1)*VSCALE_OUT) 
+            B_VR2(IK) = REAL(VIREL(2)*VSCALE_OUT) 
+            B_VR3(IK) = REAL(VIREL(3)*VSCALE_OUT) 
 C            B_FC1(IK) = F(1,I)
 C            B_FC2(IK) = F(2,I)
 C            B_FC3(IK) = F(3,I)
@@ -200,7 +218,7 @@ C            B_FC3(IK) = F(3,I)
             B_ECC(IK) = REAL(SQRT((1.0D0 - R(IPAIR)/SEMI)**2+
      &           TDOT2(IPAIR)**2/(BODY(I)*SEMI)))
             B_P(IK) = REAL(DAYS*SEMI*SQRT(ABS(SEMI)/BODY(I)))
-            B_A(IK) = REAL(SEMI*RAU)
+            B_A(IK) = REAL(SEMI*RAU_OUT)
 *     CONTINUE
             GO TO 1
          END IF
@@ -265,13 +283,13 @@ C            B_FC3(IK) = F(3,I)
 *     Name
                   NS_NAM(IK) = NAME(IG)
 *     Dynamics
-                  S_M(IK)  = REAL(BODY(J2)*ZMBAR)
-                  S_X1(IK) = REAL(X(1,J2)*RBAR) 
-                  S_X2(IK) = REAL(X(2,J2)*RBAR) 
-                  S_X3(IK) = REAL(X(3,J2)*RBAR) 
-                  S_V1(IK) = REAL(XDOT(1,J2)*VSTAR) 
-                  S_V2(IK) = REAL(XDOT(2,J2)*VSTAR) 
-                  S_V3(IK) = REAL(XDOT(3,J2)*VSTAR) 
+                  S_M(IK)  = REAL(BODY(J2)*MSCALE_OUT)
+                  S_X1(IK) = REAL(X(1,J2)*RSCALE_OUT) 
+                  S_X2(IK) = REAL(X(2,J2)*RSCALE_OUT) 
+                  S_X3(IK) = REAL(X(3,J2)*RSCALE_OUT) 
+                  S_V1(IK) = REAL(XDOT(1,J2)*VSCALE_OUT) 
+                  S_V2(IK) = REAL(XDOT(2,J2)*VSCALE_OUT) 
+                  S_V3(IK) = REAL(XDOT(3,J2)*VSCALE_OUT) 
 C                  S_F1(IK) = F(1,I)
 C                  S_F2(IK) = F(2,I)
 C                  S_F3(IK) = F(3,I)
@@ -338,40 +356,40 @@ C                  S_F3(IK) = F(3,I)
                GO TO 8
             END IF
 *     Resolve merger
-            M_XC1(IK) = REAL(X(1,ICM)*RBAR) 
-            M_XC2(IK) = REAL(X(2,ICM)*RBAR) 
-            M_XC3(IK) = REAL(X(3,ICM)*RBAR) 
-            M_VC1(IK) = REAL(XDOT(1,ICM)*VSTAR) 
-            M_VC2(IK) = REAL(XDOT(2,ICM)*VSTAR) 
-            M_VC3(IK) = REAL(XDOT(3,ICM)*VSTAR) 
+            M_XC1(IK) = REAL(X(1,ICM)*RSCALE_OUT) 
+            M_XC2(IK) = REAL(X(2,ICM)*RSCALE_OUT) 
+            M_XC3(IK) = REAL(X(3,ICM)*RSCALE_OUT) 
+            M_VC1(IK) = REAL(XDOT(1,ICM)*VSCALE_OUT) 
+            M_VC2(IK) = REAL(XDOT(2,ICM)*VSCALE_OUT) 
+            M_VC3(IK) = REAL(XDOT(3,ICM)*VSCALE_OUT) 
 
 *     Check whether ipair is avaiable
             IF(IPAIR.GT.0) THEN
                CALL KSRES_OP(IPAIR,J1,J2,XIREL,VIREL,0)
-               M_XR11(IK) = REAL(XIREL(1)*RAU)
-               M_XR12(IK) = REAL(XIREL(2)*RAU)
-               M_XR13(IK) = REAL(XIREL(3)*RAU)
-               M_VR11(IK) = REAL(VIREL(1)*VSTAR)
-               M_VR12(IK) = REAL(VIREL(2)*VSTAR)
-               M_VR13(IK) = REAL(VIREL(3)*VSTAR)
+               M_XR11(IK) = REAL(XIREL(1)*RAU_OUT)
+               M_XR12(IK) = REAL(XIREL(2)*RAU_OUT)
+               M_XR13(IK) = REAL(XIREL(3)*RAU_OUT)
+               M_VR11(IK) = REAL(VIREL(1)*VSCALE_OUT)
+               M_VR12(IK) = REAL(VIREL(2)*VSCALE_OUT)
+               M_VR13(IK) = REAL(VIREL(3)*VSCALE_OUT)
             ELSE
                IM2 = -IPAIR
-               M_XR11(IK) = REAL(XREL(1,IM2)*RAU) 
-               M_XR12(IK) = REAL(XREL(2,IM2)*RAU) 
-               M_XR13(IK) = REAL(XREL(3,IM2)*RAU) 
-               M_VR11(IK) = REAL(VREL(1,IM2)*VSTAR) 
-               M_VR12(IK) = REAL(VREL(2,IM2)*VSTAR) 
-               M_VR13(IK) = REAL(VREL(3,IM2)*VSTAR) 
+               M_XR11(IK) = REAL(XREL(1,IM2)*RAU_OUT) 
+               M_XR12(IK) = REAL(XREL(2,IM2)*RAU_OUT) 
+               M_XR13(IK) = REAL(XREL(3,IM2)*RAU_OUT) 
+               M_VR11(IK) = REAL(VREL(1,IM2)*VSCALE_OUT) 
+               M_VR12(IK) = REAL(VREL(2,IM2)*VSCALE_OUT) 
+               M_VR13(IK) = REAL(VREL(3,IM2)*VSCALE_OUT) 
             END IF
-            M_XR01(IK) = REAL(XREL(1,IM)*RAU) 
-            M_XR02(IK) = REAL(XREL(2,IM)*RAU) 
-            M_XR03(IK) = REAL(XREL(3,IM)*RAU) 
-            M_VR01(IK) = REAL(VREL(1,IM)*VSTAR) 
-            M_VR02(IK) = REAL(VREL(2,IM)*VSTAR) 
-            M_VR03(IK) = REAL(VREL(3,IM)*VSTAR) 
-            M_M1(IK) = REAL(CM(1,IM)*ZMBAR) 
-            M_M2(IK) = REAL(CM(2,IM)*ZMBAR) 
-            M_M3(IK) = REAL(BODY(J2)*ZMBAR) 
+            M_XR01(IK) = REAL(XREL(1,IM)*RAU_OUT) 
+            M_XR02(IK) = REAL(XREL(2,IM)*RAU_OUT) 
+            M_XR03(IK) = REAL(XREL(3,IM)*RAU_OUT) 
+            M_VR01(IK) = REAL(VREL(1,IM)*VSCALE_OUT) 
+            M_VR02(IK) = REAL(VREL(2,IM)*VSCALE_OUT) 
+            M_VR03(IK) = REAL(VREL(3,IM)*VSCALE_OUT) 
+            M_M1(IK) = REAL(CM(1,IM)*MSCALE_OUT) 
+            M_M2(IK) = REAL(CM(2,IM)*MSCALE_OUT) 
+            M_M3(IK) = REAL(BODY(J2)*MSCALE_OUT) 
             
             NM_NAMC(IK) = NAMEI
             NM_NAM1(IK) = NAME(J1)
@@ -395,7 +413,7 @@ C     &              + XREL(3,IM2)*VREL(3,IM2)
      &              RDOT**2/(BODY(ICM)*SEMI)))
             END IF
             M_P1(IK) = REAL(DAYS*SEMI*SQRT(ABS(SEMI)/BODY(ICM)))
-            M_A1(IK) = REAL(SEMI*RAU)
+            M_A1(IK) = REAL(SEMI*RAU_OUT)
             SEMI0 = -0.5*BODY(J1)/HM(IM)
             RJ = SQRT(XREL(1,IM)**2 + XREL(2,IM)**2 + XREL(3,IM)**2)
 C            RDOT = XREL(1,IM)*VREL(1,IM) + XREL(2,IM)*VREL(2,IM)
@@ -405,7 +423,7 @@ C     &           + XREL(3,IM)*VREL(3,IM)
             M_ECC0(IK) = REAL(SQRT((1.0D0 - RJ/SEMI0)**2 +
      &           RDOT**2/(BODY(J1)*SEMI0)))
             M_P0(IK) = REAL(DAYS*SEMI0*SQRT(ABS(SEMI0)/BODY(J1)))
-            M_A0(IK) = REAL(SEMI0*RAU)
+            M_A0(IK) = REAL(SEMI0*RAU_OUT)
             
 *     stellar evolution
             IF (KZ(12).GT.0) THEN
@@ -455,13 +473,13 @@ C     &           + XREL(3,IM)*VREL(3,IM)
                N_SINGLE = N_SINGLE + 1
                IK = N_SINGLE
                NS_NAM(IK) = NAMEC(L)
-               S_M(IK)  = REAL(BODYC(L)*ZMBAR)
-               S_X1(IK) = REAL((XCH(3*L-2)+X(1,ICH))*RBAR)
-               S_X2(IK) = REAL((XCH(3*L-1)+X(2,ICH))*RBAR)
-               S_X3(IK) = REAL((XCH(3*L)+X(3,ICH))*RBAR)
-               S_V1(IK) = REAL((VCH(3*L-2)+XDOT(1,ICH))*VSTAR)
-               S_V2(IK) = REAL((VCH(3*L-1)+XDOT(2,ICH))*VSTAR)
-               S_V3(IK) = REAL((VCH(3*L)+XDOT(3,ICH))*VSTAR)
+               S_M(IK)  = REAL(BODYC(L)*MSCALE_OUT)
+               S_X1(IK) = REAL((XCH(3*L-2)+X(1,ICH))*RSCALE_OUT)
+               S_X2(IK) = REAL((XCH(3*L-1)+X(2,ICH))*RSCALE_OUT)
+               S_X3(IK) = REAL((XCH(3*L)+X(3,ICH))*RSCALE_OUT)
+               S_V1(IK) = REAL((VCH(3*L-2)+XDOT(1,ICH))*VSCALE_OUT)
+               S_V2(IK) = REAL((VCH(3*L-1)+XDOT(2,ICH))*VSCALE_OUT)
+               S_V3(IK) = REAL((VCH(3*L)+XDOT(3,ICH))*VSCALE_OUT)
 *     stellar evolution         
                IF(KZ(12).GT.0) THEN
                   IF (L.EQ.1) THEN
@@ -544,27 +562,27 @@ C     &           + XREL(3,IM)*VREL(3,IM)
                NB_NAM1(IK) = NAME(I)
                NB_NAM2(IK) = NAME(I2)
 *     Dynamic information
-               B_M1(IK) = REAL(BODY(I)*ZMBAR)
-               B_M2(IK) = REAL(BODY(I2)*ZMBAR)
+               B_M1(IK) = REAL(BODY(I)*MSCALE_OUT)
+               B_M2(IK) = REAL(BODY(I2)*MSCALE_OUT)
 
                B_XC1(IK) = REAL((BODY(I)*X(1,I)+BODY(I2)*X(1,I2))
-     &              /ZMB*RBAR)
+     &              /ZMB*RSCALE_OUT)
                B_XC2(IK) = REAL((BODY(I)*X(2,I)+BODY(I2)*X(2,I2))
-     &              /ZMB*RBAR)
+     &              /ZMB*RSCALE_OUT)
                B_XC3(IK) = REAL((BODY(I)*X(3,I)+BODY(I2)*X(3,I2))
-     &              /ZMB*RBAR)
+     &              /ZMB*RSCALE_OUT)
                B_VC1(IK) = REAL((BODY(I)*XDOT(1,I)+BODY(I2)*XDOT(1,I2))
-     &              /ZMB*VSTAR)
+     &              /ZMB*VSCALE_OUT)
                B_VC2(IK) = REAL((BODY(I)*XDOT(2,I)+BODY(I2)*XDOT(3,I2))
-     &              /ZMB*VSTAR)
+     &              /ZMB*VSCALE_OUT)
                B_VC3(IK) = REAL((BODY(I)*XDOT(3,I)+BODY(I2)*XDOT(3,I2))
-     &              /ZMB*VSTAR)
-               B_XR1(IK) = REAL(XIREL(1)*RAU) 
-               B_XR2(IK) = REAL(XIREL(2)*RAU) 
-               B_XR3(IK) = REAL(XIREL(3)*RAU) 
-               B_VR1(IK) = REAL(VIREL(1)*VSTAR) 
-               B_VR2(IK) = REAL(VIREL(2)*VSTAR) 
-               B_VR3(IK) = REAL(VIREL(3)*VSTAR) 
+     &              /ZMB*VSCALE_OUT)
+               B_XR1(IK) = REAL(XIREL(1)*RAU_OUT) 
+               B_XR2(IK) = REAL(XIREL(2)*RAU_OUT) 
+               B_XR3(IK) = REAL(XIREL(3)*RAU_OUT) 
+               B_VR1(IK) = REAL(VIREL(1)*VSCALE_OUT) 
+               B_VR2(IK) = REAL(VIREL(2)*VSCALE_OUT) 
+               B_VR3(IK) = REAL(VIREL(3)*VSCALE_OUT) 
                DR3I = REAL(BODY(I2)/(RIJ2*RIJ))
 *     Only estimate the c.m. force at the first component position
 C               B_FC1(IK) = F(1,I) + XIREL(1)*DR3I
@@ -581,9 +599,9 @@ C               B_FC3(IK) = F(3,I) + XIREL(3)*DR3I
 *     Binary parameters
                B_ECC(IK) = REAL(SQRT((1.0D0 - RIJ/SEMI)**2 + 
      &              RDOT**2/(ZMB*SEMI)))
-               BODYI = (B_M1(IK) + B_M2(IK))/ZMBAR
+               BODYI = (B_M1(IK) + B_M2(IK))/MSCALE_OUT
                B_P(IK) = REAL(DAYS*SEMI*SQRT(ABS(SEMI)/BODYI))
-               B_A(IK) = REAL(SEMI*RAU)
+               B_A(IK) = REAL(SEMI*RAU_OUT)
 *     Continue
                GO TO 1
             ELSE
@@ -649,11 +667,27 @@ c$$$     &     M_MC1,M_MC2,M_MC3,M_RC1,M_RC2,M_RC3)
       REAL*8  LUMS(10),TSCLS(20),GB(10)
       REAL*8  RM8,LUM8,MC8,RCC8,M18,M0
       REAL*4  RM,LUM,TE,MC,RCC,M1
+      REAL*8 RSCALE_OUT,MSCALE_OUT,VSCALE_OUT,RAU_OUT,TSCALE_OUT
+
+      IF (KZ(19).EQ.0.AND.KZ(12).EQ.-1) THEN
+         RSCALE_OUT=1.0
+         MSCALE_OUT=1.0
+         VSCALE_OUT=1.0
+         RAU_OUT=1.0
+         TSCALE_OUT=1.0
+      else
+         RSCALE_OUT=RBAR
+         MSCALE_OUT=ZMBAR
+         VSCALE_OUT=VSTAR
+         RAU_OUT=RAU
+         TSCALE_OUT=TSTAR
+      END IF
+
 *
       KW = KSTAR(I)
-      AGE = MAX(TIME,TEV0(I))*TSTAR - EPOCH(I)
-      M0 = BODY0(I)*ZMBAR
-      M18 = BODY(I)*ZMBAR
+      AGE = MAX(TIME,TEV0(I))*TSCALE_OUT - EPOCH(I)
+      M0 = BODY0(I)*MSCALE_OUT
+      M18 = BODY(I)*MSCALE_OUT
       CALL STAR(KW,M0,M18,TM,TN,TSCLS,LUMS,GB,ZPARS)
       CALL HRDIAG(M0,AGE,M18,TM,TN,TSCLS,LUMS,GB,ZPARS,
      &     RM8,LUM8,KW,MC8,RCC8,ME,RE,K2)
@@ -689,17 +723,32 @@ C     &                  S_F1(NMAX), S_F2(NMAX), S_F3(NMAX),
 C      REAL*4 S_F1, S_F2, S_F3
       REAL*4 S_RS, S_L, S_TE, S_RC, S_MC
       INTEGER NS_KW,NS_NAM
+      REAL*8 RSCALE_OUT,MSCALE_OUT,VSCALE_OUT,RAU_OUT,TSCALE_OUT
+
+      IF (KZ(19).EQ.0.AND.KZ(12).EQ.-1) THEN
+         RSCALE_OUT=1.0
+         MSCALE_OUT=1.0
+         VSCALE_OUT=1.0
+         RAU_OUT=1.0
+         TSCALE_OUT=1.0
+      else
+         RSCALE_OUT=RBAR
+         MSCALE_OUT=ZMBAR
+         VSCALE_OUT=VSTAR
+         RAU_OUT=RAU
+         TSCALE_OUT=TSTAR
+      END IF
 
 *     Name
       NS_NAM(IK) = NAME(I)
 *     Dynamics
-      S_M(IK)  = REAL(BODY(I)*ZMBAR)
-      S_X1(IK) = REAL(X(1,I)*RBAR) 
-      S_X2(IK) = REAL(X(2,I)*RBAR) 
-      S_X3(IK) = REAL(X(3,I)*RBAR) 
-      S_V1(IK) = REAL(XDOT(1,I)*VSTAR) 
-      S_V2(IK) = REAL(XDOT(2,I)*VSTAR) 
-      S_V3(IK) = REAL(XDOT(3,I)*VSTAR) 
+      S_M(IK)  = REAL(BODY(I)*MSCALE_OUT)
+      S_X1(IK) = REAL(X(1,I)*RSCALE_OUT) 
+      S_X2(IK) = REAL(X(2,I)*RSCALE_OUT) 
+      S_X3(IK) = REAL(X(3,I)*RSCALE_OUT) 
+      S_V1(IK) = REAL(XDOT(1,I)*VSCALE_OUT) 
+      S_V2(IK) = REAL(XDOT(2,I)*VSCALE_OUT) 
+      S_V3(IK) = REAL(XDOT(3,I)*VSCALE_OUT) 
 C      S_F1(IK) = F(1,I)
 C      S_F2(IK) = F(2,I)
 C      S_F3(IK) = F(3,I)
@@ -743,26 +792,41 @@ C      REAL*4 B_FC1, B_FC2, B_FC3
       INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
 
       REAL*8 XIREL(3), VIREL(3), M1, M2, MTMP,MCM,RDOT
+      REAL*8 RSCALE_OUT,MSCALE_OUT,VSCALE_OUT,RAU_OUT,TSCALE_OUT
+      IF (KZ(19).EQ.0.AND.KZ(12).EQ.-1) THEN
+         RSCALE_OUT=1.0
+         MSCALE_OUT=1.0
+         VSCALE_OUT=1.0
+         RAU_OUT=1.0
+         TSCALE_OUT=1.0
+      else
+         RSCALE_OUT=RBAR
+         MSCALE_OUT=ZMBAR
+         VSCALE_OUT=VSTAR
+         RAU_OUT=RAU
+         TSCALE_OUT=TSTAR
+      END IF
+
 
 *     Name
       NB_NAMC(IK) = NCM
       NB_NAM1(IK) = NAME(J1)
       NB_NAM2(IK) = NAME(J2)
 *     Dynamic information
-      B_M1(IK) = REAL(M1*ZMBAR) 
-      B_M2(IK) = REAL(M2*ZMBAR) 
-      B_XC1(IK) = REAL(X(1,I)*RBAR) 
-      B_XC2(IK) = REAL(X(2,I)*RBAR) 
-      B_XC3(IK) = REAL(X(3,I)*RBAR) 
-      B_VC1(IK) = REAL(XDOT(1,I)*VSTAR) 
-      B_VC2(IK) = REAL(XDOT(2,I)*VSTAR) 
-      B_VC3(IK) = REAL(XDOT(3,I)*VSTAR) 
-      B_XR1(IK) = REAL(XIREL(1)*RAU) 
-      B_XR2(IK) = REAL(XIREL(2)*RAU) 
-      B_XR3(IK) = REAL(XIREL(3)*RAU) 
-      B_VR1(IK) = REAL(VIREL(1)*VSTAR) 
-      B_VR2(IK) = REAL(VIREL(2)*VSTAR) 
-      B_VR3(IK) = REAL(VIREL(3)*VSTAR) 
+      B_M1(IK) = REAL(M1*MSCALE_OUT) 
+      B_M2(IK) = REAL(M2*MSCALE_OUT) 
+      B_XC1(IK) = REAL(X(1,I)*RSCALE_OUT) 
+      B_XC2(IK) = REAL(X(2,I)*RSCALE_OUT) 
+      B_XC3(IK) = REAL(X(3,I)*RSCALE_OUT) 
+      B_VC1(IK) = REAL(XDOT(1,I)*VSCALE_OUT) 
+      B_VC2(IK) = REAL(XDOT(2,I)*VSCALE_OUT) 
+      B_VC3(IK) = REAL(XDOT(3,I)*VSCALE_OUT) 
+      B_XR1(IK) = REAL(XIREL(1)*RAU_OUT) 
+      B_XR2(IK) = REAL(XIREL(2)*RAU_OUT) 
+      B_XR3(IK) = REAL(XIREL(3)*RAU_OUT) 
+      B_VR1(IK) = REAL(VIREL(1)*VSCALE_OUT) 
+      B_VR2(IK) = REAL(VIREL(2)*VSCALE_OUT) 
+      B_VR3(IK) = REAL(VIREL(3)*VSCALE_OUT) 
 C      B_FC1(IK) =REAL( F(1,I)
 C      B_FC2(IK) = F(2,I)
 C      B_FC3(IK) = F(3,I)
@@ -786,7 +850,7 @@ C      B_FC3(IK) = F(3,I)
       B_ECC(IK) = REAL(SQRT((1.0D0 - RIP/SEMI)**2 + 
      &     RDOT**2/(MCM*SEMI)))
       B_P(IK) = REAL(DAYS*SEMI*SQRT(ABS(SEMI)/MCM))
-      B_A(IK) = REAL(SEMI*RAU)
+      B_A(IK) = REAL(SEMI*RAU_OUT)
 
       RETURN
 

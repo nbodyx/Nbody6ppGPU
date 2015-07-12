@@ -521,7 +521,7 @@
 *     PLPOT
      &     C_PLPOT,
 *     BLOCKS
-     &     TPREV,TBLOCK,DTK,KVEC,
+     &     TPREV,TBLOCK,DTK,
 *     RAND2,GALAXY
      &     C_RAND2,C_GALAXY,
 *     CLOUDS

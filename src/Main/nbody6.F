@@ -74,7 +74,7 @@
 #ifdef DEBUG
 *     --10/03/14 19:41-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-      if(rank.eq.0) read(5,*) adtime,dumptime,dprintt
+      if(rank.eq.0) read(5,*) adtime,dumptime,dprintt,dtprint,namep
 #if MPIINIT
       CALL MPI_BCAST(adtime,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
       CALL MPI_BCAST(dumptime,1,MPI_REAL8,0,MPI_COMM_WORLD,ierr)

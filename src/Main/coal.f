@@ -293,12 +293,12 @@ C      CALL DTCHCK(TIME,STEP(I2),DTK(40))
 *       Perform total force & energy corrections (new polynomial set later).
           CALL FCORR(I1,DM,KW)
 *
-*       remove from NXTLST (In binary, not needed)
-C          call delay_remove_tlist(I1,STEP,DTK)
+C*       remove from NXTLST (In binary, not needed)
+          call delay_remove_tlist(I1,STEP,DTK)
 *       Specify commensurate time-step (not needed for BODY(I1) = 0).
           CALL DTCHCK(TIME,STEP(I1),DTK(40))
 *       add into NLSTDELAY
-C          call delay_store_tlist(I1)
+          call delay_store_tlist(I1)
 *
 *       Set IPHASE = -3 to preserve ILIST.
           IPHASE = -3
@@ -316,16 +316,16 @@ C          call delay_store_tlist(I1)
                   IF (L.EQ.NNB2) THEN
                       J = I1
 *     remove from NXTLST
-C                      call delay_remove_tlist(J,STEP,DTK)
+                      call delay_remove_tlist(J,STEP,DTK)
                   ELSE IF (T0(J).LT.TIME) THEN
 *                      call jpred(j,time,time)
                       CALL XVPRED(J,-2)
 *     remove from NXTLST
-                      IF(J.NE.I1) call delay_remove_tlist(J,STEP,DTK)
+                      call delay_remove_tlist(J,STEP,DTK)
                       CALL DTCHCK(TIME,STEP(J),DTK(40))
                   ELSE
 *     remove from NXTLST
-                      IF(J.NE.I1) call delay_remove_tlist(J,STEP,DTK)
+                      call delay_remove_tlist(J,STEP,DTK)
                   END IF
                   DO 25 K = 1,3
                       X0DOT(K,J) = XDOT(K,J)
@@ -354,9 +354,9 @@ C                      call delay_remove_tlist(I1,STEP,DTK)
                   ELSE
                       CALL FPOLY1(J,J,0)
                       CALL FPOLY2(J,J,0)
+                      call delay_store_tlist(J)
                   END IF
 *     add into NLSTDELAY
-                  call delay_store_tlist(J)
    30         CONTINUE
           END IF
 *         TPREV = TIME - STEPX
@@ -380,12 +380,12 @@ C                      call delay_remove_tlist(I1,STEP,DTK)
               I2 = JMIN
 *       Note that T0(I2) may not have a large value after #I2 is exchanged.
               T0(I2) = TADJ + DTADJ
-C              call delay_remove_tlist(I2,STEP,DTK)
+              call delay_remove_tlist(I2,STEP,DTK)
               STEP(I2) = 2*DTK(1)
               call add_tlist(I2,STEP,DTK)
           ELSE
 *       remove from NXTLST
-C              call delay_remove_tlist(ICOMP,STEP,DTK)
+              call delay_remove_tlist(ICOMP,STEP,DTK)
 *       Initialize force polynomial for new single body.
               CALL FPOLY1(ICOMP,ICOMP,0)
               CALL FPOLY2(ICOMP,ICOMP,0)

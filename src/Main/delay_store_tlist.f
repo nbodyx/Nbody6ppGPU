@@ -11,6 +11,12 @@
          DO L = 2, NLSTDELAY(1)+1
             IF (NLSTDELAY(L).EQ.J) RETURN
          END DO
+         DO L = NXTLIMIT+1,NXTLIMIT+NGHOSTS
+            IF (NXTLST(L).EQ.J) THEN
+               print*,'Error!: J particle',J,' already in ghost list!'
+               call abort()
+            END IF
+         END DO
 *     --07/16/14 11:53-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 c$$$         print*,'DELAY STORE J',J,'NLSTDELAY',

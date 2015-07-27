@@ -12,6 +12,13 @@
       K = k_step(STEP(J),DTK)
 *     Check ghost
       IF(K.EQ.-1) THEN
+         DO L = 2, NLSTDELAY(1)+1
+            IF (NLSTDELAY(L).EQ.J) then
+               print*,'Error!: ghost partile ',J,' already exist in ',
+     &              'delay list'
+               call abort()
+            END IF
+         END DO
          NGHOSTS = NGHOSTS + 1
          NXTLST(NXTLIMIT+NGHOSTS) = J
 *     --07/16/14 20:21-lwang-debug--------------------------------------*

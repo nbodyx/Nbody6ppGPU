@@ -35,6 +35,7 @@
 *
 *       Note RTIDE should be non-zero for isolated systems (cf. CALL LAGR).
       RSPH2 = RTIDE
+      QVIR = Q
       
       ZMASS = 0.0D0
       DO 10 K = 1,3

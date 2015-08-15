@@ -264,9 +264,9 @@ C          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0
           IF (ZKIN.GT.0.0D0) THEN
 *       Note that QVIR = Q is saved in routine SCALE and VIR < 0 with GPU.
 #ifdef PARALLEL
-              CALL ENERGY_MPI(.false.)
+              CALL ENERGY_MPI(.true.)
 #else
-              CALL ENERGY(.false.)
+              CALL ENERGY(.true.)
 #endif
               VIR = POT - VIR
               QV = SQRT(QVIR*VIR/ZKIN)

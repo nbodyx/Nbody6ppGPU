@@ -46,6 +46,7 @@ c$$$      end if
 *
 *       Calculate the potential energy.
       ZKIN = 0.D00
+      VIR = 0.0
 *
       call cputim(tt998)
       call mpi_barrier(MPI_COMM_WORLD,ierr)

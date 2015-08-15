@@ -34,7 +34,7 @@
 #endif
           VIR = 0.0
           DO 5 I = I1,I2
-             CALL JPRED(I,TIME,TIME)
+              IF(TIME.GT.0) CALL JPRED(I,TIME,TIME)
               DO 2 K = 1,3
 *       Initialize scalars for force contributions.
                   XI(K) = X(K,I)

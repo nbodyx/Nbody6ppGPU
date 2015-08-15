@@ -13,13 +13,16 @@
       DO 40 I = I1,I2
 *
 *       Include regular force in the irregular step (cf. Makino & SJA 1992).
-          DO 5 K = 1,3
-              FDUM(K) = FI(K,I) + FR(K,I)
-    5     CONTINUE
+          DO K = 1,3
+             FDUM(K) = FI(K,I) + FR(K,I)
+          END DO
 *
 *       Determine irregular and regular steps by the general criterion.
           DT = TSTEP2(XDOT(1,I),FDUM,D1(1,I),ETAI)
           DTR = TSTEP2(XDOT(1,I),FR(1,I),D1R(1,I),ETAR)
+*       Avoid the case when velocity is zero, time step is zero
+          DT = MAX(DT,DTK(64))
+          DTR = MAX(DT,DTR)
 *
 *       Initialize the times and obtain discrete steps (block-step version).
           T0(I) = TIME

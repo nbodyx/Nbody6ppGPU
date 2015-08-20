@@ -1,6 +1,7 @@
 Welcome to use Nbody6++, which is the parallel version of Nbody6.
 Please send Email to longwang.astro@gmail.com if you find some problems during using the code.
 
+---------------------------------------------------------------------
 To install Nbody6++, please use:
 ./configure [options]
 make
@@ -10,6 +11,7 @@ The configure has several optional features, please use
 ./configure --help
 to check these features.
 
+----------------------
 Some basice features:
 
 --Install path:
@@ -42,4 +44,15 @@ There are some extra tools and libraries for reading conf.3 and do some basic an
 All these options can be used in the same time. For example:
 ./configure --prefix=/opt/nbody6++ --enable-tools --enable-hdf5
 
+---------------------------------------------------------------------
+***Important notice:
+
+* When large NMAX is used, sometimes the segmentational fault can happened after the simulation begin. This is due to the stack memory overflow. In this case, you should always run 
+ $ ulimit -s unlimited
+before the code is started in the same shell.
+Be careful that the "ulimit" only works for current shell, thus it's need to be used every time when a new shell is opened.
+You can put it in .bashrc or .bash_profile to always load it when a new shell is open.
+
+---------------------------------------------------------------------
 Please check doc/Nbody6++_manual.pdf for the detail description of Nbody6++
+

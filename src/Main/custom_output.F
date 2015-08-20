@@ -121,12 +121,14 @@ C      REAL*4 M_FC1, M_FC2, M_FC3
          VSCALE_OUT=1.0
          RAU_OUT=1.0
          TSCALE_OUT=1.0
+         DAYS_OUT=1.0
       else
          RSCALE_OUT=RBAR
          MSCALE_OUT=ZMBAR
          VSCALE_OUT=VSTAR
          RAU_OUT=RAU
          TSCALE_OUT=TSTAR
+         DAYS_OUT=DAYS
       END IF
 
 *     choose full or active particles output
@@ -217,7 +219,7 @@ C            B_FC3(IK) = F(3,I)
             SEMI = -0.5*BODY(I)/H(IPAIR)
             B_ECC(IK) = REAL(SQRT((1.0D0 - R(IPAIR)/SEMI)**2+
      &           TDOT2(IPAIR)**2/(BODY(I)*SEMI)))
-            B_P(IK) = REAL(DAYS*SEMI*SQRT(ABS(SEMI)/BODY(I)))
+            B_P(IK) = REAL(DAYS_OUT*SEMI*SQRT(ABS(SEMI)/BODY(I)))
             B_A(IK) = REAL(SEMI*RAU_OUT)
 *     CONTINUE
             GO TO 1
@@ -412,7 +414,7 @@ C     &              + XREL(3,IM2)*VREL(3,IM2)
                M_ECC1(IK) = REAL(SQRT((1.0D0 - RJ/SEMI)**2 + 
      &              RDOT**2/(BODY(ICM)*SEMI)))
             END IF
-            M_P1(IK) = REAL(DAYS*SEMI*SQRT(ABS(SEMI)/BODY(ICM)))
+            M_P1(IK) = REAL(DAYS_OUT*SEMI*SQRT(ABS(SEMI)/BODY(ICM)))
             M_A1(IK) = REAL(SEMI*RAU_OUT)
             SEMI0 = -0.5*BODY(J1)/HM(IM)
             RJ = SQRT(XREL(1,IM)**2 + XREL(2,IM)**2 + XREL(3,IM)**2)
@@ -422,7 +424,7 @@ C     &           + XREL(3,IM)*VREL(3,IM)
      &           UM(3,IM)*UMDOT(3,IM) + UM(4,IM)*UMDOT(4,IM))
             M_ECC0(IK) = REAL(SQRT((1.0D0 - RJ/SEMI0)**2 +
      &           RDOT**2/(BODY(J1)*SEMI0)))
-            M_P0(IK) = REAL(DAYS*SEMI0*SQRT(ABS(SEMI0)/BODY(J1)))
+            M_P0(IK) = REAL(DAYS_OUT*SEMI0*SQRT(ABS(SEMI0)/BODY(J1)))
             M_A0(IK) = REAL(SEMI0*RAU_OUT)
             
 *     stellar evolution
@@ -600,7 +602,7 @@ C               B_FC3(IK) = F(3,I) + XIREL(3)*DR3I
                B_ECC(IK) = REAL(SQRT((1.0D0 - RIJ/SEMI)**2 + 
      &              RDOT**2/(ZMB*SEMI)))
                BODYI = (B_M1(IK) + B_M2(IK))/MSCALE_OUT
-               B_P(IK) = REAL(DAYS*SEMI*SQRT(ABS(SEMI)/BODYI))
+               B_P(IK) = REAL(DAYS_OUT*SEMI*SQRT(ABS(SEMI)/BODYI))
                B_A(IK) = REAL(SEMI*RAU_OUT)
 *     Continue
                GO TO 1
@@ -849,7 +851,7 @@ C      B_FC3(IK) = F(3,I)
       SEMI = -0.5*MCM/HIP
       B_ECC(IK) = REAL(SQRT((1.0D0 - RIP/SEMI)**2 + 
      &     RDOT**2/(MCM*SEMI)))
-      B_P(IK) = REAL(DAYS*SEMI*SQRT(ABS(SEMI)/MCM))
+      B_P(IK) = REAL(DAYS_OUT*SEMI*SQRT(ABS(SEMI)/MCM))
       B_A(IK) = REAL(SEMI*RAU_OUT)
 
       RETURN

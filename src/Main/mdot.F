@@ -1597,8 +1597,17 @@ c$$$      end if
             END IF
 *
             IF(KSTAR(I).GT.0.AND.KZ(34).GT.0)THEN
+*       Ensure optional updating of orbit before possible Roche test (1/2013).
+               IF (KZ(34).EQ.1.AND.KSTAR(I).GT.0.AND.
+     &            MOD(KSTAR(I),2).EQ.0)THEN
+                  CALL SYNCH(IPAIR)
+                  IF(IQCOLL.NE.0.OR.IPHASE.LT.0) GO TO 1
+               ENDIF
                JPAIR = -IPAIR
                CALL TRFLOW(JPAIR,DTR)
+               IF (KZ(34).EQ.1.AND.KSTAR(I).GT.0.AND.
+     &            MOD(KSTAR(I),2).EQ.0)THEN
+               END IF
                IF(DTR.LT.STEP(I))THEN
 *     Do enery correction before particle index change
 c$$$                  call encorr_mdot(NPNUM,NDMLIST,DMLIST,IGPUDM,
@@ -1617,10 +1626,6 @@ c$$$#endif
                      TEV(J1) = MAX(1.000002d0*TEV(I),TEV(J1))
                      TEV(J2) = MAX(1.000002d0*TEV(I),TEV(J2))
                   ENDIF
-               ENDIF
-               IF (KZ(34).EQ.1.AND.KSTAR(I).GT.0.AND.
-     &            MOD(KSTAR(I),2).EQ.0)THEN
-                  CALL SYNCH(IPAIR)
                ENDIF
             ENDIF
          ENDIF

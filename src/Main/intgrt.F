@@ -1,9 +1,9 @@
       SUBROUTINE INTGRT
 *     label-intgrt
-*     
-*     N-body integrator flow control.
-*     -------------------------------
-*     
+*
+*       N-body integrator flow control.
+*       -------------------------------
+*
       INCLUDE 'common6.h'
       INCLUDE 'timing.h'
       include 'tlist.h'
@@ -12,9 +12,9 @@
 #endif
       include 'omp_lib.h'
       COMMON/CLUMP/   BODYS(NCMAX,5),T0S(5),TS(5),STEPS(5),RMAXS(5),
-     &     NAMES(NCMAX,5),ISYS(5)
+     &                NAMES(NCMAX,5),ISYS(5)
       COMMON/CHAINC/  XC(3,NCMAX),UC(3,NCMAX),BODYC(NCMAX),ICH,
-     &     LISTC(LMAX)
+     &                LISTC(LMAX)
       COMMON/BLKLVL/  JHIST(0:NMAX),JHISTR(0:NMAX),JHISTU(0:NMAX)
       COMMON/STSTAT/  TINIT,NIR,NIB,NRGL,NKS
       COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
@@ -44,16 +44,16 @@
       SAVE DTOUT
 
 
-*     
-*     Update quantized value of STEPM for large N (first time only).
+*
+*       Update quantized value of STEPM for large N (first time only).
       call cputim(tttbegin)
       IF (.NOT.LSTEPM.AND.NZERO.GT.1024) THEN
          K = INT((FLOAT(NZERO)/1024.0)**0.333333)
          STEPM = 0.03125D0/2**(K-1)
          LSTEPM = .TRUE.
       END IF
-*     
-*     Open GPU for all single particles
+*
+*       Open GPU for all single particles
       IF (IPSTART) THEN
          FNTLOOP = .false.
 
@@ -156,8 +156,8 @@
 #ifdef GPU
          NN = NTOT + 10
          CALL GPUNB_OPEN(NN,rank)
-*     CALL GPUPOT_INIT_FLOAT(rank)
-*     CALL GPUPOT_INIT(rank,NN)
+*         CALL GPUPOT_INIT_FLOAT(rank)
+*         CALL GPUPOT_INIT(rank,NN)
 #endif
 #ifdef SIMD
          NN = NTOT + NBIN0 - NPAIRS + 100
@@ -165,7 +165,7 @@
          CALL IRR_SIMD_OPEN(NN,LMAX,rank)
 #endif
 #ifdef PARALLEL         
-*     Get the offset number for NXTLST_MPI
+*       Get the offset number for NXTLST_MPI
          IF (MOD(NMAX,ISIZE).EQ.0) THEN
             NPIECE = NMAX / ISIZE
          ELSE
@@ -177,12 +177,12 @@
       END IF
       call cputim(tttiend)
       ttintb = ttintb +(tttiend-tttbegin)*60
-*     
-*     Search for high velocities after escape or KS/chain termination.
- 999  IF (KZ(37).GT.0.AND.(IPHASE.EQ.-1.OR.IPHASE.GE.2)) THEN
-         CALL HIVEL(0)
+*
+*       Search for high velocities after escape or KS/chain termination.
+  999 IF (KZ(37).GT.0.AND.(IPHASE.EQ.-1.OR.IPHASE.GE.2)) THEN
+          CALL HIVEL(0)
       END IF
-*     
+*
 #ifdef SIMD
       call cputim(ttsimda)
 *     When necessary, update all particle data in AVX/SSE library
@@ -203,20 +203,20 @@
 *     Reset control & regularization indicators.
       IPHASE = 0
       IKS = 0
-*     
+*
       IF (IQ.LT.0) ICALL = 0
       IQ = 0
       call cputim(tttiend)
       ttintb = ttintb +(tttiend-tttbegin)*60
-*     
-*     Find all particles due at next block time.
+*
+*       Find all particles due at next block time.
     1 CONTINUE
-*     
-*     
-*     Redetermine TMIN after main change to catch new small steps after chain.
+*
+*
+*       Redetermine TMIN after main change to catch new small steps after chain.
       ICALL = ICALL + 1
       IF (ICALL.EQ.2) GO TO 999
-*     
+*
       call cputim(tttbegin)
 
 *     See whether need to add delay list into NXTLST
@@ -251,7 +251,7 @@
             call flush(6)
             call abort()
          END IF
-C     IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
+C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
       END DO
       DO L = NXTLEN+1,NXTLIMIT
          J = NXTLST(L)
@@ -264,7 +264,7 @@ C     IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
             call flush(6)
             call abort()
          END IF
-C     IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
+C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
       END DO
 *     --07/07/14 23:44-lwang-end----------------------------------------*
 #endif
@@ -286,13 +286,13 @@ C     IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
             IF (LIST(1,2*IPAIR-1).GT.0) NSTEPB = NSTEPB + 1
          END IF
       END DO
-*     
+*
       LSKIP = NXTLEN 
       IF (LSKIP.LE.50) THEN
-*     Update short timestep list for regularization search.
-         CALL SHORT(NXTLEN,NXTLST,LSHORT)
+*       Update short timestep list for regularization search.
+          CALL SHORT(NXTLEN,NXTLST,LSHORT)
       END IF
-*     
+*
 #ifdef DEBUG
 *     --11/08/13 23:15-lwang-debug--------------------------------------*
 ***** Note: Interupt the simulation -----------------------------------**
@@ -313,104 +313,104 @@ C     IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
       end if
 *     --11/08/13 23:15-lwang-end----------------------------------------*
 #endif
-      
-*     Set new time and save block time (for regularization terminations).
+     
+*       Set new time and save block time (for regularization terminations).
       TIME = TMIN
       TBLOCK = TIME
       TTOT = TIME + TOFF
-*     
+*
 *     Check option for advancing interstellar clouds.
       IF (KZ(13).GT.0) THEN
-         CALL CLINT
+          CALL CLINT
       END IF
-*     
+*
 #ifdef TT
-***   FlorentR - add the case of the tidal tensor
-*     IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
+*** FlorentR - add the case of the tidal tensor
+*      IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
       IF (KZ(14).EQ.3.OR.KZ(14).EQ.4.OR.
      &     (KZ(14).EQ.9.AND.TTMODE.EQ.0) ) THEN
-*     IF (KZ(14).EQ.3.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
-         IF ((KZ(14).EQ.3.OR.KZ(14).EQ.9).AND.
-     &        DMOD(TIME,STEPX).EQ.0.0D0) THEN
-***   FRenaud
+*          IF (KZ(14).EQ.3.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
+          IF ((KZ(14).EQ.3.OR.KZ(14).EQ.9).AND.
+     &            DMOD(TIME,STEPX).EQ.0.0D0) THEN
+*** FRenaud
 #else
-*     Check optional integration of cluster guiding centre.
+*       Check optional integration of cluster guiding centre.
       IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
-         IF (KZ(14).EQ.3.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
+          IF (KZ(14).EQ.3.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
 #endif
-            CALL GCINT
-         END IF
-*     Include mass loss by gas expulsion (Kroupa et al. MN 321, 699).
-         IF (MPDOT.GT.0.0D0.AND.TIME + TOFF.GT.TDELAY) THEN
-            MP = MP0/(1.0 + MPDOT*(TIME + TOFF - TDELAY))
-         END IF
-      END IF
+              CALL GCINT
+          END IF
+*       Include mass loss by gas expulsion (Kroupa et al. MN 321, 699).
+          IF (MPDOT.GT.0.0D0.AND.TIME + TOFF.GT.TDELAY) THEN
+              MP = MP0/(1.0 + MPDOT*(TIME + TOFF - TDELAY))
+          END IF
+       END IF
 
       call cputim(tttiend)
       ttintb = ttintb +(tttiend-tttbegin)*60
 
-*     
-*     Include commensurability test (may be suppressed if no problems).
+*
+*       Include commensurability test (may be suppressed if no problems).
 *     IF (STEP(IMIN).LT.1.0E-15.OR.DMOD(TIME,STEP(IMIN)).NE.0.0D0) THEN
-*     WRITE (6,1005) IMIN, NAME(IMIN), NSTEPI, TIME, STEP(IMIN), 
-*     &                   TIME/STEP(IMIN)
-*     1005     FORMAT (' DANGER!   I NM # TIME STEP T/DT ',
-*     &                        2I5,I11,F12.5,1P,E9.1,0P,F16.4)
-*     CALL ABORT
+*         WRITE (6,1005) IMIN, NAME(IMIN), NSTEPI, TIME, STEP(IMIN), 
+*    &                   TIME/STEP(IMIN)
+*1005     FORMAT (' DANGER!   I NM # TIME STEP T/DT ',
+*    &                        2I5,I11,F12.5,1P,E9.1,0P,F16.4)
+*         CALL ABORT
 *     END IF
-*     
-*     Check for new regularization at end of block.
+*
+*       Check for new regularization at end of block.
       IF (IKS.GT.0) THEN
-         TIME = TPREV
-         IPHASE = 1
-         GO TO 100
+          TIME = TPREV
+          IPHASE = 1
+          GO TO 100
       END IF
-*     
-*     Check next adjust time before beginning a new block.
+*
+*       Check next adjust time before beginning a new block.
       IF (TIME.GT.TADJ) THEN
-         TIME = TADJ
-         IPHASE = 3
-         GO TO 100
+          TIME = TADJ
+          IPHASE = 3
+          GO TO 100
       END IF
-*     
-*     Also check output time in case DTADJ & DELTAT not commensurate.
+*
+*       Also check output time in case DTADJ & DELTAT not commensurate.
       IF (TIME.GT.TNEXT) THEN
-         TIME = TNEXT
-         CALL OUTPUT
-         GO TO 1
+          TIME = TNEXT
+          CALL OUTPUT
+          GO TO 1
       END IF
-*     
-*     See whether to advance any close encounters at first new time.
+*
+*       See whether to advance any close encounters at first new time.
       IF (TIME.GT.TPREV) THEN
          call cputim(tt5)
          CALL SUBINT(IQ,I10)
          call cputim(tt6)
          ttksintgrt = ttksintgrt + (tt6-tt5)*60.
          ttks = ttks + (tt6-tt5)*60.
-*     
+*
          IF (IQ.LT.0) GO TO 999
       END IF
 
-*     
-*     Check regularization criterion for single particles.
+*
+*       Check regularization criterion for single particles.
       call cputim(tttbegin)
       IKS = 0
       ISMIN = 0
       DSMIN = DTMIN
       IF (LSKIP.LE.50) THEN
-*     Search only in prepared list of short-step particles. (R.Sp.)
+*       Search only in prepared list of short-step particles. (R.Sp.)
          ISHORT = LSHORT(1)
          DO L = 2,ISHORT+1
             I = LSHORT(L)
-*     Search for minimum timestep candidate for not ordered steps (R.Sp.)
-*     Beware that members of LSHORT may be members of KS pair (R.Sp.)
-c$$$  If(step(i).LT.1.0D-8) THEN
-c$$$  WRITE (6,24)  TIME, I, NAME(I), NXTLEN, NSTEPI,
-c$$$  &            STEP(I), STEPR(I), NTOT, NPAIRS
-c$$$  24          FORMAT (' SMALL STEP!!  T I NAME LEN #I SI SR NT NP',F10.5,
-c$$$  &            3I6,I11,1P,2E10.2,2I11)
-c$$$  CALL FLUSH(6)
-c$$$  STOP
+*       Search for minimum timestep candidate for not ordered steps (R.Sp.)
+*       Beware that members of LSHORT may be members of KS pair (R.Sp.)
+c$$$          If(step(i).LT.1.0D-8) THEN
+c$$$             WRITE (6,24)  TIME, I, NAME(I), NXTLEN, NSTEPI,
+c$$$     &            STEP(I), STEPR(I), NTOT, NPAIRS
+c$$$ 24          FORMAT (' SMALL STEP!!  T I NAME LEN #I SI SR NT NP',F10.5,
+c$$$     &            3I6,I11,1P,2E10.2,2I11)
+c$$$             CALL FLUSH(6)
+c$$$             STOP
 c$$$  END IF
             IF (STEP(I).LT.DTMIN.AND.STEP(I).LT.DSMIN.AND.I.LE.N.AND.
      &           I.GE.IFIRST) THEN
@@ -419,17 +419,17 @@ c$$$  END IF
             END IF
          END DO
       END IF
-*     
-*     See whether dominant body can be regularized.
+*
+*       See whether dominant body can be regularized.
       IF(ISMIN.GT.0) THEN
          CALL SEARCH(ISMIN,IKS)
-*     Include close encounter search for low-eccentric massive binaries.
+*       Include close encounter search for low-eccentric massive binaries.
          IF (IKS.EQ.0.AND.NXTLEVEL.LE.4.AND.STEP(ISMIN).LT.4.0*DTMIN) 
      &        THEN
-*     Consider massive single bodies in absence of subsystems.
+*       Consider massive single bodies in absence of subsystems.
             IF (ISMIN.LE.N.AND.BODY(I).GT.2.0*BODYM.AND.NSUB.EQ.0) THEN
-*     
-*     Obtain two-body elements and relative perturbation.
+*
+*       Obtain two-body elements and relative perturbation.
                JMIN = 0
                CALL ORBIT(ISMIN,JMIN,SEMI,ECC,GI)
 *     
@@ -452,53 +452,53 @@ c$$$  END IF
 
       call cputim(tt1)
       ttintb=ttintb +(tt1-tttbegin)*60.
-*     
-*     Initialize counters for irregular & regular integrations.
+*
+*       Initialize counters for irregular & regular integrations.
       TPREV = TIME
       NBLOCK = NBLOCK + 1
 
 *     Initialize counters for irregular & regular integrations.
-*     NREG = 0
-*     
+*      NREG = 0
+*
 *     write(6,*)' irr ',time,nxtlen,(nxtlst(k),step(k),k=1,5)
 *     call flush(6)
-*     Advance the irregular step for all particles in the current block.
-*     Block-Step Level Diagnostics (R.Sp. 29.Apr. 1993)
+*       Advance the irregular step for all particles in the current block.
+*       Block-Step Level Diagnostics (R.Sp. 29.Apr. 1993)
       IF(KZ(33).GT.0)JHIST(NXTLEN) = JHIST(NXTLEN) + 1
-*     
+*
 #ifdef DEBUG
 *     --08/27/13 16:38-lwang-debug--------------------------------------*
 ***** Note: Before nbint-----------------------------------------------**
       if(time.ge.dprintt) then
-         do L=1,NXTLEN
-            J = NXTLST(L)
-            if(namep.le.-NTOT.or.name(j).eq.namep) then
-               write(100+rank,*) 'NXTLEN',NXTLEN,'NREG',NREG,'NPAIR',
-     &              NPAIRS,'N',N,'NTOT',NTOT,'T',TIME
-               write(100+rank,109),l,j,name(j),x0(1,j),x0dot(1,j),
-     *              t0(j),t0r(j),step(j),stepr(j),
-     *              f(1,j),fdot(1,j),fi(1,j),fidot(1,j),
-     *              d0(1,j),d1(1,j),
-     *              d2(1,j),d3(1,j),d0r(1,j),d1r(1,j),
-     *              d2r(1,j),d3r(1,j),body(j),time,list(1,j)
-C     write(100+rank,*)'LIST',LIST(1:LIST(1,J)+1,J)
-               call flush(100+rank)
-            end if
-         end do
- 109     format(/,'L',I7,' J',I7,'  N',I7,'  X0',E25.17,'  X0D',E25.17,
-     &        '  T0',F21.17,'  T0R',F21.17,'  STEP',F20.17,
-     &        '  STEPR',F20.17,'  F',E25.17,' FD',E25.17,
-     &        '  FI',E25.17,'  FIDOT',E25.17,'  D0',E25.17,
-     &        '  D1',E25.17,'  D2',E25.17,'  D3',E25.17,
-     &        '  D0R',E25.17,'  D1R',E25.17,'  D2R',E25.17,
-     &        '  D3R',E25.17,'  M',E25.17,'  T',F21.17,'  NB',I4)
+        do L=1,NXTLEN
+           J = NXTLST(L)
+           if(namep.le.-NTOT.or.name(j).eq.namep) then
+              write(100+rank,*) 'NXTLEN',NXTLEN,'NREG',NREG,'NPAIR',
+     &             NPAIRS,'N',N,'NTOT',NTOT,'T',TIME
+              write(100+rank,109),l,j,name(j),x0(1,j),x0dot(1,j),
+     *             t0(j),t0r(j),step(j),stepr(j),
+     *             f(1,j),fdot(1,j),fi(1,j),fidot(1,j),
+     *             d0(1,j),d1(1,j),
+     *             d2(1,j),d3(1,j),d0r(1,j),d1r(1,j),
+     *             d2r(1,j),d3r(1,j),body(j),time,list(1,j)
+C            write(100+rank,*)'LIST',LIST(1:LIST(1,J)+1,J)
+              call flush(100+rank)
+           end if
+        end do
+ 109    format(/,'L',I7,' J',I7,'  N',I7,'  X0',E25.17,'  X0D',E25.17,
+     &       '  T0',F21.17,'  T0R',F21.17,'  STEP',F20.17,
+     &       '  STEPR',F20.17,'  F',E25.17,' FD',E25.17,
+     &       '  FI',E25.17,'  FIDOT',E25.17,'  D0',E25.17,
+     &       '  D1',E25.17,'  D2',E25.17,'  D3',E25.17,
+     &       '  D0R',E25.17,'  D1R',E25.17,'  D2R',E25.17,
+     &       '  D3R',E25.17,'  M',E25.17,'  T',F21.17,'  NB',I4)
 #ifdef PARALLEL
-C     print*,'rank',rank,'bar count:',ibarcount,'nstepi',nstepi
-         call flush(6)
-C     call mpi_barrier(MPI_COMM_WORLD,ierr)
+C        print*,'rank',rank,'bar count:',ibarcount,'nstepi',nstepi
+        call flush(6)
+C        call mpi_barrier(MPI_COMM_WORLD,ierr)
 #endif
-C     if (TCCT.gt.2.0) stop
-         dprintt = TIME + dtprint
+C        if (TCCT.gt.2.0) stop
+        dprintt = TIME + dtprint
       end if
 *     --08/27/13 16:38-lwang-end-debug----------------------------------*
 #endif
@@ -507,8 +507,8 @@ C     if (TCCT.gt.2.0) stop
       ipredall = .false.
       IF(NREG.GT.0) THEN
          call cputim(tttpre1)
-*     Predict all particles (except TPRED=TIME) in C++ on host. 
-*     CALL CXVPRED(IFIRST,NTOT,TIME,T0,X0,X0DOT,F,FDOT,X,XDOT,TPRED)
+*       Predict all particles (except TPRED=TIME) in C++ on host. 
+*         CALL CXVPRED(IFIRST,NTOT,TIME,T0,X0,X0DOT,F,FDOT,X,XDOT,TPRED)
          call xbpredall
          call cputim(tttpre2)
          ttpre = ttpre + (tttpre2-tttpre1)*60
@@ -517,22 +517,21 @@ C     if (TCCT.gt.2.0) stop
 
 *     Predict chain variables and perturbers at new block-time.
       IF (NCH.GT.0) THEN
-         CALL JPRED_int(ICH,TIME)
-         CALL XCPRED(2)
+          CALL JPRED_int(ICH,TIME)
+          CALL XCPRED(2)
       END IF
 
 #ifdef PARALLEL
       IF(NXTLEN.LE.isernb)THEN
 #endif
-*     
+*
          call cputim(ttnb1)
-         
-*     #ifndef SIMD
+*#ifndef SIMD
 *     Predict x and xdot
-*     call xbpred(NREG,1,NXTLEN,NXTLST)
-*     #endif
-*     call cputim(ttnb2)
-*     ttpre = ttpre + (ttnb2-ttnb1)*60.
+*         call xbpred(NREG,1,NXTLEN,NXTLST)
+*#endif
+*         call cputim(ttnb2)
+*         ttpre = ttpre + (ttnb2-ttnb1)*60.
 #ifdef SIMD
 *     Use AVX/SSE to calculate irregular force and fdot
          call IRR_SIMD_FIRR_VEC(TIME,NXTLEN,NXTLST,FIRR_SIMD,FD_SIMD,
@@ -547,346 +546,373 @@ C     if (TCCT.gt.2.0) stop
 !$omp parallel do if(NXTLEN.GE.ITHREAD) private(L,I)
          DO L = 1,NXTLEN
             I = NXTLST(L)
-            CALL NBINT_EXTRA(I,FIRR_SIMD(1,L),FD_SIMD(1,L))
             CALL NBINT_COR(I,FIRR_SIMD(1,L),FD_SIMD(1,L))
          END DO
 !$omp end parallel do
 
+!$omp parallel do if(NXTLEN.GE.ITHREAD) private(L,I,DTR)
+         DO L = 1,NXTLEN
+            I = NXTLST(L)
+            X0(1:3,I) = XN(1:3,I)
+c$$$            X(1:3,I) = XN(1:3,I)
+            X0DOT(1:3,I) = XNDOT(1:3,I)
+c$$$            XDOT(1:3,I) = XNDOT(1:3,I)
+            D0(1:3,I) = FI(1:3,I)
+            D1(1:3,I) = FIDOT(1:3,I)
+            IMINR(I) = IMINR_TMP(L)
+*     Save new block step and update T0 & next time
+            T0(I) = TIME
+            TIMENW(I) = T0(I) + STEP(I)
+*     Set non-zero indicator for new regular force.
+            IF (T0R(I) + STEPR(I).GT.TIME) THEN
+*     Extrapolate regular force & first derivatives to obtain F & FDOT.
+              DTR = TIME - T0R(I)
+              F(1,I) = 0.5*(FRDOT(1,I)*DTR + FR(1,I) + FI(1,I))
+              F(2,I) = 0.5*(FRDOT(2,I)*DTR + FR(2,I) + FI(2,I))
+              F(3,I) = 0.5*(FRDOT(3,I)*DTR + FR(3,I) + FI(3,I))
+              FDOT(1,I) = ONE6*(FRDOT(1,I) + FIDOT(1,I))
+              FDOT(2,I) = ONE6*(FRDOT(2,I) + FIDOT(2,I))
+              FDOT(3,I) = ONE6*(FRDOT(3,I) + FIDOT(3,I))
+           END IF
+         END DO
+!$omp end parallel do
+
          call cputim(tt3)
          ttirr = ttirr + (tt3-ttnb1)*60.
-*     
+*
 #ifdef PARALLEL
-*     start PARALLEL section for nbint
-      ELSE
-*     
-         call cputim(tt998)
-         call mpi_barrier(MPI_COMM_WORLD,ierr)
-         call cputim(tt999)
-         ttbar = ttbar + (tt999-tt998)*60
-         ibarcount=ibarcount+1
-         ttbarnb = ttbarnb + (tt999-tt998)*60
-*     print*, 'Nbint Barrier 1: rank iphase ttbarnb ttbar',
+*       start PARALLEL section for nbint
+        ELSE
+*
+           call cputim(tt998)
+           call mpi_barrier(MPI_COMM_WORLD,ierr)
+           call cputim(tt999)
+           ttbar = ttbar + (tt999-tt998)*60
+           ibarcount=ibarcount+1
+           ttbarnb = ttbarnb + (tt999-tt998)*60
+*           print*, 'Nbint Barrier 1: rank iphase ttbarnb ttbar',
 *     &          ' dt nxtlen bcount',rank,ixxx,ttbarnb,ttbar,tttdet,
 *     &          nxtlen,ibarcount
+*
+           istart_lst = rank * NPIECE + 1
+           ishift = MOD(NXTLEN,isize)
+           idivide = NXTLEN / isize
+           if (rank.LT.ishift) then
+              iend_lst = idivide + istart_lst
+           else
+              iend_lst = idivide + istart_lst - 1
+           end if
+           
+           nl = NXTLEN
 *     
-         istart_lst = rank * NPIECE + 1
-         ishift = MOD(NXTLEN,isize)
-         idivide = NXTLEN / isize
-         if (rank.LT.ishift) then
-            iend_lst = idivide + istart_lst
-         else
-            iend_lst = idivide + istart_lst - 1
-         end if
-         
-         nl = NXTLEN
+           inl = nl/isize
+           jsize = isize*inl
+           idiff = nl - jsize
+           irun = 0
 *     
-         inl = nl/isize
-         jsize = isize*inl
-         idiff = nl - jsize
-         irun = 0
+           do ix = 1,isize
+              inum(ix)=inl
+              if(ix.le.idiff)inum(ix) = inum(ix) + 1
+              ista(ix) = irun+1
+              if(ista(ix).gt.nl)inum(ix) = 0
+              irun = irun + inum(ix)
+           end do
 *     
-         do ix = 1,isize
-            inum(ix)=inl
-            if(ix.le.idiff)inum(ix) = inum(ix) + 1
-            ista(ix) = irun+1
-            if(ista(ix).gt.nl)inum(ix) = 0
-            irun = irun + inum(ix)
-         end do
-*     
-         istart = ista(rank+1)
-         iend = ista(rank+1) + inum(rank+1) - 1
-*     
+           istart = ista(rank+1)
+           iend = ista(rank+1) + inum(rank+1) - 1
+*
 *     if(time.lt.0.1d0)then
 *     print*,' rank ',rank,' NXTLEN ',NXTLEN,TIME,
-*     *    ' istart,iend=',istart,iend
+*    *    ' istart,iend=',istart,iend
 *     end if
-*     
-c$$$  call cputim(tt998)
-c$$$  call mpi_barrier(MPI_COMM_WORLD,ierr)
-c$$$  call cputim(tt999)
-c$$$  tttdet=(tt999-tt998)*60
-c$$$  ttbar = ttbar + (tt999-tt998)*60
-c$$$  ibarcount=ibarcount+1
-c$$$  ttbarnb = ttbarnb + (tt999-tt998)*60
-*     print*, 'Nbint Barrier 2: rank iphase ttbarnb ttbar',
+*
+c$$$      call cputim(tt998)
+c$$$      call mpi_barrier(MPI_COMM_WORLD,ierr)
+c$$$      call cputim(tt999)
+c$$$      tttdet=(tt999-tt998)*60
+c$$$      ttbar = ttbar + (tt999-tt998)*60
+c$$$      ibarcount=ibarcount+1
+c$$$      ttbarnb = ttbarnb + (tt999-tt998)*60
+*      print*, 'Nbint Barrier 2: rank iphase ttbarnb ttbar',
 *     &     ' dt nxtlen bcount',rank,ixxx,ttbarnb,ttbar,tttdet,
 *     &     nxtlen,ibarcount
-*     
+*
 *     if(time.lt.0.1d0)then
 *     print*,' rank ',rank,' NXT in DO L ',L,TIME,
-*     *    ' istart,iend=',istart,iend
+*    *    ' istart,iend=',istart,iend
 *     end if
 
-         call cputim(ttnb1)
-*     #ifndef SIMD
+           call cputim(ttnb1)
+*#ifndef SIMD
 *     Predict x and xdot
-*     call xbpred(NREG,istart_lst,iend_lst,NXTLST_MPI)
-*     #endif
-*     call cputim(ttnb2)
-*     ttpre = ttpre + (ttnb2-ttnb1)*60.
+*           call xbpred(NREG,istart_lst,iend_lst,NXTLST_MPI)
+*#endif
+*           call cputim(ttnb2)
+*           ttpre = ttpre + (ttnb2-ttnb1)*60.
 
-         NPART_LEN = iend_lst - istart_lst + 1
+           NPART_LEN = iend_lst - istart_lst + 1
 #ifdef SIMD
 *     Use AVX/SSE to calculate irregular force and fdot
-         call IRR_SIMD_FIRR_VEC(TIME,NPART_LEN,NXTLST_MPI(istart_lst),
-     &        FIRR_SIMD(istart),FD_SIMD(istart),IMINR_TMP(istart))
-         call cputim(ttsimdc)
-         ttsimdcalc = ttsimdcalc + (ttsimdc-ttnb1)*60.
+           call IRR_SIMD_FIRR_VEC(TIME,NPART_LEN,NXTLST_MPI(istart_lst),
+     &          FIRR_SIMD,FD_SIMD,IMINR_TMP)
+           call cputim(ttsimdc)
+           ttsimdcalc = ttsimdcalc + (ttsimdc-ttnb1)*60.
 #else
 *     OpenMP version of irregular force and fdot
-         CALL NBINT(TIME,NPART_LEN,NXTLST_MPI(istart_lst),
-     &        X,XDOT,BODY,FIRR_SIMD(istart),FD_SIMD(istart),
-     &        LIST,IMINR_TMP(istart))
-#endif
-         
-         LL = istart
-         I_STEP_LEN = ithread*icore
-         DO L = istart_lst,iend_lst,I_STEP_LEN
-            if(iend_lst-L+1.GE.I_STEP_LEN) THEN
-               I_LOOP_LEN = I_STEP_LEN - 1
-            else
-               I_LOOP_LEN = iend_lst - L
-            end if
+           CALL NBINT(TIME,NPART_LEN,NXTLST_MPI(istart_lst),
+     &          X,XDOT,BODY,FIRR_SIMD,FD_SIMD,
+     &          LIST,IMINR_TMP)
+#endif           
+           LL = istart
+           I_STEP_LEN = ithread*icore
+           DO L = istart_lst,iend_lst,I_STEP_LEN
+              if(iend_lst-L+1.GE.I_STEP_LEN) THEN
+                 I_LOOP_LEN = I_STEP_LEN - 1
+              else
+                 I_LOOP_LEN = iend_lst - L
+              end if
 !$omp parallel do private(LK,I,IC_K)
-            DO LK = 0, I_LOOP_LEN
-               I = NXTLST_MPI(L + LK)
-               IC_K = LL + LK
-               CALL NBINT_EXTRA(I,FIRR_SIMD(1,IC_K),FD_SIMD(1,IC_K))
-            END DO
+              DO LK = 0, I_LOOP_LEN
+                 I = NXTLST_MPI(L + LK)
+                 IC_K = L + LK - istart_lst + 1
+                 CALL NBINT_COR(I,FIRR_SIMD(1,IC_K),FD_SIMD(1,IC_K))
+                 XMPI(1:3,LL+LK) = XN(1:3,I)
+                 XMPI(4:6,LL+LK) = XNDOT(1:3,I)
+                 XMPI(7:9,LL+LK) = D2(1:3,I)
+                 XMPI(10:12,LL+LK) = D3(1:3,I)
+                 XMPI(13:15,LL+LK) = FI(1:3,I)
+                 XMPI(16:18,LL+LK) = FIDOT(1:3,I)
+                 XMPI(19,LL+LK) = STEP(I)
+                 XMPI(20,LL+LK) = FLOAT(IMINR_TMP(IC_K))
+              END DO
 !$omp end parallel do
-            LL = LL + I_STEP_LEN
-         END DO
+              LL = LL + I_STEP_LEN
+           END DO
+*
+           call cputim(tt3)
+           ttirr = ttirr + (tt3-ttnb1)*60.
+*
+*        Distribute variables into private vectors again T3E (R.Sp.)
+*
+           isend = rank + 1
+           if(isend.eq.isize)isend = 0
+           irecv = rank - 1
+           if(irecv.eq.-1)irecv = isize - 1
+*
+           do ir = 0,isize-2
 *     
-         call cputim(tt3)
-         ttirr = ttirr + (tt3-ttnb1)*60.
+              irank = rank - ir
+              if(irank.lt.0)irank=irank+isize
 *     
-*     Distribute variables into private vectors again T3E (R.Sp.)
+              istsen=ista(irank+1)
+              icnt = inum(irank+1)
 *     
-         isend = rank + 1
-         if(isend.eq.isize)isend = 0
-         irecv = rank - 1
-         if(irecv.eq.-1)irecv = isize - 1
-*     
-         do ir = 0,isize-2
-*     
-            irank = rank - ir
-            if(irank.lt.0)irank=irank+isize
-*     
-            istsen=ista(irank+1)
-            icnt = inum(irank+1)
-*     
-            if(irank.eq.0)irank=isize
-            istrec = ista(irank)
-            icnt2 = inum(irank)
-*     
+              if(irank.eq.0)irank=isize
+              istrec = ista(irank)
+              icnt2 = inum(irank)
+*
 *     if(time.lt.0.1d0.and.icnt.gt.0)then
 *     print*,' NXT: rank t',rank,time,' ir ',ir,' send ',istsen,
-*     *    ' thru ',istsen+icnt-1,' to ',isend,' cnt ',icnt,
-*     *    ' istart,iend=',istart,iend
+*    *    ' thru ',istsen+icnt-1,' to ',isend,' cnt ',icnt,
+*    *    ' istart,iend=',istart,iend
 *     end if
 *     if(time.lt.0.1d0.and.icnt2.gt.0)then
 *     print*,' NXT: rank t',rank,time,' ir ',ir,' recv ',istrec,
-*     *    ' thru ',istrec+icnt2-1,' fr ',irecv,' cnt2 ',icnt2,
-*     *    ' istart,iend=',istart,iend
+*    *    ' thru ',istrec+icnt2-1,' fr ',irecv,' cnt2 ',icnt2,
+*    *    ' istart,iend=',istart,iend
 *     end if
-*     
+*
 #ifdef PUREMPI
-            call cputim(tta)
-            CALL MPI_SENDRECV(FIRR_SIMD(1,istsen),3*icnt,MPI_REAL8,
-     *           isend,rank,FIRR_SIMD(1,istrec),3*icnt2,MPI_REAL8,
-     *           irecv,irecv,MPI_COMM_WORLD,status,ierr)
-            CALL MPI_SENDRECV(FD_SIMD(1,istsen),3*icnt,MPI_REAL8,
-     *           isend,rank,FD_SIMD(1,istrec),3*icnt2,MPI_REAL8,
-     *           irecv,irecv,MPI_COMM_WORLD,status,ierr)
-            CALL MPI_SENDRECV(IMINR_TMP(istsen),icnt,MPI_INTEGER,
-     *           isend,rank,IMINR_TMP(istrec),icnt2,MPI_INTEGER,
-     *           irecv,irecv,MPI_COMM_WORLD,status,ierr)
-            call cputim(ttb)
-            call mpi_barrier(MPI_COMM_WORLD,ierr)
-            call cputim(tt999)
-            ttbar = ttbar + (tt999-ttb)*60
-            ttbarnb = ttbarnb + (tt999-ttb)*60
-            ibarcount=ibarcount+1
+              call cputim(tta)
+              CALL MPI_SENDRECV(XMPI(1,istsen),20*icnt,MPI_REAL8,isend,
+     *             rank,XMPI(1,istrec),20*icnt2,MPI_REAL8,irecv,irecv,
+     *             MPI_COMM_WORLD,status,ierr)
+              call cputim(ttb)
+              call mpi_barrier(MPI_COMM_WORLD,ierr)
+              call cputim(tt999)
+              ttbar = ttbar + (tt999-ttb)*60
+              ttbarnb = ttbarnb + (tt999-ttb)*60
+              ibarcount=ibarcount+1
 *     print*, 'Nbint Barrier 3: rank iphase ttbarnb ttbar',
 *     &     ' dt nxtlen bcount',rank,ixxx,ttbarnb,ttbar,tttdet,
 *     &     nxtlen,ibarcount
-            xtsub1 = xtsub1 + dble(20*8*(icnt+icnt2))
-            ttsub = ttsub + (ttb-tta)*60.
+              xtsub1 = xtsub1 + dble(20*8*(icnt+icnt2))
+              ttsub = ttsub + (ttb-tta)*60.
 #endif
-*     
+*
 #ifdef SHMEM
-            call barrier()
-            call shmem_get(FIRR_SIMD(1,istrec),FIRR_SIMD(1,istrec),
-     &           3*icnt2,irecv)
-            call shmem_get(FD_SIMD(1,istrec),FD_SIMD(1,istrec),
-     &           3*icnt2,irecv)
-            call shmem_get(IMINR_TMP(1,istrec),IMINR_TMP(1,istrec),
-     &           icnt2,irecv)
+              call barrier()
+              call shmem_get(XMPI(1,istrec),XMPI(1,istrec),20*icnt2,
+     &             irecv)
 #endif
-*     
-         end do
-*     
-*     call mpi_barrier(MPI_COMM_WORLD,ierr)
-*     
-         call cputim(ttmov3)
-         Loffset = 0
-         DO LK = 0, isize-1
-            istart = LK*NPIECE + 1
-            if (LK.LT.ishift) then
-               iend = istart + idivide
-            else
-               iend = istart + idivide - 1
-            end if
+*
+           end do
+*
+*          call mpi_barrier(MPI_COMM_WORLD,ierr)
+*
+           call cputim(ttmov3)
+           Loffset = 0
+           DO LK = 0, isize-1
+              istart = LK*NPIECE + 1
+              if (LK.LT.ishift) then
+                 iend = istart + idivide
+              else
+                 iend = istart + idivide - 1
+              end if
 !$omp parallel do if(idivide.GE.ITHREAD) private(L,LL,I,DTR)
-            DO LL = istart, iend
-               I = NXTLST_MPI(LL)
-               L = LL - Loffset
-               CALL NBINT_COR(I,FIRR_SIMD(1,L),FD_SIMD(1,L))
-               X0(1:3,I) = XN(1:3,I)
-*     X(1:3,I) = XMPI(1:3,L)
-               X0DOT(1:3,I) = XNDOT(4:6,I)
-*     XDOT(1:3,I) = XMPI(4:6,L)
-               D0(1:3,I) = FI(1:3,I)
-               D1(1:3,I) = FIDOT(1:3,I)
-               IMINR(I) = IMINR_TMP(L)
+              DO LL = istart, iend
+                 I = NXTLST_MPI(LL)
+                 L = LL - Loffset
+                 X0(1:3,I) = XMPI(1:3,L)
+*              X(1:3,I) = XMPI(1:3,L)
+                 X0DOT(1:3,I) = XMPI(4:6,L)
+*              XDOT(1:3,I) = XMPI(4:6,L)
+                 D2(1:3,I) = XMPI(7:9,L)
+                 D3(1:3,I) = XMPI(10:12,L)
+                 FI(1:3,I) = XMPI(13:15,L)
+                 D0(1:3,I) = FI(1:3,I)
+                 FIDOT(1:3,I) = XMPI(16:18,L)
+                 D1(1:3,I) = FIDOT(1:3,I)
+                 STEP(I) = XMPI(19,L)
+                 IMINR(I) = INT(XMPI(20,L))
 *     Save new block step and update T0 & next time
-               T0(I) = TIME
-               TIMENW(I) = T0(I) + STEP(I)
+                 T0(I) = TIME
+                 TIMENW(I) = T0(I) + STEP(I)
 *     Set non-zero indicator for new regular force.
-               IF (T0R(I) + STEPR(I).GT.TIME) THEN
+                 IF (T0R(I) + STEPR(I).GT.TIME) THEN
 *     Extrapolate regular force & first derivatives to obtain F & FDOT.
-                  DTR = TIME - T0R(I)
-                  F(1,I) = 0.5*(FRDOT(1,I)*DTR + FR(1,I) + FI(1,I))
-                  F(2,I) = 0.5*(FRDOT(2,I)*DTR + FR(2,I) + FI(2,I))
-                  F(3,I) = 0.5*(FRDOT(3,I)*DTR + FR(3,I) + FI(3,I))
-                  FDOT(1,I) = ONE6*(FRDOT(1,I) + FIDOT(1,I))
-                  FDOT(2,I) = ONE6*(FRDOT(2,I) + FIDOT(2,I))
-                  FDOT(3,I) = ONE6*(FRDOT(3,I) + FIDOT(3,I))
-               END IF
-            END DO
+                    DTR = TIME - T0R(I)
+                    F(1,I) = 0.5*(FRDOT(1,I)*DTR + FR(1,I) + FI(1,I))
+                    F(2,I) = 0.5*(FRDOT(2,I)*DTR + FR(2,I) + FI(2,I))
+                    F(3,I) = 0.5*(FRDOT(3,I)*DTR + FR(3,I) + FI(3,I))
+                    FDOT(1,I) = ONE6*(FRDOT(1,I) + FIDOT(1,I))
+                    FDOT(2,I) = ONE6*(FRDOT(2,I) + FIDOT(2,I))
+                    FDOT(3,I) = ONE6*(FRDOT(3,I) + FIDOT(3,I))
+                 END IF
+              END DO
 !$omp end parallel do
-            Loffset = Loffset + (LK+1)*NPIECE - iend
-         END DO
+              Loffset = Loffset + (LK+1)*NPIECE - iend
+           END DO
+*
+           call cputim(tt4)
+           ttmov = ttmov + (tt4-ttmov3)*60.
 *     
-         call cputim(tt4)
-         ttmov = ttmov + (tt4-ttmov3)*60.
-*     
-      END IF
-*     End PARALLEL section for nbint
+        END IF
+*          End PARALLEL section for nbint
 #endif
-*     
+*
 
-c$$$  call cputim(ttt32)
-c$$$  **!$omp parallel do if(NXTLEN.GE.ithread)
-c$$$  **!$omp& default(shared) private(L,I,DTR,K)
-c$$$  DO L = 1,NXTLEN
-c$$$  I = NXTLST(L)
-c$$$  *       Save new block step and update T0 & next time
-c$$$  T0(I) = TIME
-c$$$  TIMENW(I) = T0(I) + STEP(I)
-c$$$  
-c$$$  *     Set non-zero indicator for new regular force.
-c$$$  IF (T0R(I) + STEPR(I).GT.TIME) THEN
-c$$$  *     *!$omp critical 
-c$$$  *              NREG = NREG + 1
-c$$$  *              IREG(NREG) = I
-c$$$  **!$omp end critical
-c$$$  *          ELSE
-c$$$  *       Extrapolate regular force & first derivatives to obtain F & FDOT.
-c$$$  DTR = TIME - T0R(I)
-c$$$  F(1,I) = 0.5*(FRDOT(1,I)*DTR + FR(1,I) + FI(1,I))
-c$$$  F(2,I) = 0.5*(FRDOT(2,I)*DTR + FR(2,I) + FI(2,I))
-c$$$  F(3,I) = 0.5*(FRDOT(3,I)*DTR + FR(3,I) + FI(3,I))
-c$$$  FDOT(1,I) = ONE6*(FRDOT(1,I) + FIDOT(1,I))
-c$$$  FDOT(2,I) = ONE6*(FRDOT(2,I) + FIDOT(2,I))
-c$$$  FDOT(3,I) = ONE6*(FRDOT(3,I) + FIDOT(3,I))
-c$$$  * Higher order extrapolation?
-c$$$  *                 F(K,I) = FI(K,I) + FR(K,I) + DTR*(FRDOT(K,I)
-c$$$  *    *                + DTR*(D2R(K,I)/2.D0 + DTR*D3R(K,I)/6.D0))
-c$$$  *                 FDOT(K,I) = FIDOT(K,I) + FRDOT(K,I)
-c$$$  *    *                + DTR*(D2R(K,I) + DTR*D3R(K,I)/2.D0)
-c$$$  *                 F(K,I) = F(K,I)/2.D0
-c$$$  *                 FDOT(K,I) = FDOT(K,I)/6.D0
-c$$$  END IF
-c$$$  
-c$$$  *     X0(K,I) = XN(K,I)
-c$$$  *     X0DOT(K,I) = XNDOT(K,I)
-c$$$  END DO
-c$$$  **!$omp end parallel do
-*     
-*     
-*     See whether any KS candidates are in the same block.
-      IF (IKS.GT.0) THEN
-*     Accept same time, otherwise reduce STEP(ICOMP) and/or delay.
-         IF (T0(JCOMP).EQ.T0(ICOMP)) THEN
-*     call cputim(ttnb1)
-*     call xbpredall
-*     call cputim(ttnb2)
-*     ttpre = ttpre + (ttnb2-ttnb1)*60.
-            I = ICOMP
-            ICOMP = MIN(ICOMP,JCOMP)
-            JCOMP = MAX(I,JCOMP)
-            call jpred_int(icomp,time)
-            call jpred_int(jcomp,time)
+c$$$        call cputim(ttt32)
+c$$$**!$omp parallel do if(NXTLEN.GE.ithread)
+c$$$**!$omp& default(shared) private(L,I,DTR,K)
+c$$$        DO L = 1,NXTLEN
+c$$$           I = NXTLST(L)
+c$$$*       Save new block step and update T0 & next time
+c$$$           T0(I) = TIME
+c$$$           TIMENW(I) = T0(I) + STEP(I)
+c$$$           
+c$$$*     Set non-zero indicator for new regular force.
+c$$$           IF (T0R(I) + STEPR(I).GT.TIME) THEN
+c$$$*     *!$omp critical 
+c$$$*              NREG = NREG + 1
+c$$$*              IREG(NREG) = I
+c$$$**!$omp end critical
+c$$$*          ELSE
+c$$$*       Extrapolate regular force & first derivatives to obtain F & FDOT.
+c$$$              DTR = TIME - T0R(I)
+c$$$              F(1,I) = 0.5*(FRDOT(1,I)*DTR + FR(1,I) + FI(1,I))
+c$$$              F(2,I) = 0.5*(FRDOT(2,I)*DTR + FR(2,I) + FI(2,I))
+c$$$              F(3,I) = 0.5*(FRDOT(3,I)*DTR + FR(3,I) + FI(3,I))
+c$$$              FDOT(1,I) = ONE6*(FRDOT(1,I) + FIDOT(1,I))
+c$$$              FDOT(2,I) = ONE6*(FRDOT(2,I) + FIDOT(2,I))
+c$$$              FDOT(3,I) = ONE6*(FRDOT(3,I) + FIDOT(3,I))
+c$$$* Higher order extrapolation?
+c$$$*                 F(K,I) = FI(K,I) + FR(K,I) + DTR*(FRDOT(K,I)
+c$$$*    *                + DTR*(D2R(K,I)/2.D0 + DTR*D3R(K,I)/6.D0))
+c$$$*                 FDOT(K,I) = FIDOT(K,I) + FRDOT(K,I)
+c$$$*    *                + DTR*(D2R(K,I) + DTR*D3R(K,I)/2.D0)
+c$$$*                 F(K,I) = F(K,I)/2.D0
+c$$$*                 FDOT(K,I) = FDOT(K,I)/6.D0
+c$$$           END IF
+c$$$          
+c$$$*     X0(K,I) = XN(K,I)
+c$$$*     X0DOT(K,I) = XNDOT(K,I)
+c$$$        END DO
+c$$$**!$omp end parallel do
+*
+*
+*       See whether any KS candidates are in the same block.
+        IF (IKS.GT.0) THEN
+*       Accept same time, otherwise reduce STEP(ICOMP) and/or delay.
+           IF (T0(JCOMP).EQ.T0(ICOMP)) THEN
+*             call cputim(ttnb1)
+*             call xbpredall
+*             call cputim(ttnb2)
+*             ttpre = ttpre + (ttnb2-ttnb1)*60.
+              I = ICOMP
+              ICOMP = MIN(ICOMP,JCOMP)
+              JCOMP = MAX(I,JCOMP)
+              call jpred_int(icomp,time)
+              call jpred_int(jcomp,time)
 *     --09/25/13 21:44-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-c$$$  if(time.ge.0.3) then
-c$$$  print*,rank,'icomp',icomp,name(icomp),
-c$$$  &            x(1,icomp),xdot(1,icomp),x0(1,icomp),x0dot(i,icomp)
-c$$$  end if
+c$$$              if(time.ge.0.3) then
+c$$$                 print*,rank,'icomp',icomp,name(icomp),
+c$$$     &            x(1,icomp),xdot(1,icomp),x0(1,icomp),x0dot(i,icomp)
+c$$$              end if
 *     --09/25/13 21:44-lwang-end----------------------------------------*
-         ELSE IF (T0(JCOMP) + STEP(JCOMP).LT.T0(ICOMP)) THEN
-            STEP(ICOMP) = 0.5D0*STEP(ICOMP)
-            TIMENW(ICOMP) = T0(ICOMP) + STEP(ICOMP)
-            IKS = 0
-         ELSE
-            IKS = 0
-         END IF
-      END IF
-*     
+           ELSE IF (T0(JCOMP) + STEP(JCOMP).LT.T0(ICOMP)) THEN
+              STEP(ICOMP) = 0.5D0*STEP(ICOMP)
+              TIMENW(ICOMP) = T0(ICOMP) + STEP(ICOMP)
+              IKS = 0
+           ELSE
+              IKS = 0
+           END IF
+        END IF
+*
       NSTEPI = NSTEPI + NXTLEN
 
-*     
-c$$$  call cputim(ttt33)
-c$$$  ttnewt = ttnewt + (ttt33 - ttt32)*60.
+*
+c$$$      call cputim(ttt33)
+c$$$      ttnewt = ttnewt + (ttt33 - ttt32)*60.
 
 ***** --Regular force calculation--------------------------------------**
       IF(NREG.GT.0)THEN
-         
+      
 #ifdef GPU
-*     Send all single particles to GPU memory
+*       Send all single particles to GPU memory
          call cputim(tt51)
          NN = NTOT - IFIRST + 1
          CALL GPUNB_SEND(NN,BODY(IFIRST),X(1,IFIRST),XDOT(1,IFIRST))
          call cputim(tt52)
 *     --09/26/13 16:58-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-c$$$  if(rank.eq.0) print*,'NREG',NXTLEN,NREG,TIME,NGPUC,tt52-tt51
-c$$$  NGPUC = NGPUC + 1
-c$$$  if(rank.eq.0) then
-c$$$  do i=1,nreg
-c$$$  L=ireg(i)
-c$$$  write(100,*) NREG, Name(L), STEPR(L),TIME
-c$$$  end do
-c$$$  end if
+c$$$      if(rank.eq.0) print*,'NREG',NXTLEN,NREG,TIME,NGPUC,tt52-tt51
+c$$$      NGPUC = NGPUC + 1
+c$$$      if(rank.eq.0) then
+c$$$         do i=1,nreg
+c$$$            L=ireg(i)
+c$$$            write(100,*) NREG, Name(L), STEPR(L),TIME
+c$$$         end do
+c$$$      end if
 *     --09/26/13 16:58-lwang-end----------------------------------------*
          ttgrcomm = ttgrcomm + (tt52-tt51)*60.0
 #endif
 
-*     
-*     Block-Step Level Diagnostics (R.Sp. 29.Apr. 1993)
+*
+*       Block-Step Level Diagnostics (R.Sp. 29.Apr. 1993)
          IF(KZ(33).GT.1)JHISTR(NREG) = JHISTR(NREG) + 1
-*     
+*
 
 #ifdef PARALLEL
          IF(NREG.LE.iserreg)THEN
 #endif
-*     
+*
             call cputim(tt1)
             CALL CALC_REG_ON_GPU(IREG,1,NREG)
             call cputim(tt2)
             ttgrcalc = ttgrcalc + (tt2-tt1)*60.0
-*     
+*
 !$omp parallel do private(L,I)
             DO L = 1,NREG
                I = IREG(L)
@@ -897,12 +923,12 @@ c$$$  end if
                FDOT(2,I) = ONE6*(FIDOT(2,I) + FRDOT(2,I))
                FDOT(3,I) = ONE6*(FIDOT(3,I) + FRDOT(3,I))               
                X0(1:3,I) = XN(1:3,I)
-c$$$  X(1:3,I) = XN(1:3,I)
+c$$$               X(1:3,I) = XN(1:3,I)
                X0DOT(1:3,I) = XNDOT(1:3,I)
-c$$$  XDOT(1:3,I) = XNDOT(1:3,I)
+c$$$               XDOT(1:3,I) = XNDOT(1:3,I)
 *     Copy neighbor list
-*     NNB = IMPI(1,L) + 1 
-*     LIST(1:NNB,I) = IMPI(1:NNB,L)
+*               NNB = IMPI(1,L) + 1 
+*               LIST(1:NNB,I) = IMPI(1:NNB,L)
                IF(LIST(1,I).GT.0) then
 !$omp critical                   
                   RSMIN = MIN(RSMIN,RS(I))
@@ -920,9 +946,9 @@ c$$$  XDOT(1:3,I) = XNDOT(1:3,I)
             ttreg = ttreg + (tt2-tt1)*60.
 
 #ifdef PARALLEL
-*     Start PARALLEL section for regint
+*       Start PARALLEL section for regint
          ELSE
-*     
+*
             call cputim(tt998)
             call mpi_barrier(MPI_COMM_WORLD,ierr)
             call cputim(tt999)
@@ -930,7 +956,7 @@ c$$$  XDOT(1:3,I) = XNDOT(1:3,I)
             ttbar = ttbar + (tt999-tt998)*60
             ttbarreg = ttbarreg +(tt999-tt998)*60
 
-*     
+*
             nl = NREG
 *     
             inl = nl/isize
@@ -948,14 +974,14 @@ c$$$  XDOT(1:3,I) = XNDOT(1:3,I)
 *     
             istart = ista(rank+1)
             iend = ista(rank+1) + inum(rank+1) - 1
-c$$$  if (ixxxx.le.10000000.and.time.gt.1.33.and.rank.eq.0) then
-c$$$  PRINT*,' Start reg block rank ',rank,
-c$$$  *        ' TIME=',TIME,' NREG=',NREG
-c$$$  PRINT*,' Start reg block rank ',rank,
-c$$$  *        ' istart,iend=',istart,iend
-c$$$  call flush(6)
-c$$$  end if
-*     
+c$$$      if (ixxxx.le.10000000.and.time.gt.1.33.and.rank.eq.0) then
+c$$$         PRINT*,' Start reg block rank ',rank,
+c$$$     *        ' TIME=',TIME,' NREG=',NREG
+c$$$         PRINT*,' Start reg block rank ',rank,
+c$$$     *        ' istart,iend=',istart,iend
+c$$$         call flush(6)
+c$$$      end if
+*
             NC5 = NBFULL
             NC6 = NBVOID
             NC11 = NBSMIN
@@ -967,7 +993,7 @@ c$$$  end if
             NCY = NBFAST
             NBSUM = NBFLUX
             NC12 = NBPRED
-*     
+*
 
             call cputim(tt1)
             CALL CALC_REG_ON_GPU(IREG,istart,iend)
@@ -985,7 +1011,7 @@ c$$$  end if
                YMPI(39,L) = TIMENW(I)
                YMPI(40,L) = RS(I)
                YMPI(41,L) = T0R(I)
-*     
+*
                YMPI(1:3,L) = XN(1:3,I)
                YMPI(4:6,L) = XNDOT(1:3,I)
                YMPI(7:9,L) = FI(1:3,I)
@@ -1017,14 +1043,14 @@ c$$$  end if
             JMPI(11) = NBPRED - NC12
             call cputim(tt3)
             ttmov = ttmov +(tt3-tt2)*60.
-*     
-*     
-*     Distribute variables into private vectors again T3E (R.Sp.)
+*
+*
+*        Distribute variables into private vectors again T3E (R.Sp.)
             isend = rank + 1
             if(isend.eq.isize)isend = 0
             irecv = rank - 1
             if(irecv.eq.-1)irecv = isize - 1
-*     
+*
             do ir = 0,isize-2
 *     
                irank = rank - ir
@@ -1036,15 +1062,15 @@ c$$$  end if
                if(irank.eq.0)irank=isize
                istrec = ista(irank)
                icnt2 = inum(irank)
-*     
-c$$$  if (ixxxx.le.10000000.and.time.gt.1.33) then
-c$$$  print*,' INTGRT-R: rank t',rank,time,' ir ',ir,' send ',istsen,
-c$$$  *        ' thru ',istsen+icnt-1,' to ',isend,' cnt ',icnt
-c$$$  print*,' INTGRT-R: rank t',rank,time,' ir ',ir,' recv ',istrec,
-c$$$  *        ' thru ',istrec+icnt2-1,' fr ',irecv,' cnt2 ',icnt2
-c$$$  call flush(6)
-c$$$  end if
-*     
+*
+c$$$      if (ixxxx.le.10000000.and.time.gt.1.33) then
+c$$$         print*,' INTGRT-R: rank t',rank,time,' ir ',ir,' send ',istsen,
+c$$$     *        ' thru ',istsen+icnt-1,' to ',isend,' cnt ',icnt
+c$$$         print*,' INTGRT-R: rank t',rank,time,' ir ',ir,' recv ',istrec,
+c$$$     *        ' thru ',istrec+icnt2-1,' fr ',irecv,' cnt2 ',icnt2
+c$$$         call flush(6)
+c$$$      end if
+*
 #ifdef PUREMPI
                call cputim(tta)
                CALL MPI_SENDRECV(YMPI(1,istsen),41*icnt,MPI_REAL8,isend,
@@ -1064,18 +1090,18 @@ c$$$  call mpi_barrier(MPI_COMM_WORLD,ierr)
                xtsub2 = xtsub2 + dble((41*8+lmax*4)*(icnt+icnt2))
                ttsub2 = ttsub2 + (ttb-tta)*60.
 #endif
-*     
+*
 #ifdef SHMEM
-*     
+*
                call barrier()
                call shmem_get(YMPI(1,istrec),YMPI(1,istrec),41*icnt2,
      *              irecv)
                call shmem_get(IMPI(1,istrec),IMPI(1,istrec),lmax*icnt2,
      *              irecv)
 #endif
-*     
+*
             END DO
-*     
+*
             CALL MPI_ALLGATHER(JMPI(1),11,MPI_INTEGER,
      *           JMPILOCAL(1,1),11,MPI_INTEGER,MPI_COMM_WORLD,ierr)
 *     
@@ -1089,9 +1115,9 @@ c$$$  call mpi_barrier(MPI_COMM_WORLD,ierr)
             DO L = 1,NREG
                I = IREG(L)
                X0(1:3,I) = YMPI(1:3,L)
-*     X(1:3,I) = YMPI(1:3,L)
+*               X(1:3,I) = YMPI(1:3,L)
                X0DOT(1:3,I) = YMPI(4:6,L)
-*     XDOT(1:3,I) = YMPI(4:6,L)
+*               XDOT(1:3,I) = YMPI(4:6,L)
                FI(1:3,I) = YMPI(7:9,L)
                FR(1:3,I) = YMPI(10:12,L)
                FIDOT(1:3,I) = YMPI(13:15,L)
@@ -1131,7 +1157,7 @@ c$$$  call mpi_barrier(MPI_COMM_WORLD,ierr)
 #endif
             END DO
 !$omp end parallel do       
-*     
+*
             NBFULL = NC5
             NBVOID = NC6
             NBSMIN = NC11
@@ -1159,42 +1185,42 @@ c$$$  call mpi_barrier(MPI_COMM_WORLD,ierr)
             END DO
             call cputim(tt3)
             ttmov = ttmov + (tt3-tt999)*60.
-*     
-*     call mpi_barrier(MPI_COMM_WORLD,ierr)
-*     call cputim(tt999)
-*     ibarcount=ibarcount+1
-*     ttbar = ttbar + (tt999-tt3)*60
+*
+*      call mpi_barrier(MPI_COMM_WORLD,ierr)
+*      call cputim(tt999)
+*      ibarcount=ibarcount+1
+*      ttbar = ttbar + (tt999-tt3)*60
          END IF
-*     End PARALLEL section for regint
+*         End PARALLEL section for regint
 #endif
-*     
-c$$$  call cputim(tt333) 
+*
+c$$$         call cputim(tt333) 
          NSTEPR = NSTEPR + NREG
          NBLCKR = NBLCKR + 1
-c$$$  *
-c$$$  c$$$**!$omp parallel do if(NREG.GE.ithread) private(L,I,K)      
-c$$$  c$$$         DO L = 1,NREG
-c$$$  c$$$            I = IREG(L)
-c$$$  c$$$*     
-c$$$  c$$$            LIST(1:LMAX,I) = IMPI(1:LMAX,L)
-c$$$  c$$$*
-c$$$  c$$$*       Check minimum neighbor sphere since last output
-c$$$  c$$$**!$omp critical          
-c$$$  c$$$            IF(LIST(1,I).GT.0)RSMIN = MIN(RSMIN,RS(I))
-c$$$  c$$$**!$omp end critical              
-c$$$  c$$$*
-c$$$  c$$$         END DO
-c$$$  c$$$**!$omp end parallel do      
-c$$$  call cputim(tt334)
-c$$$  ttmov = ttmov +(tt334-tt333)*60
-*     
-*     OPEN(98,STATUS='OLD',ERR=123)
-*     print*,' last reg block t=',time,' length=',nreg
-*     print*,' first 10 =',(name(ireg(l)),l=1,min(nreg,10))
-*     call flush(6)
-*     CLOSE(98)
-*     123      CONTINUE
-*     
+c$$$*
+c$$$c$$$**!$omp parallel do if(NREG.GE.ithread) private(L,I,K)      
+c$$$c$$$         DO L = 1,NREG
+c$$$c$$$            I = IREG(L)
+c$$$c$$$*     
+c$$$c$$$            LIST(1:LMAX,I) = IMPI(1:LMAX,L)
+c$$$c$$$*
+c$$$c$$$*       Check minimum neighbor sphere since last output
+c$$$c$$$**!$omp critical          
+c$$$c$$$            IF(LIST(1,I).GT.0)RSMIN = MIN(RSMIN,RS(I))
+c$$$c$$$**!$omp end critical              
+c$$$c$$$*
+c$$$c$$$         END DO
+c$$$c$$$**!$omp end parallel do      
+c$$$         call cputim(tt334)
+c$$$         ttmov = ttmov +(tt334-tt333)*60
+*
+*          OPEN(98,STATUS='OLD',ERR=123)
+*         print*,' last reg block t=',time,' length=',nreg
+*         print*,' first 10 =',(name(ireg(l)),l=1,min(nreg,10))
+*         call flush(6)
+*         CLOSE(98)
+*123      CONTINUE
+*
       END IF
 
 *     Send corrected active particles to GPUIRR library.
@@ -1227,7 +1253,7 @@ c$$$  ttmov = ttmov +(tt334-tt333)*60
       call cputim(tt336)
       ttintb =ttintb + (tt336-tt335)*60
       ttnewt = ttnewt + (tt336 - tt335)*60.      
-*     
+*
 #ifdef DEBUG
 *     --07/08/14 15:38-lwang-debug--------------------------------------*
 ***** Note: Check time step--------------------------------------------**
@@ -1250,21 +1276,21 @@ c$$$  ttmov = ttmov +(tt334-tt333)*60
             END IF
          END DO
       END IF
-c$$$  J = 230
-c$$$  K=K_STEP(STEP(J),DTK)
-c$$$  DO L = NDTK(K+1)+1, NDTK(K)
-c$$$  c      DO L = 1,NXTLIMIT
-c$$$  IF(NXTLST(L).EQ.J) THEN
-c$$$  print*,'J',J,'N',NAME(J),'STEP',STEP(J),'T',TIME,'NXTLEVEL',
-c$$$  &           NXTLEVEL,'L',L,'DTK',DTK(K),'K',K,'IPHASE',IPHASE
-c$$$  C            GO TO 1022
-c$$$  end if
-c$$$  END DO
-c$$$  print*,'J',J,'N',NAME(J),'NOT FIND STEP',STEP(J),'K',K,'NXTLEVEL',
-c$$$  &     NXTLEVEL,'IPHASE',IPHASE
-c$$$  call flush(6)
-c$$$  C      call abort()
-c$$$  1022 continue
+c$$$      J = 230
+c$$$      K=K_STEP(STEP(J),DTK)
+c$$$      DO L = NDTK(K+1)+1, NDTK(K)
+c$$$c      DO L = 1,NXTLIMIT
+c$$$         IF(NXTLST(L).EQ.J) THEN
+c$$$            print*,'J',J,'N',NAME(J),'STEP',STEP(J),'T',TIME,'NXTLEVEL',
+c$$$     &           NXTLEVEL,'L',L,'DTK',DTK(K),'K',K,'IPHASE',IPHASE
+c$$$C            GO TO 1022
+c$$$         end if
+c$$$      END DO
+c$$$      print*,'J',J,'N',NAME(J),'NOT FIND STEP',STEP(J),'K',K,'NXTLEVEL',
+c$$$     &     NXTLEVEL,'IPHASE',IPHASE
+c$$$      call flush(6)
+c$$$C      call abort()
+c$$$ 1022 continue
 *     --07/08/14 15:38-lwang-end----------------------------------------*
 #endif
 
@@ -1272,27 +1298,27 @@ c$$$  1022 continue
       IF (KZ(24).EQ.1) then
          call BHPLOT
       END IF
-c$$$  *     --10/27/13 10:33-lwang-add----------------------------------------*
-c$$$  ***** if ks need terminate, do prediction for icomp and jcomp-----------*
-c$$$  if (iks.gt.0) then
-c$$$  call xvpred(ICOMP,0)
-c$$$  call xvpred(JCOMP,0)
-c$$$  end if
-c$$$  *     --10/27/13 10:33-lwang-end----------------------------------------*
-*     
-*     *!$omp parallel do if (nreg.ge.ithread) private(L,I)      
-*     DO L =1,NREG
-*     I = IREG(L)
-*     DO 82 K = 1,3
-*     X0(K,I) = XN(K,I)
-*     X0DOT(K,I) = XNDOT(K,I)
-*     82       CONTINUE
-*     END DO
-*     *!$omp end parallel do      
+c$$$*     --10/27/13 10:33-lwang-add----------------------------------------*
+c$$$***** if ks need terminate, do prediction for icomp and jcomp-----------*
+c$$$      if (iks.gt.0) then
+c$$$         call xvpred(ICOMP,0)
+c$$$         call xvpred(JCOMP,0)
+c$$$      end if
+c$$$*     --10/27/13 10:33-lwang-end----------------------------------------*
+*
+**!$omp parallel do if (nreg.ge.ithread) private(L,I)      
+*       DO L =1,NREG
+*          I = IREG(L)
+*          DO 82 K = 1,3
+*             X0(K,I) = XN(K,I)
+*             X0DOT(K,I) = XNDOT(K,I)
+* 82       CONTINUE
+*       END DO
+**!$omp end parallel do      
 *     Needed to update only active particles, avoid sending all at reg block
 *     Take care is this really efficient?
-*     CALL GPUIRR_SET_JP(I,X0(1,I),X0DOT(1,I),F(1,I),FDOT(1,I),
-*     &                                            BODY(I),T0(I))
+*         CALL GPUIRR_SET_JP(I,X0(1,I),X0DOT(1,I),F(1,I),FDOT(1,I),
+*    &                                            BODY(I),T0(I))
       IF (NTAIL.GT.0) THEN
 *     Allow large quantized interval with internal iteration.
          IF (DMOD(TIME,0.25D0).EQ.0.0D0) THEN
@@ -1309,66 +1335,66 @@ c$$$  *     --10/27/13 10:33-lwang-end----------------------------------------*
 #endif
          END IF
       END IF
-*     
-*     Exit on KS termination, new multiple regularization or merger.
+*
+*       Exit on KS termination, new multiple regularization or merger.
       IF (IQ.GT.0) THEN
-         NBPREV = 0
-         IF (IQ.GE.4.AND.IQ.NE.7) THEN
-            CALL DELAY(IQ,-1)
-         ELSE
-*     Ensure correct KS index (KSPAIR may denote second termination).
-            KSPAIR = KVEC(I10)
-            IPHASE = IQ
-         END IF
-         GO TO 100
+          NBPREV = 0
+          IF (IQ.GE.4.AND.IQ.NE.7) THEN
+              CALL DELAY(IQ,-1)
+          ELSE
+*       Ensure correct KS index (KSPAIR may denote second termination).
+              KSPAIR = KVEC(I10)
+              IPHASE = IQ
+          END IF
+          GO TO 100
       END IF
-*     
-*     Perform optional check on high-velocity particles at major times.
+*
+*       Perform optional check on high-velocity particles at major times.
       IF (KZ(37).GT.0.AND.LISTV(1).GT.0) THEN
-         call cputim(tttsa)
-         IF (DMOD(TIME,STEPM).EQ.0.0D0.AND.NREG.GT.0) THEN
-            CALL SHRINK(TMIN)
-            IF (LISTV(1).GT.0) THEN
-               CALL HIVEL(-1)
-            END IF
-         END IF
-         call cputim(tttsb)
-         ttshk = ttshk + (tttsb-tttsa)*60.0
+          call cputim(tttsa)
+          IF (DMOD(TIME,STEPM).EQ.0.0D0.AND.NREG.GT.0) THEN
+              CALL SHRINK(TMIN)
+              IF (LISTV(1).GT.0) THEN
+                  CALL HIVEL(-1)
+              END IF
+          END IF
+          call cputim(tttsb)
+          ttshk = ttshk + (tttsb-tttsa)*60.0
       END IF
-*     
-*     Check optional mass loss time.
+*
+*       Check optional mass loss time.
       IF (KZ(19).GT.0) THEN
-*     Delay until time commensurate with 1000-year step (new polynomials).
-         IF (NREG.NE.0.AND.TIME.GT.TMDOT
+*       Delay until time commensurate with 1000-year step (new polynomials).
+          IF (NREG.NE.0.AND.TIME.GT.TMDOT
      *        .AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
-c$$$  IF (TIME.GT.TMDOT.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
-            call cputim(tttmdota)
-            IF (KZ(19).GE.3) THEN
-               CALL MDOT
-            ELSE
-               CALL MLOSS
-            END IF
-            call cputim(tttmdotb)
-            ttmdot = ttmdot +(tttmdotb-tttmdota)*60
-            IF (IPHASE.LT.0.OR.IPHASE.EQ.1.OR.IPHASE.EQ.2) GO TO 999
-         END IF
+c$$$          IF (TIME.GT.TMDOT.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
+             call cputim(tttmdota)
+             IF (KZ(19).GE.3) THEN
+                CALL MDOT
+             ELSE
+                CALL MLOSS
+             END IF
+             call cputim(tttmdotb)
+             ttmdot = ttmdot +(tttmdotb-tttmdota)*60
+             IF (IPHASE.LT.0.OR.IPHASE.EQ.1.OR.IPHASE.EQ.2) GO TO 999
+          END IF
       END IF
-*     
-*     Advance counters and check timer & optional COMMON save (NSUB = 0).
+*
+*       Advance counters and check timer & optional COMMON save (NSUB = 0).
       NTIMER = NTIMER + NXTLEN
       IF (NTIMER.LT.NMAX) GO TO 1
       NTIMER = 0
       NSTEPS = NSTEPS + NMAX
-*     
+*
       IF (NSTEPS.GE.100*NMAX.AND.NSUB.EQ.0) THEN
          NSTEPS = 0
          IF (KZ(1).GT.1) CALL MYDUMP(1,1)
       END IF
 *     
-C     *     Check option for general binary search.
-C     IF (KZ(4).NE.0.AND.TIME - TLASTS.GT.DELTAS) THEN
-C     CALL EVOLVE(0,0)
-C     END IF
+C*     Check option for general binary search.
+C      IF (KZ(4).NE.0.AND.TIME - TLASTS.GT.DELTAS) THEN
+C         CALL EVOLVE(0,0)
+C      END IF
 *     
 *     Include facility for termination of run (create dummy file STOP).
       IF(rank.EQ.0)THEN
@@ -1381,7 +1407,7 @@ C     END IF
          END IF
       END IF
 *     
-*     Repeat cycle until elapsed computing time exceeds the limit.
+*       Repeat cycle until elapsed computing time exceeds the limit.
       CALL CPUTIM(TCOMP)
       TCOMP = (TCOMP-TTOTA)*60.
 *     
@@ -1404,12 +1430,12 @@ C     END IF
      &        ERRTOT, DETOT
  98      FORMAT (//,9X,'COMMON SAVED AT TOFF/TIME/TTOT =',1P,E16.8,
      &        '  TCOMP =',E16.8,'  CPUTOT =',E16.8,
-     &        '  ERRTOT =',F10.6,'  DETOT =',F10.6)
+     &                  '  ERRTOT =',F10.6,'  DETOT =',F10.6)
       END IF
-*     
+*
 *     Determine time interval and step numbers per time unit
       TIMINT = TIME + TOFF - TINIT
-*     
+*
 #ifdef PARALLEL
       IF(rank.EQ.0)THEN
 #endif
@@ -1426,8 +1452,8 @@ C     END IF
 #endif
 #ifdef GPU
       CALL GPUNB_CLOSE
-*     CALL GPUPOT_CLOSE
-*     CALL GPUPOT_CLOSE_FLOAT
+*      CALL GPUPOT_CLOSE
+*      CALL GPUPOT_CLOSE_FLOAT
 #endif
 #ifdef SIMD
       CALL IRR_SIMD_CLOSE(rank)
@@ -1441,12 +1467,12 @@ C     END IF
       CALL MPI_ABORT(MPI_COMM_WORLD,ierr)
 #endif
       STOP
-*     
+*
  100  CONTINUE
-*     
+*
 *     Set current global time.
       TTOT = TIME + TOFF
 
       RETURN
-*     
+*
       END

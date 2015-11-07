@@ -172,6 +172,11 @@ c$$$      end if
      &        ' t0',F21.17,' t0r',F21.17,
      &        ' NB',I4,' LIST1',I7,' N1',I7)
 c$$$         if(name(i).eq.1155) stop
+c$$$         print*,'N',N,'BODY',BODY(I)
+c$$$         do k =2,LIST(1,I)+1
+c$$$            kk =LIST(K,I)
+c$$$            print*, 'I',KK,'N',NAME(KK),'STEP',STEP(KK),'M',BODY(KK)
+c$$$         end do
       end if
 *     --03/03/14 20:29-lwang-end----------------------------------------*
 *

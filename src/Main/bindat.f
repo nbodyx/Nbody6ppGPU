@@ -80,6 +80,7 @@ C              RM = MIN(RM,99.9D0)
                       IM = K
                   END IF
     5         CONTINUE
+              IF (IM.EQ.0) GO TO 10
               BODYJ1 = CM(3,IM)
               BODYJ2 = CM(4,IM)
               BODYCM = BODYJ1 + BODYJ2

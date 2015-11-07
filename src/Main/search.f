@@ -8,7 +8,14 @@
       COMMON/CLUMP/   BODYS(NCMAX,5),T0S(5),TS(5),STEPS(5),RMAXS(5),
      &                NAMES(NCMAX,5),ISYS(5)
       REAL*8 RJMIN2
-
+*     Trace flag for debug
+      INTEGER TRACE_FLAG
+*     1. JCOMP<IFIRST || JCOMP>N
+*     2. RJMIN2 > RMIN2
+*     3. RDOT > 0.02*sqrt(BODY(I)+BODY(JCOMP)*RIJMIN)
+*     4. GI>0.25
+*     5. sub: NAMEI==NAME(I) || NAMEI==NAME(JCOMP)
+*     6. ch: NAME(I)==0 || NAME(JCOMP)==0
 *
       RJMIN2 = RMIN2 + RMIN2
 *
@@ -105,8 +112,14 @@ c$$$          end if
     6 CONTINUE
 *
 *       See whether dominant component is a single particle inside RMIN.
-      IF (JCOMP.LT.IFIRST.OR.JCOMP.GT.N) GO TO 10
-      IF (RJMIN2.GT.RMIN2) GO TO 10
+      IF (JCOMP.LT.IFIRST.OR.JCOMP.GT.N) THEN
+         TRACE_FLAG = 1
+         GO TO 10
+      END IF
+      IF (RJMIN2.GT.RMIN2) THEN
+         TRACE_FLAG = 2
+         GO TO 10
+      END IF
 *
       RDOT = (X(1,I) - X(1,JCOMP))*(XDOT(1,I) - XDOT(1,JCOMP)) +
      &       (X(2,I) - X(2,JCOMP))*(XDOT(2,I) - XDOT(2,JCOMP)) +
@@ -114,7 +127,10 @@ c$$$          end if
 *
 *       Only select approaching particles (include nearly circular case).
       RIJMIN = SQRT(RJMIN2)
-      IF (RDOT.GT.0.02*SQRT((BODY(I) + BODY(JCOMP))*RIJMIN)) GO TO 10
+      IF (RDOT.GT.0.02*SQRT((BODY(I) + BODY(JCOMP))*RIJMIN)) THEN
+         TRACE_FLAG = 3
+         GO TO 10
+      END IF
 *
 *       Ensure a massive neighbour is included in perturbation estimate.
       BCM = BODY(I) + BODY(JCOMP)
@@ -149,28 +165,40 @@ c$$$          end if
       IF (GI.GT.0.25) THEN
 *         IF (KZ(4).GT.0.AND.TIME-TLASTT.GT.4.44*TCR/FLOAT(N))
 *    &                                             CALL EVOLVE(JCOMP,0)
+          TRACE_FLAG=4
           GO TO 10
       END IF
 *
 *       Exclude any c.m. body of compact subsystem (TRIPLE, QUAD or CHAIN).
       DO 8 ISUB = 1,NSUB
           NAMEI = NAMES(1,ISUB)
-          IF (NAMEI.EQ.NAME(I).OR.NAMEI.EQ.NAME(JCOMP)) GO TO 10
+          IF (NAMEI.EQ.NAME(I).OR.NAMEI.EQ.NAME(JCOMP)) THEN
+             TRACE_FLAG=5
+             GO TO 10
+          END IF
     8 CONTINUE
 *
 *       Also check possible c.m. body of chain regularization (NAME = 0).
       IF (NCH.GT.0) THEN
-          IF (NAME(I).EQ.0.OR.NAME(JCOMP).EQ.0) GO TO 10
+          IF (NAME(I).EQ.0.OR.NAME(JCOMP).EQ.0) THEN
+             TRACE_FLAG=6
+             GO TO 10
+          END IF
       END IF
 *
 *       Save index and increase indicator to denote new regularization.
       ICOMP = I
       IKS = IKS + 1
+
+ 10   CONTINUE
+
 *     --07/19/14 22:42-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-c$$$      print*,'SEARCH IKS',IKS,'T',TIME,'J',JLIST(1:NCLOSE)
+C      print*,'SEARCH I',I,'NB',LIST(1,I),'L',LIST(2:LIST(1,I),I),
+C     &     'TRACE_F',TRACE_FLAG,'IKS',IKS,'JCOMP',JCOMP
 *     --07/19/14 22:42-lwang-end----------------------------------------*
 *
-   10 RETURN
+      
+      RETURN
 *
       END

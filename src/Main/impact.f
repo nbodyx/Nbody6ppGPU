@@ -367,22 +367,26 @@ c$$$     &     'xdot',xdot(1,i1),'fdot',fdot(1,i1),'time',time
 c$$$      call flush(6)
 c$$$      call mpi_barrier(MPI_COMM_WORLD,ierr)
 *     --01/03/14 13:46-lwang-end----------------------------------------*
+
+      JCMAX = 0
 *       Include any close single or c.m. perturber (cf. routine SETSYS).
-      IF (JMAX.NE.JCOMP.AND.SQRT(RMAX2).LT.MIN(2.0D0*RSUM,RMIN).AND.
-     &    NAME(JMAX).GT.0) THEN
-          IF (JCOMP.GT.N.AND.JMAX.GT.N) THEN
-              JCMAX = 0
-          ELSE
-              if(rank.eq.0)
-     &        WRITE (6,21)  NAME(JCOMP), NAME(JMAX), RSUM, SQRT(RMAX2)
-   21         FORMAT (' B+2 CHAIN    NAM RSUM RMX ',2I7,1P,2E10.2)
-              CALL JPRED(JMAX,time,time)
-              JCMAX = JMAX
+      IF (JMAX.GT.0.AND.JMAX.NE.JCOMP) THEN
+         IF(SQRT(RMAX2).LT.MIN(2.0D0*RSUM,RMIN)
+     &        .AND.NAME(JMAX).GT.0) THEN
+            IF (JCOMP.GT.N.AND.JMAX.GT.N) THEN
+               JCMAX = 0
+            ELSE
+               if(rank.eq.0) THEN
+                  WRITE (6,21)  NAME(JCOMP), NAME(JMAX), RSUM, 
+     &                 SQRT(RMAX2)
+ 21               FORMAT (' B+2 CHAIN    NAM RSUM RMX ',2I7,1P,2E10.2)
+               END IF
+               CALL JPRED(JMAX,time,time)
+               JCMAX = JMAX
 *     ks MPI communication JCMAX
-              call ksparmpi(K_store,K_int,K_JCMAX,0,0,JCMAX)
-           END IF
-      ELSE
-          JCMAX = 0
+               call ksparmpi(K_store,K_int,K_JCMAX,0,0,JCMAX)
+            END IF
+         END IF
       END IF
 *
 *       Save global index of intruder for TRIPLE or CHAIN.

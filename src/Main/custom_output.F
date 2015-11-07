@@ -528,6 +528,7 @@ C     &           + XREL(3,IM)*VREL(3,IM)
          IF(TMASK(I).EQ.TTOT.OR.TMASK(I2).EQ.TTOT
      &        .OR.I2.GT.N.OR.NAME(I2).LE.0) THEN
             IF(TMASK(I).NE.TTOT) THEN
+               TMASK(I) = TTOT
                N_SINGLE = N_SINGLE + 1
                call custom_store_single(I,N_SINGLE)
             END IF

@@ -609,6 +609,7 @@ C               B_FC3(IK) = F(3,I) + XIREL(3)*DR3I
                GO TO 1
             ELSE
 *     Treat as single star
+               TMASK(I) = TTOT
                N_SINGLE = N_SINGLE + 1
                call custom_store_single(I,N_SINGLE)
 *     CONTINUE

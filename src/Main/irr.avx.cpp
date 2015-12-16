@@ -255,7 +255,7 @@ struct Force{
 		const v4df dh = __builtin_ia32_haddpd256(dd, dd);
 		const v2df sum = __builtin_ia32_vextractf128_pd256(dh, 0)
 		               + __builtin_ia32_vextractf128_pd256(dh, 1);
-#ifdef __USE_INTEL
+#ifdef XX__USE_INTEL
         double p;
         _mm_store_sd(&p, sum);
         return p;
@@ -453,17 +453,11 @@ static void irr_simd_set_list(
 	assert(nnb <= NBlist::NB_MAX);
 	list[addr].nnb = nnb;
 
-#ifdef __USE_INTEL
-     const int one4[4] = REP4(1);
-     __m128i one;
-     _mm_stream_si128(&one, *((__m128i*) one4));
-    //    const __m128i one =  _mm_stream_load_si128 ((__m128i*) one4 );
-#endif
 	const int *src = nblist;
 	      int *dst = list[addr].nb;
 	for(int k=0; k<nnb; k+=8){
       // assert((unsigned long)dst %16 == 0);
-#ifdef __USE_INTEL
+#ifdef XX__USE_INTEL
       //        const __m128i one  = 
       //        const __m128i idx0 = _mm_stream_load_si128 ((__m128i*) (src+k+0));
       //        const __m128i idx1 = _mm_stream_load_si128 ((__m128i*) (src+k+4));
@@ -476,7 +470,14 @@ static void irr_simd_set_list(
 #else
         typedef long long v2di __attribute__ ((__vector_size__ (16)));
         typedef int       v4si __attribute__((vector_size(16)));
+#ifdef __USE_INTEL
+    //     const int one4[4] = REP4(1);
+        const __m128i one =  __m128i _mm_set1_epi32(1);
+    //     _mm_stream_si128(&one, *((__m128i*) one4));
+    //    const __m128i one =  _mm_stream_load_si128 ((__m128i*) one4 );
+#else
 		const v4si one = REP4(1);
+#endif
 		const v4si idx0 = (v4si)__builtin_ia32_loaddqu((const char *)(src+k+0));
 		const v4si idx1 = (v4si)__builtin_ia32_loaddqu((const char *)(src+k+4));
 		__builtin_ia32_movntdq((v2di *)(dst+k+0), (v2di)(idx0-one));

@@ -25,6 +25,13 @@ typedef __m128i v4si;
 #define __builtin_ia32_unpcklpd(a,b)               _mm_unpacklo_pd(a,b)
 #define __builtin_ia32_loaddqu(mem_addr)           _mm_loaddup_pd(mem_addr)
 //#define __builtin_ia32_vec_ext_v2df(a,imm)         _mm_store_sd(a,imm)
+inline double __builtin_ia32_vec_ext_v2df(__m128d a,const int imm)
+{
+  double p;
+  _mm_store_sd(&p+imm,a);
+  return p;
+}
+    
 // AVX
 #define __builtin_ia32_rsqrtps256(a)               _mm256_rsqrt_ps(a)
 #define __builtin_ia32_vinsertf128_ps256(a,b,imm)  _mm256_insertf128_ps(a,b,imm)
@@ -38,30 +45,30 @@ typedef __m128i v4si;
 #define __builtin_ia32_haddpd256(a,b)              _mm256_hadd_pd(a,b)
 #define __builtin_ia32_vextractf128_pd256(a,imm)   _mm256_extractf128_pd(a,imm)
 #define __builtin_ia32_minpd256(a,b)               _mm256_min_pd(a,b)
-//#define __builtin_ia32_movntdq(mem_addr,a)         _mm_stream_si128(mem_addr,a)
+#define __builtin_ia32_movntdq(mem_addr,a)         _mm_stream_si128((__m128i*)(mem_addr),(__m128)(a))
 
 // SSE
-v2df operator + (const v2df& a, const v2df& b) { return _mm_add_pd(a,b); }
-v2df operator - (const v2df& a, const v2df& b) { return _mm_sub_pd(a,b); }
-v2df operator * (const v2df& a, const v2df& b) { return _mm_mul_pd(a,b); }
-v2df operator / (const v2df& a, const v2df& b) { return _mm_div_pd(a,b); }
-v4sf operator + (const v4sf& a, const v4sf& b) { return _mm_add_ps(a,b); }
-v4sf operator - (const v4sf& a, const v4sf& b) { return _mm_sub_ps(a,b); }
-v4sf operator * (const v4sf& a, const v4sf& b) { return _mm_mul_ps(a,b); }
-v4sf operator / (const v4sf& a, const v4sf& b) { return _mm_div_ps(a,b); }
-v4si operator - (const v4si& a, const v4si& b) { return _mm_sub_epi32(a,b); }
+inline v2df operator + (const v2df& a, const v2df& b) { return _mm_add_pd(a,b); }
+inline v2df operator - (const v2df& a, const v2df& b) { return _mm_sub_pd(a,b); }
+inline v2df operator * (const v2df& a, const v2df& b) { return _mm_mul_pd(a,b); }
+inline v2df operator / (const v2df& a, const v2df& b) { return _mm_div_pd(a,b); }
+inline v4sf operator + (const v4sf& a, const v4sf& b) { return _mm_add_ps(a,b); }
+inline v4sf operator - (const v4sf& a, const v4sf& b) { return _mm_sub_ps(a,b); }
+inline v4sf operator * (const v4sf& a, const v4sf& b) { return _mm_mul_ps(a,b); }
+inline v4sf operator / (const v4sf& a, const v4sf& b) { return _mm_div_ps(a,b); }
+inline v4si operator - (const v4si& a, const v4si& b) { return _mm_sub_epi32(a,b); }
 
 // AVX
-v4df operator + (const v4df& a, const v4df& b) { return _mm256_add_pd(a,b); }
-v4df operator - (const v4df& a, const v4df& b) { return _mm256_sub_pd(a,b); }
-v4df operator * (const v4df& a, const v4df& b) { return _mm256_mul_pd(a,b); }
-v4df operator / (const v4df& a, const v4df& b) { return _mm256_div_pd(a,b); }
-v4df& operator += (v4df &a, const v4df& b) { a = _mm256_add_pd(a,b); }
-v8sf operator + (const v8sf& a, const v8sf& b) { return _mm256_add_ps(a,b); }
-v8sf operator - (const v8sf& a, const v8sf& b) { return _mm256_sub_ps(a,b); }
-v8sf operator * (const v8sf& a, const v8sf& b) { return _mm256_mul_ps(a,b); }
-v8sf operator / (const v8sf& a, const v8sf& b) { return _mm256_div_ps(a,b); }
-v8sf& operator += (v8sf &a, const v8sf& b) { a = _mm256_add_ps(a,b); }
+inline v4df operator + (const v4df& a, const v4df& b) { return _mm256_add_pd(a,b); }
+inline v4df operator - (const v4df& a, const v4df& b) { return _mm256_sub_pd(a,b); }
+inline v4df operator * (const v4df& a, const v4df& b) { return _mm256_mul_pd(a,b); }
+inline v4df operator / (const v4df& a, const v4df& b) { return _mm256_div_pd(a,b); }
+inline v4df& operator += (v4df &a, const v4df& b) { a = _mm256_add_pd(a,b); }
+inline v8sf operator + (const v8sf& a, const v8sf& b) { return _mm256_add_ps(a,b); }
+inline v8sf operator - (const v8sf& a, const v8sf& b) { return _mm256_sub_ps(a,b); }
+inline v8sf operator * (const v8sf& a, const v8sf& b) { return _mm256_mul_ps(a,b); }
+inline v8sf operator / (const v8sf& a, const v8sf& b) { return _mm256_div_ps(a,b); }
+inline v8sf& operator += (v8sf &a, const v8sf& b) { a = _mm256_add_ps(a,b); }
 
 
 #endif

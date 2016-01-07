@@ -28,7 +28,8 @@
       if(rank.eq.0)then
 *
       IREAD = 0
-      IF (KZ(22).EQ.2.OR.KZ(22).EQ.6.OR.KZ(22).EQ.9) THEN
+      IF (KZ(22).EQ.2.OR.KZ(22).EQ.6.OR.
+     &     KZ(22).EQ.9.OR.KZ(22).EQ.10) THEN
           DO 5 I = 1,N
               READ (10,*)  BODY(I), (X(K,I),K=1,3), (XDOT(K,I),K=1,3)
     5     CONTINUE

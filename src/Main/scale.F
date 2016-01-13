@@ -232,6 +232,14 @@
 
 *     Define scaling factor (set E0 = ETOT if energy scaling not desired).
          SX = E0/ETOT
+
+*     Safe check
+         IF (SX.LE.0) then
+            print*, 'Error!: Scaling factor <= 0. Virial ratio Q >= 1.',
+     &           ' Scaled energy E0 = ',E0,
+     &           ' Original energy ETOT = ',ETOT
+            call abort()
+         END IF
 *
 *     Scale coordinates & velocities to the new units.
          DO 70 I = 1,N

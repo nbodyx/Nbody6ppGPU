@@ -3,8 +3,9 @@
 *
 *     COMMON TLIST for irregular block time step list (Need include params.h before include tlist.h)
 *
+      parameter(NDELAYMAX=20*LMAX)
       COMMON/TLIST/ NXTLST(NMAX),NXTLEN,NDTK(64),NDTMIN,NDTMAX,
-     &              NXTLIMIT,NXTLEVEL,NLSTDELAY(2*LMAX),NGHOSTS
+     &              NXTLIMIT,NXTLEVEL,NLSTDELAY(NDELAYMAX),NGHOSTS
       INTEGER NXTLST,NXTLEN,NDTK,NDTMIN,NDTMAX,NXTLIMIT,NXTLEVEL
       INTEGER NLSTDELAY,NGHOSTS
 

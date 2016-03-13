@@ -61,7 +61,11 @@
          IF(KZ(47).GE.0) THEN
             DTOUT = DTK(KZ(47)+1)
          ELSE
-            DTOUT = DTK(64)
+*            DTOUT = DTK(64)
+            DTOUT = DTK(1)
+            DO I=KZ(47),-1
+               DTOUT = DTOUT*2.0D0
+            END DO
          END IF
 
 *     Initial nxtlst

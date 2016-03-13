@@ -53,6 +53,12 @@ All these options can be used in the same time. For example:
  Be careful that the "ulimit" only works for current shell, thus it's need to be used every time when a new shell is opened.
  You can put it in .bashrc or .bash_profile to always load it when a new shell is open.
 
+* In some Linux systems (e.g. Ubuntu), when the large NMAX is used, the compiling crash with the error: 
+ "*** R_X86_64_PC32 against symbol ***"
+ This error is related to the memory model of the Linux system. The detail of memory model is shown in https://software.intel.com/en-us/node/579558 
+ The solution is to add the configure option "--enable-mcmodel=large"
+ In this case, the code performance may slightly decrease compared with "mcmodel=medium/small"
+
 ---------------------------------------------------------------------
 Please check doc/Nbody6++_manual.pdf for the detail description of Nbody6++
 

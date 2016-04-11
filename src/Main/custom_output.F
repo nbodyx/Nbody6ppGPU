@@ -1,4 +1,4 @@
-      subroutine custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS,IMINR)
+      subroutine custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS)
 *
 *
 *     Custom output with HDF5/binary format  (Long Wang)
@@ -102,7 +102,7 @@ C      REAL*4 M_FC1, M_FC2, M_FC3
 
       REAL*8 RSCALE_OUT,MSCALE_OUT,VSCALE_OUT,RAU_OUT,TSCALE_OUT
 *      
-      INTEGER NXTLST(NMAX),IMINR(NMAX),IWBINC
+      INTEGER NXTLST(NMAX),IWBINC
       INTEGER N_SINGLE,N_BINARY,N_MERGER, IMLST(4,30),NIMLST
       REAL*8 MMLST(30),MTMP,M3
       SAVE TMASK

@@ -25,7 +25,7 @@ SIMD_FLAGS = -D SIMD
 HDF5_FLAGS = -D H5OUTPUT
 DEBUG_FLAGS= -D DEBUG
 TT_FLAGS= -D TT
-INTEL_FLAGS= -D __USE_INTEL
+INTEL_FLAGS= -D __USE_INTEL -no-wrap-margin
 
 FFLAGS = @FCFLAGS@
 CXXFLAGS = @CXXFLAGS@
@@ -108,7 +108,8 @@ add_tlist.f exchange_tlist.f replace_tlist.f delay_store_tlist.f \
 delay_add_tlist.f delay_remove_tlist.f rmesc_tlist.f shift_tlist.f k_step.f \
 imbhinit.f bhplot.f energy.f kspinit.f kspreg.f counter_reset.f util_gpu.f \
 regcor_gpu.f fpoly0.f tail0.f ntint.f xtrnlt.f fbulge.f steps2.f tstep2.f \
-custom_output.f custom_output_facility.f ksres_op.f kstran.f
+custom_output.f custom_output_facility.f ksres_op.f kstran.f \
+global_output.f global_params_gether.f
 
 .SUFFIXES : .o .F
 

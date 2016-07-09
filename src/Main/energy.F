@@ -26,6 +26,7 @@
 *       Calculate the potential energy.
       ZKIN = 0.D00
       POT = 0.0
+      VIR = 0.0
 #ifdef GPU
 *     Use GPU to get potential
       NNT = NTOT - IFIRST + 1

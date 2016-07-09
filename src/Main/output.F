@@ -203,8 +203,8 @@
          IF(kstart.eq.1.and.ttot.eq.0.0) then
          write (30,76) 
  76      format('TIME[NB} TIME[Myr] TCR[Myr] DE BE(3) ',
-     &           'RSCALE[PC] RTIDE[PC] RDENS[PC] RC[PC]  RHOD[PC] ',
-     &           'RHOM[PC] MC[M*] CMAX <Cn> Ir/R RCM VCM AZ ',
+     &           'RSCALE[PC] RTIDE[PC] RDENS[PC] RC[PC]  RHOD[M*] ',
+     &           'RHOM[M*] MC[M*] CMAX <Cn> Ir/R RCM VCM AZ ',
      &           'EB/E EM/E VRMS ',
      &           'N NS NPAIRS NUPKS NPKS NMERGE MULT <NB> NC NESC ',
      &           'NSTEPI NSTEPB NSTEPR NSTEPU NSTEPT NSTEPQ NSTEPC ',
@@ -216,8 +216,8 @@
      &           'NTTRY NTRIP NQUAD NCHAIN NMERG NEWHI')
          END IF
          write (30,77) TTOT,TTOT*TSTAR,TCR*TSTAR,ERROR,BE(3),
-     &        RSCALE*RBAR,RTIDE*RBAR,RD*RBAR,RC*RBAR,RHOD*RBAR,
-     &        RHOM*RBAR,ZMC*ZMBAR,CMAX,CNNB,COST,CMR(4),CMRDOT(4),AZ,
+     &        RSCALE*RBAR,RTIDE*RBAR,RD*RBAR,RC*RBAR,RHOD*ZMBAR,
+     &        RHOM*ZMBAR,ZMC*ZMBAR,CMAX,CNNB,COST,CMR(4),CMRDOT(4),AZ,
      &        EB,EM,VRMS,
      &        N,NS,NPAIRS,IUNP,NP,NMERGE,MULT,NNB,NC,NESC,
      &        NSTEPI,NSTEPB,NSTEPR,NSTEPU,NSTEPT,NSTEPQ,NSTEPC,

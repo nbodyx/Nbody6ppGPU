@@ -24,21 +24,22 @@
 *       Obtain the tidal potential energy for linearized external field. 
       IF (KZ(14).EQ.0) THEN
 *       Note: EPL holds accumulated tidal energy if KZ(14) = 3.
-          EPL = 0.0D0
+         VIR = 0.0
+         EPL = 0.0D0
       ELSE
 *       Employ general expression sum {m*r*F} for virial energy.
          CALL XTRNLV(1,N)
 *       Form tidal energy with Plummer potential (note EPL use for #14=3).
-          IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
-              EPL = 0.0
-              DO 50 I = 1,N
-                  RI2 = AP2
-                  DO 45 K = 1,3
-                      RI2 = RI2 + X(K,I)**2
-   45             CONTINUE
-                  EPL = EPL - BODY(I)*MP/SQRT(RI2)
-   50         CONTINUE
-          END IF
+         IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
+            EPL = 0.0
+            DO 50 I = 1,N
+               RI2 = AP2
+               DO 45 K = 1,3
+                  RI2 = RI2 + X(K,I)**2
+ 45            CONTINUE
+               EPL = EPL - BODY(I)*MP/SQRT(RI2)
+ 50         CONTINUE
+         END IF
       END IF
       EPARS(5) = REAL(EPL)
       IF(KZ(14).NE.3.and.KZ(14).NE.9) EPARS(5) = EPARS(5) + REAL(ETIDE)
@@ -103,8 +104,7 @@
       ALLN = FLOAT(NPARS(5))
 *     Form equilibrium rms velocity (temporarily defined as VC).
       VC = SQRT(2.0D0*ABS(EKM)/TMASS)
-      TRH = 4.0*TWOPI/3.0*(VC*Rh)**3
-     &     /(15.4*TMASS**2*LOG(ALLN)/ALLN)
+      TRH = 4.0*TWOPI/3.0*(VC*Rh)**3/(15.4*TMASS**2*LOG(ALLN)/ALLN)
       FPARS(4) = REAL(TRH*TSCALE_OUT)
 
 *     10.   Rtid[A]: Tidal radius
@@ -112,13 +112,13 @@
 
 *     11-13. R_den[A]: Density center position
       
-*     14.  R_hod[A]: Density weighted average density ΣRHO2/ΣRHO 
+*     14.  Rho_d[A]: Density weighted average density ΣRHO2/ΣRHO 
 *                    (RHO:Mass density of individual star calculated by nearest 5 neighbors.
 *                     only avaiable for particles inside core radius)
-      FPARS(14) = REAL(RHOD*MSCALE_OUT)
+      FPARS(14) = REAL(RHOD*DSCALE_OUT)
 
-*     15.  R_hom[A]: Maximum mass density / half mass mean value
-      FPARS(15) = REAL(RHOM*MSCALE_OUT)
+*     15.  Rho_m[A]: Maximum mass density / half mass mean value
+      FPARS(15) = REAL(RHOM*DSCALE_OUT)
 
 ***** Number ---------------------------
 C*     6. NESC: Escaper number

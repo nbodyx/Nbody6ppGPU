@@ -38,6 +38,10 @@
 *     5. R
 *     6. T
 *     7. ROT
+*     Velocity dispersion is mass weighted.
+*     Velocity dispersion of binaries (also for different stellar types) use the central mass velocity.
+*     But for stellar types, the mass use only the component mass.
+
       REAL FLAGR(NN)
       INTEGER NLAGR(NN),NSLAGR(NN),NBLAGR(NN),NPLAGR(NN,NTP)
       REAL RLAGR(NN),RSLAGR(NN),RBLAGR(NN),RPLAGR(NN,NTP)
@@ -570,7 +574,7 @@ C!$omp end parallel do
          END IF
 
 *     half mass radius
-         IF (CMASS.GE.HFMASS) RH = ri
+         IF (CMASS.GE.HFMASS.and.RH.eq.0.0) RH = ri
 
          IF (J.GT.NPS) THEN
 *     Binary:
@@ -637,10 +641,12 @@ C!$omp end parallel do
          call lagr_empty_fill(kkb,NBLAGR,RBLAGR,MBLAGR,VBLAGR,VTBAVE,
      &        EBLAGR)
 *     stellar types:
-         DO K=1, NTP
-            call lagr_empty_fill(kkp(K),NPLAGR(1,K),RPLAGR(1,K),
-     &           MPLAGR(1,K),VPLAGR(1,1,K),VTPAVE(1,1,K),EPLAGR(1,K))
-         END DO
+         if (fse) THEN
+            DO K=1, NTP
+               call lagr_empty_fill(kkp(K),NPLAGR(1,K),RPLAGR(1,K),
+     &              MPLAGR(1,K),VPLAGR(1,1,K),VTPAVE(1,1,K),EPLAGR(1,K))
+            END DO
+         END IF
 *     binary fraction:
          IF (KK.LT.NN) THEN
             MSBLAGR(KK:NN-1) = MSBLAGR(KK-1)
@@ -676,6 +682,7 @@ C!$omp end parallel do
       kk  = 1
       kks = 1
       kkb = 1
+      kkp = 1
 
       MCPREV  = 0.0
       MCSPREV = 0.0
@@ -765,8 +772,8 @@ C!$omp end parallel do
                END IF
             ELSE
                KN = 1
-               kwi(1) = NS_KW(K)
-               mki(1) = S_M(K)
+               kwi(1) = NS_KW(J)
+               mki(1) = S_M(J)
             END IF
 *     fill coresponding stellar types
             DO 4 L = 1, KN
@@ -909,6 +916,7 @@ C!$omp end parallel do
 *     Core:
       IF (ri.LE.rc) THEN
          ml(NN) = ml(NN) + mi
+         nl(NN) = nl(NN) + 1
          vl(NN,2:4) = vl(NN,2:4) + mi*v(1:3) 
          vl(NN,5)   = vl(NN,5)   + mi*vr 
          vl(NN,7)   = vl(NN,7)   + mi*vrot

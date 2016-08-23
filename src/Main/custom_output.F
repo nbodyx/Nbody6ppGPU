@@ -124,6 +124,7 @@ C      INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
       IF (KZ(19).EQ.0.AND.KZ(12).EQ.-1) THEN
          RSCALE_OUT=1.0
          MSCALE_OUT=1.0
+         DSCALE_OUT=1.0
          VSCALE_OUT=1.0
          RAU_OUT=1.0
          TSCALE_OUT=1.0
@@ -135,6 +136,7 @@ C      INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
          RSCALE_OUT=RBAR
          MSCALE_OUT=ZMBAR
          VSCALE_OUT=VSTAR
+         DSCALE_OUT=ZMBAR/RBAR**3
          RAU_OUT=RAU
          TSCALE_OUT=TSTAR
          DAYS_OUT=DAYS

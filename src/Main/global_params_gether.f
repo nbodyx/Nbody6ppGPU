@@ -50,15 +50,15 @@
       EPARS(7)  = REAL(ECOLL)
 *     8. ECMDOT: common envelope energy
       EPARS(8)  = REAL(ECDOT)
-*     1. ETOT: total energy
+*     1. ETOT: total energy without escaping energy
       EPARS(1)  = SUM(EPARS(2:8))
 *     9. EKICK: kick energy
       EPARS(9)  = REAL(EKICK)
-*     10. ESESC: single escaper energy
+*     10. ESESC: escaper kinetic and potential energy
       EPARS(10) = REAL(ESESC)
-*     11. EBESC: binary escaper energy
+*     11. EBESC: binary escaper binding energy
       EPARS(11) = REAL(EBESC)
-*     12. EMESC: triple escaper energy
+*     12. EMESC: triple escaper binding energy
       EPARS(12) = REAL(EMESC)
 
 *     Mechanical energy

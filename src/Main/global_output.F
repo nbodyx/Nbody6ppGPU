@@ -38,6 +38,8 @@
 *     5. R
 *     6. T
 *     7. ROT
+*     Number counts for Total Lagrangian resolved all binaries and mergers to get correct average mass
+*     Number counts for binaris use center-of-mass.
 *     Velocity dispersion is mass weighted.
 *     Velocity dispersion of binaries (also for different stellar types) use the central mass velocity.
 *     But for stellar types, the mass use only the component mass.
@@ -439,24 +441,16 @@ C!$omp end parallel do
          RI = SQRT(R2(I))
 *     Increase total counter
          NC = NC + 1
-*     Core number
-         IF (ri.le.rc) NLAGR(NN) = NLAGR(NN) + 1
-
 
 *     Check the type of stars (single/binary/merger)
          IF (J.GT.NPS) THEN
             NCB = NCB + 1
             NC = NC + 1
-            IF (ri.le.rc) then
-               NLAGR(NN) = NLAGR(NN) + 1
-               NBLAGR(NN) = NBLAGR(NN) + 1
-            END IF
 
             IF (J.GT.NPSB) THEN
                K = J - NPSB
 *     Mergers:
                NC = NC + 1
-               IF (ri.le.rc)  NLAGR(NN) = NLAGR(NN) + 1
 *     cumulative binary bins for binary fraction
                IF (kk.lt.NN)  NSBLAGR(kk) = NSBLAGR(kk) + 1
                mi = M_M1(K) + M_M2(K) + M_M3(K)

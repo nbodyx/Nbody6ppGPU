@@ -248,6 +248,7 @@
 *
 *       Correct total energy.
       BE(3) = BE(3) - EI
+      ESESC = ESESC + EI
 *
 *       Update total mass and save energy & number of single escapers.
       IF (I.LE.N) THEN
@@ -403,12 +404,14 @@
           ECC = SQRT(ECC2)
           EB1 = ZMU*H(JPAIR)
           BE(3) = BE(3) - EB1
+          EMESC = EMESC + EB1
           EMERGE = EMERGE - EB1
           DEB = DEB + EB1
       END IF
 *
 *       Update total energy (ECOLL with EB < -1 & #27 > 0 affects BINOUT).
       BE(3) = BE(3) - EB
+      EBESC = EBESC + EB
 *
 *       Check optional diagnostics for hierarchical systems.
       IF (NAMEI.LE.0.AND.(KZ(18).EQ.1.OR.KZ(18).EQ.3)) THEN
@@ -616,12 +619,14 @@
           EB = ZMU*HM(JM)
           PB = DAYS*SEMI0*SQRT(SEMI0/BODYCM)
           BE(3) = BE(3) - EB
+          EMESC = EMESC + EB
           EMERGE = EMERGE - EB
 *       Include extra correction for mergers between binary pairs.
           IF (JM.LT.IM) THEN
               ZMU2 = CM(1,IM)*CM(2,IM)/(CM(1,IM) + CM(2,IM))
               EB2 = ZMU2*HM(IM)
               BE(3) = BE(3) - EB2
+              EMESC = EMESC + EB2
               EMERGE = EMERGE - EB2
 *       Copy smaller index for QUAD binary output.
               IM = JM

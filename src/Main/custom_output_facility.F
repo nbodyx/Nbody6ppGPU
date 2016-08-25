@@ -734,11 +734,14 @@ C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'P',
      &     B_P, N_BINARY, 1, h5_dset_ids(58),
      &     original_vec_len,finalize)
+      CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'G',
+     &     B_G, N_BINARY, 1, h5_dset_ids(59),
+     &     original_vec_len,finalize)
       
 *     stellar evolution data
       IF(KSEV.GT.0) THEN
          CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KW1',
-     &        NB_KW1, N_BINARY, 1, h5_dset_ids(59),
+     &        NB_KW1, N_BINARY, 1, h5_dset_ids(60),
      &        original_vec_len,finalize)
          CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KW2',
      &        NB_KW2, N_BINARY, 1, h5_dset_ids(61),
@@ -746,17 +749,17 @@ C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
       END IF
 
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KWC',
-     &     NB_KWC, N_BINARY, 1, h5_dset_ids(63),
+     &     NB_KWC, N_BINARY, 1, h5_dset_ids(62),
      &     original_vec_len,finalize)
 
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM1',
-     &     NB_NAM1, N_BINARY, 1, h5_dset_ids(60),
+     &     NB_NAM1, N_BINARY, 1, h5_dset_ids(63),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM2',
-     &     NB_NAM2, N_BINARY, 1, h5_dset_ids(62),
+     &     NB_NAM2, N_BINARY, 1, h5_dset_ids(64),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAMC',
-     &     NB_NAMC, N_BINARY, 1, h5_dset_ids(64),
+     &     NB_NAMC, N_BINARY, 1, h5_dset_ids(65),
      &     original_vec_len,finalize)
 
       CALL h5fflush_f(h5_subgroup_id, H5F_SCOPE_LOCAL_F, error)
@@ -787,7 +790,8 @@ C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
      &     B_XR1(1:N_BINARY), B_XR2(1:N_BINARY), B_XR3(1:N_BINARY), 
      &     B_VR1(1:N_BINARY), B_VR2(1:N_BINARY), B_VR3(1:N_BINARY), 
      &     B_POT(1:N_BINARY),
-     &     B_A(1:N_BINARY), B_ECC(1:N_BINARY), B_P(1:N_BINARY)
+     &     B_A(1:N_BINARY), B_ECC(1:N_BINARY), B_P(1:N_BINARY),
+     &     B_G(1:N_BINARY)
        IF(KSEV.GT.0) THEN
          WRITE (40) B_RS1(1:N_BINARY), B_RS2(1:N_BINARY),
      &        B_L1(1:N_BINARY), B_L2(1:N_BINARY),
@@ -807,7 +811,7 @@ C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
      &         B_VC1(K), B_VC2(K), B_VC3(K), 
      &         B_XR1(K), B_XR2(K), B_XR3(K), 
      &         B_VR1(K), B_VR2(K), B_VR3(K), B_POT(K),
-     &         B_A(K), B_ECC(K), B_P(K),
+     &         B_A(K), B_ECC(K), B_P(K), B_G(K),
      &         B_RS1(K), B_RS2(K),
      &         B_L1(K), B_L2(K),
      &         B_TE1(K), B_TE2(K),
@@ -1092,24 +1096,24 @@ C      INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
      &        NM_KW1, N_MERGER, 1, h5_dset_ids(124),
      &        original_vec_len,finalize)
          CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KW2',
-     &        NM_KW2, N_MERGER, 1, h5_dset_ids(126),
+     &        NM_KW2, N_MERGER, 1, h5_dset_ids(125),
      &        original_vec_len,finalize)
          CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KW3',
-     &        NM_KW3, N_MERGER, 1, h5_dset_ids(128),
+     &        NM_KW3, N_MERGER, 1, h5_dset_ids(126),
      &        original_vec_len,finalize)
       END IF
 
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KWC',
-     &     NM_KWC, N_MERGER, 1, h5_dset_ids(130),
+     &     NM_KWC, N_MERGER, 1, h5_dset_ids(127),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM1',
-     &     NM_NAM1, N_MERGER, 1, h5_dset_ids(125),
+     &     NM_NAM1, N_MERGER, 1, h5_dset_ids(128),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM2',
-     &     NM_NAM2, N_MERGER, 1, h5_dset_ids(127),
+     &     NM_NAM2, N_MERGER, 1, h5_dset_ids(129),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM3',
-     &     NM_NAM3, N_MERGER, 1, h5_dset_ids(129),
+     &     NM_NAM3, N_MERGER, 1, h5_dset_ids(130),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAMC',
      &     NM_NAMC, N_MERGER, 1, h5_dset_ids(131),

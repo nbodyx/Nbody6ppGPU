@@ -32,7 +32,7 @@
       include 'timing.h'
       include 'output.h'
       include 'scale_out.h'
-      PARAMETER  (NMX=10,NMX3=3*NMX,NMXm=NMX*(NMX-1)/2)
+      PARAMETER  (NMX=10,NMX3=3*NMX,NMXm=NMX*(NMX-1)/2,GALIMIT=0.1D0)
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
      &                NAMEM(MMAX),NAMEG(MMAX),KSTARM(MMAX),IFLAG(MMAX)
@@ -201,45 +201,75 @@ c$$$         END IF
 *     Resolve unperturbed binary
             CALL KSRES_OP(IPAIR,J1,J2,XIREL,VIREL,0)
 *     Name
-            NB_NAMC(IK) = NAME(I)
-            NB_NAM1(IK) = NAME(J1)
-            NB_NAM2(IK) = NAME(J2)
+            if (GAMMA(IPAIR).LT.GALIMIT.AND.H(IPAIR).LT.0) THEN
+               NB_NAMC(IK) = NAME(I)
+               NB_NAM1(IK) = NAME(J1)
+               NB_NAM2(IK) = NAME(J2)
 *     Dynamic information
-            B_M1(IK) = REAL(BODY(J1)*MSCALE_OUT)
-            B_M2(IK) = REAL(BODY(J2)*MSCALE_OUT)
-            B_XC1(IK) = REAL(X(1,I)*RSCALE_OUT) 
-            B_XC2(IK) = REAL(X(2,I)*RSCALE_OUT) 
-            B_XC3(IK) = REAL(X(3,I)*RSCALE_OUT) 
-            B_VC1(IK) = REAL(XDOT(1,I)*VSCALE_OUT) 
-            B_VC2(IK) = REAL(XDOT(2,I)*VSCALE_OUT) 
-            B_VC3(IK) = REAL(XDOT(3,I)*VSCALE_OUT) 
-            B_XR1(IK) = REAL(XIREL(1)*RAU_OUT) 
-            B_XR2(IK) = REAL(XIREL(2)*RAU_OUT) 
-            B_XR3(IK) = REAL(XIREL(3)*RAU_OUT) 
-            B_VR1(IK) = REAL(VIREL(1)*VSCALE_OUT) 
-            B_VR2(IK) = REAL(VIREL(2)*VSCALE_OUT) 
-            B_VR3(IK) = REAL(VIREL(3)*VSCALE_OUT) 
-            B_FC1(IK) = REAL(F(1,I)*FSCALE_OUT)
-            B_FC2(IK) = REAL(F(2,I)*FSCALE_OUT)
-            B_FC3(IK) = REAL(F(3,I)*FSCALE_OUT)
-            B_POT(IK) = REAL(-PHIDBL(I)*POTSCALE_OUT)
+               B_M1(IK) = REAL(BODY(J1)*MSCALE_OUT)
+               B_M2(IK) = REAL(BODY(J2)*MSCALE_OUT)
+               B_XC1(IK) = REAL(X(1,I)*RSCALE_OUT) 
+               B_XC2(IK) = REAL(X(2,I)*RSCALE_OUT) 
+               B_XC3(IK) = REAL(X(3,I)*RSCALE_OUT) 
+               B_VC1(IK) = REAL(XDOT(1,I)*VSCALE_OUT) 
+               B_VC2(IK) = REAL(XDOT(2,I)*VSCALE_OUT) 
+               B_VC3(IK) = REAL(XDOT(3,I)*VSCALE_OUT) 
+               B_XR1(IK) = REAL(XIREL(1)*RAU_OUT) 
+               B_XR2(IK) = REAL(XIREL(2)*RAU_OUT) 
+               B_XR3(IK) = REAL(XIREL(3)*RAU_OUT) 
+               B_VR1(IK) = REAL(VIREL(1)*VSCALE_OUT) 
+               B_VR2(IK) = REAL(VIREL(2)*VSCALE_OUT) 
+               B_VR3(IK) = REAL(VIREL(3)*VSCALE_OUT) 
+               B_FC1(IK) = REAL(F(1,I)*FSCALE_OUT)
+               B_FC2(IK) = REAL(F(2,I)*FSCALE_OUT)
+               B_FC3(IK) = REAL(F(3,I)*FSCALE_OUT)
+               B_POT(IK) = REAL(-PHIDBL(I)*POTSCALE_OUT)
+               B_G(IK)   = REAL(GAMMA(IPAIR))
 C            B_FDC1(IK) = REAL(FDOT(1,I)*FDSCALE_OUT)
 C            B_FDC2(IK) = REAL(FDOT(2,I)*FDSCALE_OUT)
 C            B_FDC3(IK) = REAL(FDOT(3,I)*FDSCALE_OUT)
 *     Stellar evolution of two components
-            IF (KZ(12).GT.0) THEN
-               call sev_one_star(J1,NB_KW1(IK),B_RS1(IK),B_L1(IK),
-     &              B_TE1(IK),B_MC1(IK),B_RC1(IK),B_M1(IK))
-               call sev_one_star(J2,NB_KW2(IK),B_RS2(IK),B_L2(IK),
-     &              B_TE2(IK),B_MC2(IK),B_RC2(IK),B_M2(IK))
-            END IF
-            NB_KWC(IK) = KSTAR(I)
+               IF (KZ(12).GT.0) THEN
+                  call sev_one_star(J1,NB_KW1(IK),B_RS1(IK),B_L1(IK),
+     &                 B_TE1(IK),B_MC1(IK),B_RC1(IK),B_M1(IK))
+                  call sev_one_star(J2,NB_KW2(IK),B_RS2(IK),B_L2(IK),
+     &                 B_TE2(IK),B_MC2(IK),B_RC2(IK),B_M2(IK))
+               END IF
+               NB_KWC(IK) = KSTAR(I)
 *     Binary parameters
-            SEMI = -0.5*BODY(I)/H(IPAIR)
-            B_ECC(IK) = REAL(SQRT((1.0D0 - R(IPAIR)/SEMI)**2+
-     &           TDOT2(IPAIR)**2/(BODY(I)*SEMI)))
-            B_P(IK) = REAL(DAYS_OUT*SEMI*SQRT(ABS(SEMI)/BODY(I)))
-            B_A(IK) = REAL(SEMI*RAU_OUT)
+               SEMI = -0.5*BODY(I)/H(IPAIR)
+               B_ECC(IK) = REAL(SQRT((1.0D0 - R(IPAIR)/SEMI)**2+
+     &              TDOT2(IPAIR)**2/(BODY(I)*SEMI)))
+               B_P(IK) = REAL(DAYS_OUT*SEMI*SQRT(ABS(SEMI)/BODY(I)))
+               B_A(IK) = REAL(SEMI*RAU_OUT)
+            ELSE
+*     If perturbation is too strong (Gamma>GALIMIT) or the binding energy is positive, the K.S. may not be a binary.
+               TMASK(I1) = TTOT
+               TMASK(I2) = TTOT
+               TMASK(I)  = TTOT
+               N_SINGLE = N_SINGLE + 1
+               IK = N_SINGLE
+               call custom_store_single(I1,IK)
+*     correction for the force and potential
+               DR3I = BODY(I2)/R(IPAIR)**3
+               S_F1(IK) = S_F1(IK) - REAL(XIREL(1)*DR3I*FSCALE_OUT)
+               S_F2(IK) = S_F2(IK) - REAL(XIREL(2)*DR3I*FSCALE_OUT)
+               S_F3(IK) = S_F3(IK) - REAL(XIREL(3)*DR3I*FSCALE_OUT)
+               S_POT(IK) = S_POT(IK) -
+     &              REAL(BODY(I2)/R(IPAIR)*POTSCALE_OUT)
+
+               N_SINGLE = N_SINGLE + 1
+               IK = N_SINGLE
+               call custom_store_single(I2,IK)
+*     correction for the force and potential
+               DR3I = -BODY(I1)/R(IPAIR)**3
+               S_F1(IK) = S_F1(IK) - REAL(XIREL(1)*DR3I*FSCALE_OUT) 
+               S_F2(IK) = S_F2(IK) - REAL(XIREL(2)*DR3I*FSCALE_OUT) 
+               S_F3(IK) = S_F3(IK) - REAL(XIREL(3)*DR3I*FSCALE_OUT) 
+               S_POT(IK) = S_POT(IK) -
+     &              REAL(BODY(I1)/R(IPAIR)*POTSCALE_OUT)
+               
+            END IF
 *     CONTINUE
             GO TO 1
          END IF
@@ -297,7 +327,7 @@ C            B_FDC3(IK) = REAL(FDOT(3,I)*FDSCALE_OUT)
                   CALL KSRES_OP(JPAIR,JP1,JP2,XIREL,VIREL,0)
                   call custom_store_binary(N_BINARY,J2,NAME(IG),
      &                 JP1,JP2,CM(3,IM),CM(4,IM),H(JPAIR),R(JPAIR),
-     &                 TDOT2(JPAIR),XIREL,VIREL,KSTAR(IG))
+     &                 TDOT2(JPAIR),XIREL,VIREL,KSTAR(IG),GAMMA(JPAIR))
                ELSE
                   N_SINGLE = N_SINGLE + 1
                   IK = N_SINGLE
@@ -370,14 +400,14 @@ C                  S_FD3(IK) = REAL(FDOT(3,I)*FDSCALE_OUT)
      &              XREL(3,IM)*VREL(3,IM)
                call custom_store_binary(N_BINARY,J1,NAMEM(IM),J1,IG,
      &              CM(1,IM),CM(2,IM),HM(IM),RIP,RDOT,
-     &              XREL(1,IM),VREL(1,IM),KSTARM(IM))
+     &              XREL(1,IM),VREL(1,IM),KSTARM(IM),GALIMIT)
 *     Outer binary
                N_BINARY = N_BINARY + 1
                JPAIR = IG - N
                call ksres_op(JPAIR,JP1,JP2,XIREL,VIREL,0)
                call custom_store_binary(N_BINARY,J2,NAME(I2),JP1,JP2,
      &              CM(3,IM),CM(4,IM),H(JPAIR),R(JPAIR),TDOT2(JPAIR),
-     &              XIREL,VIREL,KSTAR(I2))
+     &              XIREL,VIREL,KSTAR(I2),GALIMIT)
                GO TO 8
             END IF
 *     Resolve merger
@@ -617,12 +647,15 @@ C     &           + XREL(3,IM)*VREL(3,IM)
                B_VR1(IK) = REAL(VIREL(1)*VSCALE_OUT) 
                B_VR2(IK) = REAL(VIREL(2)*VSCALE_OUT) 
                B_VR3(IK) = REAL(VIREL(3)*VSCALE_OUT) 
-               DR3I = REAL(BODY(I2)/(RIJ2*RIJ))
+               DR3I = BODY(I2)/(RIJ2*RIJ)
 *     Only estimate the c.m. force at the first component position
                B_FC1(IK) = REAL((F(1,I) + XIREL(1)*DR3I)*FSCALE_OUT) 
                B_FC2(IK) = REAL((F(2,I) + XIREL(2)*DR3I)*FSCALE_OUT) 
                B_FC3(IK) = REAL((F(3,I) + XIREL(3)*DR3I)*FSCALE_OUT) 
                B_POT(IK) = REAL((-PHIDBL(I) +BODY(I2)/RIJ)*POTSCALE_OUT)
+               B_G(IK) = REAL(2*SQRT((F(1,I)-F(1,I2))**2
+     &              +(F(2,I)-F(2,I2))**2
+     &              +(F(3,I)-F(3,I2))**2)*RIJ2/(BODY(I)+BODY(I2)))
 *     Stellar evolution of two components
                IF (KZ(12).GT.0) THEN
                   call sev_one_star(I,NB_KW1(IK),B_RS1(IK),B_L1(IK),
@@ -783,7 +816,7 @@ C      INTEGER NS_KW,NS_NAM
 
 *----------------------------------------------------------------------------
       subroutine custom_store_binary(IK,I,NCM,J1,J2,M1,M2,HIP,RIP,RDOT,
-     &     XIREL,VIREL,KC)
+     &     XIREL,VIREL,KC,GI)
 *
 *
 *     Save special binary system
@@ -814,7 +847,7 @@ C      REAL*4 B_RS1, B_L1, B_TE1, B_RS2, B_L2, B_TE2
 C      REAL*4 B_RC1, B_MC1, B_RC2, B_MC2,B_A, B_ECC, B_P
 C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
 
-      REAL*8 XIREL(3), VIREL(3), M1, M2, MTMP,MCM,RDOT
+      REAL*8 XIREL(3), VIREL(3), M1, M2, MTMP,MCM,RDOT,GI
 
 *     Name
       NB_NAMC(IK) = NCM
@@ -839,6 +872,7 @@ C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
       B_FC2(IK) = REAL(F(2,I)*FSCALE_OUT)
       B_FC3(IK) = REAL(F(3,I)*FSCALE_OUT)
       B_POT(IK) = REAL(-PHIDBL(I)*POTSCALE_OUT)
+      B_G(IK)   = REAL(GI)
 *     Stellar evolution of two components
       IF (KZ(12).GT.0) THEN
          MTMP = BODY(J1)

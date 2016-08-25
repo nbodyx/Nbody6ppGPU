@@ -13,6 +13,10 @@
 #include "cuda_pointer.h"
 //#include "cuda_share.h"
 
+#ifndef POTENTIAL
+#define POTENTIAL
+#endif
+
 #define NTHREAD 64 // 64 or 128
 // #define NJBLOCK 14 // for GTX 470
 #define NJBLOCK 28 // for GTX660Ti 

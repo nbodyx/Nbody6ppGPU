@@ -71,6 +71,7 @@ C      FRAG(4) = 'bdat'
       FILE(33) = 'ns.33     '
       FILE(34) = 'bh.34     '
       FILE(35) = 'event.35  '
+      FILE(36) = 'status.36 '
       FILE(38) = 'sediag.38 '
       FILE(39) = 'hbin.39   '
 *      FILE(40) = 'data.h5par'
@@ -261,6 +262,9 @@ C     &             ACCESS='APPEND')
       IF (KZ(19).GT.0.OR.KZ(27).GT.0) 
      &OPEN (UNIT=35,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(35),
      &             ACCESS='APPEND')
+
+      OPEN (UNIT=36,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(36),
+     &     ACCESS='APPEND')
       IF (KZ(19).GE.3)
      &OPEN (UNIT=38,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(38),
      &             ACCESS='APPEND')

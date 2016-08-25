@@ -4,11 +4,11 @@
 *     Custom output with HDF5/binary format  (Long Wang)
 *-----------------------------------------------------------------------------------
 *     IF(KZ(19).EQ.0.AND.KZ(12).EQ.-1) The output is not scaled
-*     single: NAME, M[M*], X(1:3)[pc], V(1:3)[km/s],
+*     single: NAME, M[M*], X(1:3)[pc], V(1:3)[km/s], POT[(km/s)^2],
 *             RS[R*], L[L*], Teff[K], MCORE[M*], RSCORE[R*], K*
 
 *     binary: NAME1, NAME2, NAME(ICM), M1[M*], M2[M*], XCM(1:3)[pc], 
-*             VCM(1:3)[km/s], XREL(1:3)[AU], VREL(1:3)[km/s],
+*             VCM(1:3)[km/s], XREL(1:3)[AU], VREL(1:3)[km/s], POT[(km/s)^2],
 *             semi[AU], ecc, P[days],
 *             RS1[R*], RS2[R*], L1[L*], L2[L*], Teff1[K], Teff2[K],
 *             MCORE1[M*], MCORE2[M*], RSCORE1[R*], RSCORE2[R*],
@@ -16,18 +16,22 @@
 
 *     merger: NAME1,NAME2,NAME3,NAME(INCM), M1[M*], M2[M*], M3[*],
 *             XCM(1:3)[pc], VCM(1:3)[km/s], XREL0(1:3)[AU], VREL0(1:3)[km/s],
-*             XREL1(1:3)[AU], VREL1(1:3)[km/s],
+*             XREL1(1:3)[AU], VREL1(1:3)[km/s],POT[(km/s)^2],
 *             semi0[AU], ecc0, P0[days], semi1[AU], ecc1, P1[days],
 *             K*1, K*2, K*3, K*(INCM), 
 *             RS1[R*], RS2[R*], RS3[R*], L1[L*], L2[L*], L3[L*], Teff1[K], Teff2[K], Teff3[K],
 *             MCORE1[M*], MCORE2[M*], MCORE3[M*], RSCORE1[R*], RSCORE2[R*], RSCORE3[R*]
 *     (binary parameter: 0 means inner binary, 1 means outer component )
-*     (sinlge parameter: 0/1, means inner binary components, 3 means outer component )
+*     (single parameter: 0/1, means inner binary components, 3 means outer component )
+*     (merger parameter: 0 inner binary, 1 outer binary)
+*     (POT: potential, sum of - G m_j/r_j)
 *-----------------------------------------------------------------------------------
 *
 
       include 'common6.h'
       include 'timing.h'
+      include 'output.h'
+      include 'scale_out.h'
       PARAMETER  (NMX=10,NMX3=3*NMX,NMXm=NMX*(NMX-1)/2)
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
@@ -39,69 +43,71 @@
       COMMON/CHAINC/  XC(3,NCMAX),UC(3,NCMAX),BODYC(NCMAX),ICH,
      &                LISTC(LMAX)
       COMMON/CHREG/  TIMEC,TMAX,RMAXC,CMC(10),NAMEC(6),NSTEP1,KZ27,KZ30
+      COMMON/POTDEN/  RHO(NMAX),XNDBL(NMAX),PHIDBL(NMAX)
       REAL*8  M,MASS,MC,MIJ,MKK
       REAL*8 TMASK(NMAX),VIREL(3),XIREL(3)
-*     single
-      COMMON/OUTSINGLE/ S_M(NMAX),S_X1(NMAX), S_X2(NMAX), S_X3(NMAX),
-     &                  S_V1(NMAX), S_V2(NMAX), S_V3(NMAX),
-C     &                  S_F1(NMAX), S_F2(NMAX), S_F3(NMAX),
-     &                  S_RS(NMAX), S_L(NMAX), S_TE(NMAX),
-     &                  S_RC(NMAX), S_MC(NMAX),
-     &                  NS_KW(NMAX),NS_NAM(NMAX)
-      REAL*4 S_M, S_X1, S_X2, S_X3, S_V1, S_V2, S_V3
-C      REAL*4 S_F1, S_F2, S_F3
-      REAL*4 S_RS, S_L, S_TE, S_RC, S_MC
-      INTEGER NS_KW,NS_NAM,NLOOP
-*     Binary
-      COMMON/OUTBINARY/ B_M1(KMAX), B_M2(KMAX),
-     &                  B_XC1(KMAX), B_XC2(KMAX), B_XC3(KMAX),
-     &                  B_VC1(KMAX), B_VC2(KMAX), B_VC3(KMAX), 
-     &                  B_XR1(KMAX), B_XR2(KMAX), B_XR3(KMAX), 
-     &                  B_VR1(KMAX), B_VR2(KMAX), B_VR3(KMAX), 
-C     &                  B_FC1(KMAX), B_FC2(KMAX), B_FC3(KMAX), 
-     &                  B_RS1(KMAX), B_L1(KMAX), B_TE1(KMAX),
-     &                  B_RS2(KMAX), B_L2(KMAX), B_TE2(KMAX),
-     &                  B_RC1(KMAX), B_MC1(KMAX), B_RC2(KMAX), 
-     &                  B_MC2(KMAX), B_A(KMAX), B_ECC(KMAX), B_P(KMAX),
-     &                  NB_KW1(KMAX), NB_NAM1(KMAX), NB_KW2(KMAX), 
-     &                  NB_NAM2(KMAX), NB_KWC(KMAX), NB_NAMC(KMAX)
-      REAL*4 B_M1, B_M2, B_XC1, B_XC2, B_XC3, B_VC1, B_VC2, B_VC3
-      REAL*4 B_XR1, B_XR2, B_XR3, B_VR1, B_VR2, B_VR3
-C      REAL*4 B_FC1, B_FC2, B_FC3
-      REAL*4 B_RS1, B_L1, B_TE1, B_RS2, B_L2, B_TE2
-      REAL*4 B_RC1, B_MC1, B_RC2, B_MC2,B_A, B_ECC, B_P
-      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
-*     Merger
-      COMMON/OUTMERGER/ M_M1(MMAX), M_M2(MMAX), M_M3(MMAX),
-     &                  M_XC1(MMAX), M_XC2(MMAX), M_XC3(MMAX),
-     &                  M_VC1(MMAX), M_VC2(MMAX), M_VC3(MMAX),
-     &                  M_XR01(MMAX), M_XR02(MMAX), M_XR03(MMAX), 
-     &                  M_VR01(MMAX), M_VR02(MMAX), M_VR03(MMAX), 
-     &                  M_XR11(MMAX), M_XR12(MMAX), M_XR13(MMAX), 
-     &                  M_VR11(MMAX), M_VR12(MMAX), M_VR13(MMAX), 
-C     &                  M_FC1(MMAX), M_FC2(MMAX), M_FC3(MMAX),
-     &                  M_RS1(MMAX), M_L1(MMAX), M_TE1(MMAX), 
-     &                  M_RS2(MMAX), M_L2(MMAX), M_TE2(MMAX), 
-     &                  M_RS3(MMAX), M_L3(MMAX), M_TE3(MMAX), 
-     &                  M_RC1(MMAX), M_MC1(MMAX), M_RC2(MMAX), 
-     &                  M_MC2(MMAX), M_RC3(MMAX), M_MC3(MMAX),
-     &                  M_A0(MMAX), M_ECC0(MMAX), M_P0(MMAX),
-     &                  M_A1(MMAX), M_ECC1(MMAX), M_P1(MMAX),
-     &                  NM_KW1(MMAX), NM_NAM1(MMAX), NM_KW2(MMAX),
-     &                  NM_NAM2(MMAX), NM_KW3(MMAX), NM_NAM3(MMAX),
-     &                  NM_KWC(MMAX), NM_NAMC(MMAX)
-      REAL*4 M_M1, M_M2, M_M3, M_XC1, M_XC2, M_XC3, M_VC1, M_VC2, M_VC3
-      REAL*4 M_XR01, M_XR02, M_XR03, M_VR01, M_VR02, M_VR03
-      REAL*4 M_XR11, M_XR12, M_XR13, M_VR11, M_VR12, M_VR13
-C      REAL*4 M_FC1, M_FC2, M_FC3
-      REAL*4 M_RS1, M_L1, M_TE1, M_RS2, M_L2, M_TE2, M_RS3, M_L3, M_TE3
-      REAL*4 M_RC1, M_MC1, M_RC2, M_MC2, M_RC3, M_MC3
-      REAL*4 M_A0, M_ECC0, M_P0, M_A1, M_ECC1, M_P1
-      INTEGER NM_KW1, NM_NAM1, NM_KW2, NM_NAM2
-      INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
+      INTEGER NLOOP
 
-      REAL*8 RSCALE_OUT,MSCALE_OUT,VSCALE_OUT,RAU_OUT,TSCALE_OUT
-*      
+      
+C*     single
+C      COMMON/OUTSINGLE/ S_M(NMAX),S_X1(NMAX), S_X2(NMAX), S_X3(NMAX),
+C     &                  S_V1(NMAX), S_V2(NMAX), S_V3(NMAX),
+CC     &                  S_F1(NMAX), S_F2(NMAX), S_F3(NMAX),
+C     &                  S_RS(NMAX), S_L(NMAX), S_TE(NMAX),
+C     &                  S_RC(NMAX), S_MC(NMAX),
+C     &                  NS_KW(NMAX),NS_NAM(NMAX)
+C      REAL*4 S_M, S_X1, S_X2, S_X3, S_V1, S_V2, S_V3
+CC      REAL*4 S_F1, S_F2, S_F3
+C      REAL*4 S_RS, S_L, S_TE, S_RC, S_MC
+C      INTEGER NS_KW,NS_NAM
+C*     Binary
+C      COMMON/OUTBINARY/ B_M1(KMAX), B_M2(KMAX),
+C     &                  B_XC1(KMAX), B_XC2(KMAX), B_XC3(KMAX),
+C     &                  B_VC1(KMAX), B_VC2(KMAX), B_VC3(KMAX), 
+C     &                  B_XR1(KMAX), B_XR2(KMAX), B_XR3(KMAX), 
+C     &                  B_VR1(KMAX), B_VR2(KMAX), B_VR3(KMAX), 
+CC     &                  B_FC1(KMAX), B_FC2(KMAX), B_FC3(KMAX), 
+C     &                  B_RS1(KMAX), B_L1(KMAX), B_TE1(KMAX),
+C     &                  B_RS2(KMAX), B_L2(KMAX), B_TE2(KMAX),
+C     &                  B_RC1(KMAX), B_MC1(KMAX), B_RC2(KMAX), 
+C     &                  B_MC2(KMAX), B_A(KMAX), B_ECC(KMAX), B_P(KMAX),
+C     &                  NB_KW1(KMAX), NB_NAM1(KMAX), NB_KW2(KMAX), 
+C     &                  NB_NAM2(KMAX), NB_KWC(KMAX), NB_NAMC(KMAX)
+C      REAL*4 B_M1, B_M2, B_XC1, B_XC2, B_XC3, B_VC1, B_VC2, B_VC3
+C      REAL*4 B_XR1, B_XR2, B_XR3, B_VR1, B_VR2, B_VR3
+CC      REAL*4 B_FC1, B_FC2, B_FC3
+C      REAL*4 B_RS1, B_L1, B_TE1, B_RS2, B_L2, B_TE2
+C      REAL*4 B_RC1, B_MC1, B_RC2, B_MC2,B_A, B_ECC, B_P
+C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
+C*     Merger
+C      COMMON/OUTMERGER/ M_M1(MMAX), M_M2(MMAX), M_M3(MMAX),
+C     &                  M_XC1(MMAX), M_XC2(MMAX), M_XC3(MMAX),
+C     &                  M_VC1(MMAX), M_VC2(MMAX), M_VC3(MMAX),
+C     &                  M_XR01(MMAX), M_XR02(MMAX), M_XR03(MMAX), 
+C     &                  M_VR01(MMAX), M_VR02(MMAX), M_VR03(MMAX), 
+C     &                  M_XR11(MMAX), M_XR12(MMAX), M_XR13(MMAX), 
+C     &                  M_VR11(MMAX), M_VR12(MMAX), M_VR13(MMAX), 
+CC     &                  M_FC1(MMAX), M_FC2(MMAX), M_FC3(MMAX),
+C     &                  M_RS1(MMAX), M_L1(MMAX), M_TE1(MMAX), 
+C     &                  M_RS2(MMAX), M_L2(MMAX), M_TE2(MMAX), 
+C     &                  M_RS3(MMAX), M_L3(MMAX), M_TE3(MMAX), 
+C     &                  M_RC1(MMAX), M_MC1(MMAX), M_RC2(MMAX), 
+C     &                  M_MC2(MMAX), M_RC3(MMAX), M_MC3(MMAX),
+C     &                  M_A0(MMAX), M_ECC0(MMAX), M_P0(MMAX),
+C     &                  M_A1(MMAX), M_ECC1(MMAX), M_P1(MMAX),
+C     &                  NM_KW1(MMAX), NM_NAM1(MMAX), NM_KW2(MMAX),
+C     &                  NM_NAM2(MMAX), NM_KW3(MMAX), NM_NAM3(MMAX),
+C     &                  NM_KWC(MMAX), NM_NAMC(MMAX)
+C      REAL*4 M_M1, M_M2, M_M3, M_XC1, M_XC2, M_XC3, M_VC1, M_VC2, M_VC3
+C      REAL*4 M_XR01, M_XR02, M_XR03, M_VR01, M_VR02, M_VR03
+C      REAL*4 M_XR11, M_XR12, M_XR13, M_VR11, M_VR12, M_VR13
+CC      REAL*4 M_FC1, M_FC2, M_FC3
+C      REAL*4 M_RS1, M_L1, M_TE1, M_RS2, M_L2, M_TE2, M_RS3, M_L3, M_TE3
+C      REAL*4 M_RC1, M_MC1, M_RC2, M_MC2, M_RC3, M_MC3
+C      REAL*4 M_A0, M_ECC0, M_P0, M_A1, M_ECC1, M_P1
+C      INTEGER NM_KW1, NM_NAM1, NM_KW2, NM_NAM2
+C      INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
+
       INTEGER NXTLST(NMAX),IWBINC
       INTEGER N_SINGLE,N_BINARY,N_MERGER, IMLST(4,30),NIMLST
       REAL*8 MMLST(30),MTMP,M3
@@ -118,17 +124,26 @@ C      REAL*4 M_FC1, M_FC2, M_FC3
       IF (KZ(19).EQ.0.AND.KZ(12).EQ.-1) THEN
          RSCALE_OUT=1.0
          MSCALE_OUT=1.0
+         DSCALE_OUT=1.0
          VSCALE_OUT=1.0
          RAU_OUT=1.0
          TSCALE_OUT=1.0
          DAYS_OUT=1.0
+         FSCALE_OUT=1.0
+         POTSCALE_OUT=1.0
+         G_OUT=1.0
       else
          RSCALE_OUT=RBAR
          MSCALE_OUT=ZMBAR
          VSCALE_OUT=VSTAR
+         DSCALE_OUT=ZMBAR/RBAR**3
          RAU_OUT=RAU
          TSCALE_OUT=TSTAR
          DAYS_OUT=DAYS
+         FSCALE_OUT=1.0
+         G_OUT=4.302E-3
+*         POTSCALE_OUT=G_OUT*ZMBAR/RSCALE_OUT
+         POTSCALE_OUT=1.0
       END IF
 
 *     choose full or active particles output
@@ -204,9 +219,13 @@ c$$$         END IF
             B_VR1(IK) = REAL(VIREL(1)*VSCALE_OUT) 
             B_VR2(IK) = REAL(VIREL(2)*VSCALE_OUT) 
             B_VR3(IK) = REAL(VIREL(3)*VSCALE_OUT) 
-C            B_FC1(IK) = F(1,I)
-C            B_FC2(IK) = F(2,I)
-C            B_FC3(IK) = F(3,I)
+            B_FC1(IK) = REAL(F(1,I)*FSCALE_OUT)
+            B_FC2(IK) = REAL(F(2,I)*FSCALE_OUT)
+            B_FC3(IK) = REAL(F(3,I)*FSCALE_OUT)
+            B_POT(IK) = REAL(-PHIDBL(I)*POTSCALE_OUT)
+C            B_FDC1(IK) = REAL(FDOT(1,I)*FDSCALE_OUT)
+C            B_FDC2(IK) = REAL(FDOT(2,I)*FDSCALE_OUT)
+C            B_FDC3(IK) = REAL(FDOT(3,I)*FDSCALE_OUT)
 *     Stellar evolution of two components
             IF (KZ(12).GT.0) THEN
                call sev_one_star(J1,NB_KW1(IK),B_RS1(IK),B_L1(IK),
@@ -292,9 +311,13 @@ C            B_FC3(IK) = F(3,I)
                   S_V1(IK) = REAL(XDOT(1,J2)*VSCALE_OUT) 
                   S_V2(IK) = REAL(XDOT(2,J2)*VSCALE_OUT) 
                   S_V3(IK) = REAL(XDOT(3,J2)*VSCALE_OUT) 
-C                  S_F1(IK) = F(1,I)
-C                  S_F2(IK) = F(2,I)
-C                  S_F3(IK) = F(3,I)
+                  S_F1(IK) = REAL(F(1,I)*FSCALE_OUT) 
+                  S_F2(IK) = REAL(F(2,I)*FSCALE_OUT) 
+                  S_F3(IK) = REAL(F(3,I)*FSCALE_OUT) 
+                  S_POT(IK) = REAL(-PHIDBL(I)*POTSCALE_OUT)
+C                  S_FD1(IK) = REAL(FDOT(1,I)*FDSCALE_OUT) 
+C                  S_FD2(IK) = REAL(FDOT(2,I)*FDSCALE_OUT) 
+C                  S_FD3(IK) = REAL(FDOT(3,I)*FDSCALE_OUT) 
 *     Stellar evolution of single star
                   IF (KZ(12).GT.0) THEN
                      MTMP = BODY(IG)
@@ -363,7 +386,11 @@ C                  S_F3(IK) = F(3,I)
             M_XC3(IK) = REAL(X(3,ICM)*RSCALE_OUT) 
             M_VC1(IK) = REAL(XDOT(1,ICM)*VSCALE_OUT) 
             M_VC2(IK) = REAL(XDOT(2,ICM)*VSCALE_OUT) 
-            M_VC3(IK) = REAL(XDOT(3,ICM)*VSCALE_OUT) 
+            M_VC3(IK) = REAL(XDOT(3,ICM)*VSCALE_OUT)
+            M_FC1(IK) = REAL(F(1,ICM)*FSCALE_OUT)
+            M_FC2(IK) = REAL(F(2,ICM)*FSCALE_OUT)
+            M_FC3(IK) = REAL(F(3,ICM)*FSCALE_OUT)
+            M_POT(IK) = REAL(-PHIDBL(ICM)*POTSCALE_OUT)
 
 *     Check whether ipair is avaiable
             IF(IPAIR.GT.0) THEN
@@ -391,7 +418,7 @@ C                  S_F3(IK) = F(3,I)
             M_VR03(IK) = REAL(VREL(3,IM)*VSCALE_OUT) 
             M_M1(IK) = REAL(CM(1,IM)*MSCALE_OUT) 
             M_M2(IK) = REAL(CM(2,IM)*MSCALE_OUT) 
-            M_M3(IK) = REAL(BODY(J2)*MSCALE_OUT) 
+            M_M3(IK) = REAL(BODY(J2)*MSCALE_OUT)
             
             NM_NAMC(IK) = NAMEI
             NM_NAM1(IK) = NAME(J1)
@@ -482,6 +509,10 @@ C     &           + XREL(3,IM)*VREL(3,IM)
                S_V1(IK) = REAL((VCH(3*L-2)+XDOT(1,ICH))*VSCALE_OUT)
                S_V2(IK) = REAL((VCH(3*L-1)+XDOT(2,ICH))*VSCALE_OUT)
                S_V3(IK) = REAL((VCH(3*L)+XDOT(3,ICH))*VSCALE_OUT)
+               S_F1(IK) = REAL(F(1,I)*FSCALE_OUT) 
+               S_F2(IK) = REAL(F(2,I)*FSCALE_OUT) 
+               S_F3(IK) = REAL(F(3,I)*FSCALE_OUT) 
+               S_POT(IK) = REAL(-PHIDBL(I)*POTSCALE_OUT)
 *     stellar evolution         
                IF(KZ(12).GT.0) THEN
                   IF (L.EQ.1) THEN
@@ -588,9 +619,10 @@ C     &           + XREL(3,IM)*VREL(3,IM)
                B_VR3(IK) = REAL(VIREL(3)*VSCALE_OUT) 
                DR3I = REAL(BODY(I2)/(RIJ2*RIJ))
 *     Only estimate the c.m. force at the first component position
-C               B_FC1(IK) = F(1,I) + XIREL(1)*DR3I
-C               B_FC2(IK) = F(2,I) + XIREL(2)*DR3I
-C               B_FC3(IK) = F(3,I) + XIREL(3)*DR3I
+               B_FC1(IK) = REAL((F(1,I) + XIREL(1)*DR3I)*FSCALE_OUT) 
+               B_FC2(IK) = REAL((F(2,I) + XIREL(2)*DR3I)*FSCALE_OUT) 
+               B_FC3(IK) = REAL((F(3,I) + XIREL(3)*DR3I)*FSCALE_OUT) 
+               B_POT(IK) = REAL((-PHIDBL(I) +BODY(I2)/RIJ)*POTSCALE_OUT)
 *     Stellar evolution of two components
                IF (KZ(12).GT.0) THEN
                   call sev_one_star(I,NB_KW1(IK),B_RS1(IK),B_L1(IK),
@@ -655,6 +687,14 @@ c$$$     &     M_A0,M_A2,M_ECC0,M_ECC1,M_P0,M_P1,
 c$$$     &     NM_KWC,NM_KW1,NM_KW2,NM_KW3,
 c$$$     &     M_RS1,M_RS2,M_RS3,M_L1,M_L2,M_L3,M_TE1,M_TE2,M_TE3,
 c$$$     &     M_MC1,M_MC2,M_MC3,M_RC1,M_RC2,M_RC3)
+
+      if (NXTLEN.eq.NXTLIMIT.or.TTOT.eq.0.D0) then
+         ZSM0 = ZSMASS0*MSCALE_OUT
+         ZBM0 = ZBMASS0*MSCALE_OUT
+         call global_output(ZSM0,ZBM0,RC,
+     &        N_SINGLE,N_BINARY,N_MERGER,KZ(7),KZ(19))
+      END IF
+      
       RETURN
 
       END
@@ -667,25 +707,11 @@ c$$$     &     M_MC1,M_MC2,M_MC3,M_RC1,M_RC2,M_RC3)
 *     ---------------------------------------------
 *
       include 'common6.h'
+      include 'scale_out.h'
       INTEGER I,KW
       REAL*8  LUMS(10),TSCLS(20),GB(10)
       REAL*8  RM8,LUM8,MC8,RCC8,M18,M0
       REAL*4  RM,LUM,TE,MC,RCC,M1
-      REAL*8 RSCALE_OUT,MSCALE_OUT,VSCALE_OUT,RAU_OUT,TSCALE_OUT
-
-      IF (KZ(19).EQ.0.AND.KZ(12).EQ.-1) THEN
-         RSCALE_OUT=1.0
-         MSCALE_OUT=1.0
-         VSCALE_OUT=1.0
-         RAU_OUT=1.0
-         TSCALE_OUT=1.0
-      else
-         RSCALE_OUT=RBAR
-         MSCALE_OUT=ZMBAR
-         VSCALE_OUT=VSTAR
-         RAU_OUT=RAU
-         TSCALE_OUT=TSTAR
-      END IF
 
 *
       KW = KSTAR(I)
@@ -716,32 +742,20 @@ c$$$     &     M_MC1,M_MC2,M_MC3,M_RC1,M_RC2,M_RC3)
 *     ---------------------------------
 *     
       include 'common6.h'
-*     single
-      COMMON/OUTSINGLE/ S_M(NMAX),S_X1(NMAX), S_X2(NMAX), S_X3(NMAX),
-     &                  S_V1(NMAX), S_V2(NMAX), S_V3(NMAX),
-C     &                  S_F1(NMAX), S_F2(NMAX), S_F3(NMAX),
-     &                  S_RS(NMAX), S_L(NMAX), S_TE(NMAX),
-     &                  S_RC(NMAX), S_MC(NMAX),
-     &                  NS_KW(NMAX),NS_NAM(NMAX)
-      REAL*4 S_M, S_X1, S_X2, S_X3, S_V1, S_V2, S_V3
-C      REAL*4 S_F1, S_F2, S_F3
-      REAL*4 S_RS, S_L, S_TE, S_RC, S_MC
-      INTEGER NS_KW,NS_NAM
-      REAL*8 RSCALE_OUT,MSCALE_OUT,VSCALE_OUT,RAU_OUT,TSCALE_OUT
-
-      IF (KZ(19).EQ.0.AND.KZ(12).EQ.-1) THEN
-         RSCALE_OUT=1.0
-         MSCALE_OUT=1.0
-         VSCALE_OUT=1.0
-         RAU_OUT=1.0
-         TSCALE_OUT=1.0
-      else
-         RSCALE_OUT=RBAR
-         MSCALE_OUT=ZMBAR
-         VSCALE_OUT=VSTAR
-         RAU_OUT=RAU
-         TSCALE_OUT=TSTAR
-      END IF
+      include 'output_single.h'
+      include 'scale_out.h'
+      COMMON/POTDEN/  RHO(NMAX),XNDBL(NMAX),PHIDBL(NMAX)
+C*     single
+C      COMMON/OUTSINGLE/ S_M(NMAX),S_X1(NMAX), S_X2(NMAX), S_X3(NMAX),
+C     &                  S_V1(NMAX), S_V2(NMAX), S_V3(NMAX),
+CC     &                  S_F1(NMAX), S_F2(NMAX), S_F3(NMAX),
+C     &                  S_RS(NMAX), S_L(NMAX), S_TE(NMAX),
+C     &                  S_RC(NMAX), S_MC(NMAX),
+C     &                  NS_KW(NMAX),NS_NAM(NMAX)
+C      REAL*4 S_M, S_X1, S_X2, S_X3, S_V1, S_V2, S_V3
+CC      REAL*4 S_F1, S_F2, S_F3
+C      REAL*4 S_RS, S_L, S_TE, S_RC, S_MC
+C      INTEGER NS_KW,NS_NAM
 
 *     Name
       NS_NAM(IK) = NAME(I)
@@ -753,9 +767,10 @@ C      REAL*4 S_F1, S_F2, S_F3
       S_V1(IK) = REAL(XDOT(1,I)*VSCALE_OUT) 
       S_V2(IK) = REAL(XDOT(2,I)*VSCALE_OUT) 
       S_V3(IK) = REAL(XDOT(3,I)*VSCALE_OUT) 
-C      S_F1(IK) = F(1,I)
-C      S_F2(IK) = F(2,I)
-C      S_F3(IK) = F(3,I)
+      S_F1(IK) = REAL(F(1,I)*FSCALE_OUT) 
+      S_F2(IK) = REAL(F(2,I)*FSCALE_OUT) 
+      S_F3(IK) = REAL(F(3,I)*FSCALE_OUT) 
+      S_POT(IK) = REAL(-PHIDBL(I)*POTSCALE_OUT)
 *     Stellar evolution of single star
       IF (KZ(12).GT.0) THEN
          call sev_one_star(I,NS_KW(IK),S_RS(IK),S_L(IK),
@@ -775,42 +790,31 @@ C      S_F3(IK) = F(3,I)
 *     ---------------------------------
 *     
       include 'common6.h'
-*     Binary
-      COMMON/OUTBINARY/ B_M1(KMAX), B_M2(KMAX),
-     &                  B_XC1(KMAX), B_XC2(KMAX), B_XC3(KMAX),
-     &                  B_VC1(KMAX), B_VC2(KMAX), B_VC3(KMAX), 
-     &                  B_XR1(KMAX), B_XR2(KMAX), B_XR3(KMAX), 
-     &                  B_VR1(KMAX), B_VR2(KMAX), B_VR3(KMAX), 
-C     &                  B_FC1(KMAX), B_FC2(KMAX), B_FC3(KMAX), 
-     &                  B_RS1(KMAX), B_L1(KMAX), B_TE1(KMAX),
-     &                  B_RS2(KMAX), B_L2(KMAX), B_TE2(KMAX),
-     &                  B_RC1(KMAX), B_MC1(KMAX), B_RC2(KMAX), 
-     &                  B_MC2(KMAX), B_A(KMAX), B_ECC(KMAX), B_P(KMAX),
-     &                  NB_KW1(KMAX), NB_NAM1(KMAX), NB_KW2(KMAX), 
-     &                  NB_NAM2(KMAX), NB_KWC(KMAX), NB_NAMC(KMAX)
-      REAL*4 B_M1, B_M2, B_XC1, B_XC2, B_XC3, B_VC1, B_VC2, B_VC3
-      REAL*4 B_XR1, B_XR2, B_XR3, B_VR1, B_VR2, B_VR3
-C      REAL*4 B_FC1, B_FC2, B_FC3
-      REAL*4 B_RS1, B_L1, B_TE1, B_RS2, B_L2, B_TE2
-      REAL*4 B_RC1, B_MC1, B_RC2, B_MC2,B_A, B_ECC, B_P
-      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
+      include 'output_binary.h'
+      include 'scale_out.h'
+      COMMON/POTDEN/  RHO(NMAX),XNDBL(NMAX),PHIDBL(NMAX)
+
+C*     Binary
+C      COMMON/OUTBINARY/ B_M1(KMAX), B_M2(KMAX),
+C     &                  B_XC1(KMAX), B_XC2(KMAX), B_XC3(KMAX),
+C     &                  B_VC1(KMAX), B_VC2(KMAX), B_VC3(KMAX), 
+C     &                  B_XR1(KMAX), B_XR2(KMAX), B_XR3(KMAX), 
+C     &                  B_VR1(KMAX), B_VR2(KMAX), B_VR3(KMAX), 
+CC     &                  B_FC1(KMAX), B_FC2(KMAX), B_FC3(KMAX), 
+C     &                  B_RS1(KMAX), B_L1(KMAX), B_TE1(KMAX),
+C     &                  B_RS2(KMAX), B_L2(KMAX), B_TE2(KMAX),
+C     &                  B_RC1(KMAX), B_MC1(KMAX), B_RC2(KMAX), 
+C     &                  B_MC2(KMAX), B_A(KMAX), B_ECC(KMAX), B_P(KMAX),
+C     &                  NB_KW1(KMAX), NB_NAM1(KMAX), NB_KW2(KMAX), 
+C     &                  NB_NAM2(KMAX), NB_KWC(KMAX), NB_NAMC(KMAX)
+C      REAL*4 B_M1, B_M2, B_XC1, B_XC2, B_XC3, B_VC1, B_VC2, B_VC3
+C      REAL*4 B_XR1, B_XR2, B_XR3, B_VR1, B_VR2, B_VR3
+CC      REAL*4 B_FC1, B_FC2, B_FC3
+C      REAL*4 B_RS1, B_L1, B_TE1, B_RS2, B_L2, B_TE2
+C      REAL*4 B_RC1, B_MC1, B_RC2, B_MC2,B_A, B_ECC, B_P
+C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
 
       REAL*8 XIREL(3), VIREL(3), M1, M2, MTMP,MCM,RDOT
-      REAL*8 RSCALE_OUT,MSCALE_OUT,VSCALE_OUT,RAU_OUT,TSCALE_OUT
-      IF (KZ(19).EQ.0.AND.KZ(12).EQ.-1) THEN
-         RSCALE_OUT=1.0
-         MSCALE_OUT=1.0
-         VSCALE_OUT=1.0
-         RAU_OUT=1.0
-         TSCALE_OUT=1.0
-      else
-         RSCALE_OUT=RBAR
-         MSCALE_OUT=ZMBAR
-         VSCALE_OUT=VSTAR
-         RAU_OUT=RAU
-         TSCALE_OUT=TSTAR
-      END IF
-
 
 *     Name
       NB_NAMC(IK) = NCM
@@ -831,9 +835,10 @@ C      REAL*4 B_FC1, B_FC2, B_FC3
       B_VR1(IK) = REAL(VIREL(1)*VSCALE_OUT) 
       B_VR2(IK) = REAL(VIREL(2)*VSCALE_OUT) 
       B_VR3(IK) = REAL(VIREL(3)*VSCALE_OUT) 
-C      B_FC1(IK) =REAL( F(1,I)
-C      B_FC2(IK) = F(2,I)
-C      B_FC3(IK) = F(3,I)
+      B_FC1(IK) = REAL(F(1,I)*FSCALE_OUT)
+      B_FC2(IK) = REAL(F(2,I)*FSCALE_OUT)
+      B_FC3(IK) = REAL(F(3,I)*FSCALE_OUT)
+      B_POT(IK) = REAL(-PHIDBL(I)*POTSCALE_OUT)
 *     Stellar evolution of two components
       IF (KZ(12).GT.0) THEN
          MTMP = BODY(J1)

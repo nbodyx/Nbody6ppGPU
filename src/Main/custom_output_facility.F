@@ -1177,13 +1177,13 @@ C      INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
      &            M_VR11(K), M_VR12(K), M_VR13(K), M_POT(K),
      &            M_A0(K), M_ECC0(K), M_P0(K),
      &            M_A1(K), M_ECC1(K), M_P1(K),
-     &            NM_KW1(K), NM_KW2(K),
-     &            NM_KW3(K), NM_KWC(K),
      &            M_RS1(K), M_RS2(K), M_RS3(K),
      &            M_L1(K), M_L2(K), M_L3(K), 
      &            M_TE1(K), M_TE2(K), M_TE3(K), 
      &            M_MC1(K), M_MC2(K), M_MC3(K),
-     &            M_RC1(K), M_RC2(K), M_RC3(K)
+     &            M_RC1(K), M_RC2(K), M_RC3(K),
+     &            NM_KW1(K), NM_KW2(K),
+     &            NM_KW3(K), NM_KWC(K)
           END DO
        ELSE
           DO K=1,N_MERGER

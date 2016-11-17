@@ -28,14 +28,21 @@ The GPU support is enabled in default case, if you want to disable GPU accelerat
 The MPI is enabled in default case, if you want to disable MPI, please use:
 ./configure --disable-mpi
 
+**Notice if no Fortran MPI compiler (mpif77) exist, the configure cannot pass, the --disable-mpi should be added manually
+
 --AVX/SSE:
 The AVX is enable in default case, you can choose no AVX/SSE, SSE and AVX, the option is:
 ./configure --enable-simd=[arg]
 Replace [arg] by "no", "sse", "avx".
 
+**Notice when the CPU don't support AVX/SSE, the code can still be compiled if the compiler support them. In this case a warning will appear during configure. Please be careful for this warning. It means the code cannot be used in the current machine.
+In the case for computer cluster, the code may be compiled in the login node without AVX/SSE support but used in working nodes that support AVX/SSE. Thus the configure does not switch off AVX/SSE even the CPU doesn't support.
+
 --HDF5 output format:
 The HDF5 is disabled in default case, if you want to enable it, please use:
 ./configure --enable-hdf5
+
+**Notice when MPI is used, HDF5 compiler should be parallel version with Fortran enabled. If you want to use non-parallel version of HDF5 compiler with no MPI, please add '--disable-mpi' during comfigure
 
 --extra tools:
 There are some extra tools and libraries for reading conf.3 and do some basic analysis, the default case it's disabled, if you want to compile them, please use:

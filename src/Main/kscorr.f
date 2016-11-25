@@ -63,8 +63,8 @@
 *         BODYIN = 1.0/BODY(I)
 *     END IF
 *
-      ITP = 0
-      IF(GAMMA(IPAIR).GT.1.0D-04) ITP = 1
+CC      ITP = 0
+CC      IF(GAMMA(IPAIR).GT.1.0D-04) ITP = 1
 *       Perform iteration with or without re-calculating perturbation.
       DO 40 ITER = 1,ITMAX
 *
@@ -131,15 +131,16 @@
 *                 FD(K) = RI*FD1(K)
 *  30         CONTINUE
 *         ELSE
-*       Choose between old and optional new perturbation (first iteration).
-          IF (ITER.EQ.ITP) THEN
-*       Transform to improved coordinates & velocities.
-             I1 = 2*IPAIR - 1
-             call kstran(I1,UI,UIDOT,XI,VI)
-             NNB0 = LIST(1,I1)
-*       Re-calculate the perturbing force & derivative.
-             call KSPERT(I1,NNB0,XI,VI,FP,FD)
-          END IF
+***       Seems this new part cause segmentational fault, suppressed currently
+CC*       Choose between old and optional new perturbation (first iteration).
+CC          IF (ITER.EQ.ITP) THEN
+CC*       Transform to improved coordinates & velocities.
+CC             I1 = 2*IPAIR - 1
+CC             call kstran(I1,UI,UIDOT,XI,VI)
+CC             NNB0 = LIST(1,I1)
+CC*       Re-calculate the perturbing force & derivative.
+CC             call KSPERT(I1,NNB0,XI,VI,FP,FD)
+CC          END IF
 *             CALL KSTRAN(IPAIR,I1,I,BODYIN,RI,UI,UIDOT,XI,VI)
 *
 *             CALL KSPERT(I1,NNB0,XI,VI,FP,FD)

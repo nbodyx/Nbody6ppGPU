@@ -54,7 +54,7 @@
 *
 *       Use extra iteration and new KSPERT for large perturbation.
 *     IF (GAMMA(IPAIR).LT.1.0D-20) THEN
-          ITMAX = ITLOW
+      ITMAX = ITLOW
 *     ELSE
 *         ITMAX = ITLOW + 1
 *         I1 = 2*IPAIR - 1
@@ -63,6 +63,8 @@
 *         BODYIN = 1.0/BODY(I)
 *     END IF
 *
+CC      ITP = 0
+CC      IF(GAMMA(IPAIR).GT.1.0D-04) ITP = 1
 *       Perform iteration with or without re-calculating perturbation.
       DO 40 ITER = 1,ITMAX
 *
@@ -129,10 +131,18 @@
 *                 FD(K) = RI*FD1(K)
 *  30         CONTINUE
 *         ELSE
-*       Transform to improved coordinates & velocities.
+***       Seems this new part cause segmentational fault, suppressed currently
+CC*       Choose between old and optional new perturbation (first iteration).
+CC          IF (ITER.EQ.ITP) THEN
+CC*       Transform to improved coordinates & velocities.
+CC             I1 = 2*IPAIR - 1
+CC             call kstran(I1,UI,UIDOT,XI,VI)
+CC             NNB0 = LIST(1,I1)
+CC*       Re-calculate the perturbing force & derivative.
+CC             call KSPERT(I1,NNB0,XI,VI,FP,FD)
+CC          END IF
 *             CALL KSTRAN(IPAIR,I1,I,BODYIN,RI,UI,UIDOT,XI,VI)
 *
-*       Re-calculate the perturbing force & derivative.
 *             CALL KSPERT(I1,NNB0,XI,VI,FP,FD)
 *
 *       Convert to regularized derivative (note slow-down not active).

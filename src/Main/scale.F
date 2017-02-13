@@ -69,16 +69,22 @@
                BODY(I) = BODY(I)/ZMASS
  50         CONTINUE
          END IF
-*     
+*
+*     Determine astronomical scale from original data
+*     Assume Mass use the unit of M_sun 
+         IF(KZ(22).EQ.10) ZMBAR = ZMASS/FLOAT(N)
+         
          ZMASS = 1.D0
 *
       END IF
 *
+      GRAV = 1.0D0
+*     Astronomical unit in non-scaled input data
+      IF (LSCALE) GRAV = 4.30145D-3*ZMBAR*FLOAT(N)
+      
 *     --10/22/13 17:12-lwang-binary-scale-------------------------------*
 ***** Note:------------------------------------------------------------**
-*      GRAV = GRAV*SUNM/PARSEC/1.D10*ZMBAR*FLOAT(N)
       IF (KZ(8).EQ.2) THEN
-         GRAV = 4.30145D-3*ZMBAR*FLOAT(N)
 *       Sum the total energy of pairs.
          NPAIRS = NBIN0
          IFIRST = 2*NPAIRS + 1
@@ -200,6 +206,12 @@
 *       Scale non-zero velocities by virial theorem ratio.
 *       (if start model data were read from other source do NOT scale)(R.Sp.)
       ELSE IF (LSCALE) THEN
+*     Determine Q from original data and initialize VSTAR
+         IF (KZ(22).EQ.10) THEN
+            Q = ZKIN/(GRAV*VIR)
+            QVIR = Q
+            VSTAR = 1.0D0
+         END IF
          IF (ZKIN.GT.0.0D0) THEN
             QV = SQRT(Q*VIR/ZKIN)
             DO 60 I = 1,N
@@ -207,6 +219,7 @@
                   XDOT(K,I) = XDOT(K,I)*QV
  58            CONTINUE
  60         CONTINUE
+            IF (KZ(22).EQ.10) VSTAR = 1.0D0/QV
          END IF
 *
 *     Scale total energy to standard units (E = -0.25 for Q < 1).
@@ -219,6 +232,14 @@
 
 *     Define scaling factor (set E0 = ETOT if energy scaling not desired).
          SX = E0/ETOT
+
+*     Safe check
+         IF (SX.LE.0) then
+            print*, 'Error!: Scaling factor <= 0. Virial ratio Q >= 1.',
+     &           ' Scaled energy E0 = ',E0,
+     &           ' Original energy ETOT = ',ETOT
+            call abort()
+         END IF
 *
 *     Scale coordinates & velocities to the new units.
          DO 70 I = 1,N
@@ -227,6 +248,13 @@
                XDOT(K,I) = XDOT(K,I)*SQRT(SX)
  68         CONTINUE
  70      CONTINUE
+*     Determine astronomical scale from original data
+*     Assume original data use M_sun, PC and km/s as units
+         IF (KZ(22).EQ.10) THEN
+            VSTAR = VSTAR/SQRT(SX)
+            RBAR = SX
+         END IF
+         
       ELSE
          ETOT = ZKIN - POT
          E0 = ETOT
@@ -234,9 +262,11 @@
 
 *     Print scaling information
       if(rank.eq.0)
-     *     WRITE (6,65)  SX, ETOT, BODY(1), BODY(N), ZMASS/FLOAT(N)
+     *     WRITE (6,65)  SX, ETOT, BODY(1), BODY(N), ZMASS/FLOAT(N),
+     &     Q
  65   FORMAT (//,12X,'SCALING:   SX =',1P,D13.5,'  E =',E10.2,
-     &     '  M(1) =',E9.2,'  M(N) =',E9.2,'  <M> =',E9.2)
+     &     '  M(1) =',E9.2,'  M(N) =',E9.2,'  <M> =',E9.2,
+     &     '  Q =',0P,F10.5)
 *     
       call flush(6)
 

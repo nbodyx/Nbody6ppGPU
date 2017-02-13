@@ -34,7 +34,12 @@
 *
 *       Define mean mass in scaled units and solar mass conversion factor.
       BODYM = ZMASS/FLOAT(N)
-      ZMBAR = ZMBAR/BODYM
+*     Notice from now ZMBAR is mass scale factor instead of average mass of input data
+      IF (KZ(22).NE.10) THEN
+         ZMBAR = ZMBAR/BODYM
+      ELSE
+         ZMBAR = ZMBAR*FLOAT(N)
+      END IF
 *
 *       Introduce scaling factors DAYS, YRS, SU, RAU, SMU, TSTAR & VSTAR.
       CALL UNITS

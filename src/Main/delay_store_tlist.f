@@ -7,7 +7,7 @@
       include 'tlist.h'
       INTEGER L
       
-      IF(NLSTDELAY(1).LT.2*LMAX-1) THEN
+      IF(NLSTDELAY(1).LT.NDELAYMAX-1) THEN
          DO L = 2, NLSTDELAY(1)+1
             IF (NLSTDELAY(L).EQ.J) RETURN
          END DO
@@ -19,8 +19,8 @@
          END DO
 *     --07/16/14 11:53-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-c$$$         print*,'DELAY STORE J',J,'NLSTDELAY',
-c$$$     &        NLSTDELAY(1:NLSTDELAY(1)+1)
+*         print*,'DELAY STORE J',J,'NLSTDELAY NUM',NLSTDELAY(1)
+*     &        NLSTDELAY(1:NLSTDELAY(1)+1)
 *     --07/16/14 11:53-lwang-end----------------------------------------*
          NLSTDELAY(1) = NLSTDELAY(1) + 1
          NLSTDELAY(NLSTDELAY(1)+1) = J

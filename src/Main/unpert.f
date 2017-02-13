@@ -6,6 +6,7 @@
 *
       Include 'kspars.h'
       INCLUDE 'common6.h'
+      include 'timing.h'
       REAL*8  UI(4),UIDOT(4)
 *     Warning!: saved value is unsafe for parallel
       SAVE TCALL
@@ -60,7 +61,10 @@
     9 KPERT = 1
       IP = IPAIR
 *     Copy JCL from IPAIR and restore value 
+      call cputim(tt1)
       CALL TPERT(IPAIR,GMIN,DT)
+      call cputim(tt2)
+      tttp = tttp + (tt2-tt1)*60.
       JCL = IPAIR
       IPAIR = IP
 *

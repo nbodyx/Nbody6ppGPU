@@ -23,20 +23,26 @@
 *       Copy solar mass scaling to new variable (M = BODY*<M>).
       SMU = ZMBAR
 *
-*       Form time scale in seconds and velocity scale in km/sec.
+*     Form time scale in seconds and velocity scale in km/sec.
       TSTAR = SQRT(PC/GM)*PC
-      VSTAR = 1.0D-05*SQRT(GM/PC)
-*
-*       Convert time scale from units of seconds to million years.
+
+*     Convert time scale from units of seconds to million years.
       TSTAR = TSTAR/(3.15D+07*1.0D+06)
+
+      IF (KZ(22).NE.10) THEN
+         VSTAR = 1.0D-05*SQRT(GM/PC)
 *
 *       Ensure ZMBAR & RBAR > 0 (=0: assume <M>/Sun = 1, RBAR = 1 pc).
-      IF (ZMBAR.LE.0.0D0) ZMBAR = FLOAT(N)/ZMASS
-      IF (RBAR.LE.0.0D0) RBAR = 1.0
+         IF (ZMBAR.LE.0.0D0) ZMBAR = FLOAT(N)/ZMASS
+         IF (RBAR.LE.0.0D0) RBAR = 1.0
 *
 *       Scale to working units of RBAR in pc & ZMBAR in solar masses.
-      TSTAR = TSTAR*SQRT(RBAR**3/(ZMASS*ZMBAR))
-      VSTAR = VSTAR*SQRT(ZMASS*ZMBAR/RBAR)
+         TSTAR = TSTAR*SQRT(RBAR**3/(ZMASS*ZMBAR))
+         VSTAR = VSTAR*SQRT(ZMASS*ZMBAR/RBAR)
+      ELSE
+*     USE scale factor from original input data instead
+         TSTAR = TSTAR*SQRT(RBAR**3/ZMBAR)
+      END IF
 *
 *       Copy TSTAR to secondary time-scale factor.
       TSCALE = TSTAR

@@ -65,7 +65,7 @@
      &               BODY0(NMAX),EPOCH(NMAX),SPIN(NMAX),XSTAR(NMAX),
      &               ZLMSTY(NMAX),FIDOT(3,NMAX),D0(3,NMAX),
      &               FRDOT(3,NMAX),D0R(3,NMAX),KSTAR(NMAX),NAME(NMAX),
-     &               LIST(LMAX,NMAX)
+     &               IMINR(NMAX),LIST(LMAX,NMAX)
 
 *
       COMMON/PAIRS/  U(4,KMAX),U0(4,KMAX),UDOT(4,KMAX),FU(4,KMAX),

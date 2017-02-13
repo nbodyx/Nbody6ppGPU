@@ -6,7 +6,8 @@
 *       --------------------
 *     M_FLAG: 1: mass weighted neighbor radius
 *     N_FLAG: 1: reduce neighbor radius by (NNBOPT/NNB)**0.333 if NNB overflow
-*
+*     POT: positive potential value
+
       PARAMETER (maxthr=1024)
       include 'params.h'
       REAL*8 X(3,NMAX),XDOT(3,NMAX),BODY(NMAX),RS(NMAX),DTR(NMAX)
@@ -75,7 +76,7 @@
                IF(NNB.LE.LMAX-3) LISTGP(NNB,II) = J
             END IF
 *     Obtain potential.
-            POT(I) = POT(I) - DR3I*RIJ2
+            POT(I) = POT(I) + DR3I*RIJ2
  1       CONTINUE
 *     Check neighbor list overflow
          IF(NNB.GT.LMAX-3) THEN

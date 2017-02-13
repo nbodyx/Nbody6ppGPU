@@ -9,7 +9,7 @@
      *     ttup,ttmdot,ttout,ttpreall,ttfic,ttfc,ttpotg,ttpot,
      *     ttecor,ttksblist,ttksints,ttksintp,ttkssub,ttksbar,
      *     ttkscp,ttkscmb,ttksins,ttksinit,ttksterm,tttq,ttksintgrt,
-     *     ttsimdsend,ttsimdcalc,ttshk,
+     *     ttsimdsend,ttsimdcalc,ttshk,tttp,
      *     xtsub1,xtsub2
       INTEGER ibarcount
 
@@ -19,5 +19,5 @@
      *  ttup,ttmdot,ttout,ttpreall,ttfic,ttfc,ttpotg,ttpot,ttecor,
      *  ttksblist,ttksints,ttksintp,ttkssub,ttksbar,
      *  ttkscp,ttkscmb,ttksins,ttksinit,ttksterm,tttq,ttksintgrt,
-     *  ttsimdsend,ttsimdcalc,ttshk,
+     *  ttsimdsend,ttsimdcalc,ttshk,tttp,
      *  xtsub1,xtsub2,ibarcount

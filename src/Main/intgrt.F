@@ -20,7 +20,7 @@
       COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
       COMMON/NEWXV/ XN(3,NMAX),XNDOT(3,NMAX)
       INTEGER JHIST,JHISTR,LSHORT(NMAX)
-      INTEGER IREG(NMAX),IMINR(NMAX),IMINR_TMP(NMAX)
+      INTEGER IREG(NMAX),IMINR_TMP(NMAX)
       REAL*8 FIRR_SIMD(3,NMAX),FD_SIMD(3,NMAX)
 #ifdef DEBUG
 *     --10/03/14 19:40-lwang-debug--------------------------------------*
@@ -61,7 +61,11 @@
          IF(KZ(47).GE.0) THEN
             DTOUT = DTK(KZ(47)+1)
          ELSE
-            DTOUT = DTK(64)
+*            DTOUT = DTK(64)
+            DTOUT = DTK(1)
+            DO I=KZ(47),-1
+               DTOUT = DTOUT*2.0D0
+            END DO
          END IF
 
 *     Initial nxtlst
@@ -134,7 +138,7 @@
                   END IF
                end if
                CALL custom_output(NXTLEN,NXTLST,
-     &              NXTLIMIT,NGHOSTS,IMINR)
+     &              NXTLIMIT,NGHOSTS)
             END IF
 
 *     Sorting NXTLST

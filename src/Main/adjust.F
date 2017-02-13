@@ -297,14 +297,15 @@ c$$$     &        EBIN,EMERGE
      &        '    HighV  KS.Init.B',
      &        '  KS.Int.S  KS.Int.P  KS.Comm.  KS.Barr.   KS.Move',
      &        '   KS.Cmb. KS.Insert  KS.Init.  KS.Term.     Hiar.',
-     &        '     KS.UP       xtsub1       xtsub2')
+     &        '     KS.UP   KS.TP      xtsub1       xtsub2')
          WRITE(6,56)isize,n,ttotal,ttinitial,ttint,ttreg,ttirr,ttpre,
      &        ttintb,ttmdot,ttmov,ttsub,ttsub2,ttsimdsend,ttgrcomm,
      &        ttks,ttadj,ttout,ttbar,ttbarnb,ttbarreg,ttgrcalc,
      &        ttgrcalc2,ttsube,ttfic,ttfc,ttpot,ttecor,ttnewt,ttshk,
      &        ttksblist,ttksints,ttksintp,ttkssub,ttksbar,ttkscp,
-     &        ttkscmb,ttksins,ttksinit,ttksterm,tttq,ttup,xtsub1,xtsub2
- 56      FORMAT(1X,I3,I8,F13.5,39F10.2,1P,2D13.5)
+     &        ttkscmb,ttksins,ttksinit,ttksterm,tttq,ttup,tttp,
+     &        xtsub1,xtsub2
+ 56      FORMAT(1X,I3,I8,F13.5,40F10.2,1P,2D13.5)
          CALL FLUSH(6)
       end if
 

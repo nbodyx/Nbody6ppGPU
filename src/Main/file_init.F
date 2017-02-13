@@ -71,6 +71,7 @@ C      FRAG(4) = 'bdat'
       FILE(33) = 'ns.33     '
       FILE(34) = 'bh.34     '
       FILE(35) = 'event.35  '
+      FILE(36) = 'status.36 '
       FILE(38) = 'sediag.38 '
       FILE(39) = 'hbin.39   '
 *      FILE(40) = 'data.h5par'
@@ -83,6 +84,7 @@ C      FRAG(4) = 'bdat'
 *      FILE(52) = 'itid3.52  '
       FILE(54) = 'hypcep.54 '
       FILE(55) = 'hypcec.55 '
+      FILE(60) = 'xtrnl.60 '
       FILE(71) = 'cirdiag.71'
       FILE(73) = 'histab.73 '
       FILE(75) = 'cirdiag.75'
@@ -261,6 +263,9 @@ C     &             ACCESS='APPEND')
       IF (KZ(19).GT.0.OR.KZ(27).GT.0) 
      &OPEN (UNIT=35,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(35),
      &             ACCESS='APPEND')
+
+      OPEN (UNIT=36,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(36),
+     &     ACCESS='APPEND')
       IF (KZ(19).GE.3)
      &OPEN (UNIT=38,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(38),
      &             ACCESS='APPEND')
@@ -294,6 +299,11 @@ C     &             ACCESS='APPEND')
       IF (KZ(14).EQ.3)
      &OPEN (UNIT=55,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(55),
      &             ACCESS='APPEND')
+C     External tidal field info
+      IF (KZ(14).EQ.3)
+     &OPEN (UNIT=60,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(60),
+     &             ACCESS='APPEND')
+      
       IF (KZ(27).GT.0)
      &OPEN (UNIT=71,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE(71),
      &             ACCESS='APPEND')

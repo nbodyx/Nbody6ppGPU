@@ -655,7 +655,7 @@ c$$$C     &     M_FC1,M_FC2,M_FC3,
 c$$$     &     M_A0,M_A2,M_ECC0,M_ECC1,M_P0,M_P1,
 c$$$     &     NM_KWC,NM_KW1,NM_KW2,NM_KW3,
 c$$$     &     M_RS1,M_RS2,M_RS3,M_L1,M_L2,M_L3,M_TE1,M_TE2,M_TE3,
-c$$$  &     M_MC1,M_MC2,M_MC3,M_RC1,M_RC2,M_RC3)
+c$$$     &     M_MC1,M_MC2,M_MC3,M_RC1,M_RC2,M_RC3)
 
       if (kz(14) .eq. 3) then
          SX = RBAR/1000.0

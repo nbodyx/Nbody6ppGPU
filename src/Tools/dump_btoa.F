@@ -59,7 +59,7 @@
      &               BODY0(NMAX),EPOCH(NMAX),SPIN(NMAX),XSTAR(NMAX),
      &               ZLMSTY(NMAX),FIDOT(3,NMAX),D0(3,NMAX),
      &               FRDOT(3,NMAX),D0R(3,NMAX),KSTAR(NMAX),NAME(NMAX),
-     &               LIST(LMAX,NMAX)
+     &               IMINR(NMAX), LIST(LMAX,NMAX)
       COMMON/PAIRS/  U(4,KMAX),U0(4,KMAX),UDOT(4,KMAX),FU(4,KMAX),
      &               FUDOT(4,KMAX),FUDOT2(4,KMAX),FUDOT3(4,KMAX),
      &               H(KMAX),HDOT(KMAX),HDOT2(KMAX),HDOT3(KMAX),
@@ -218,7 +218,8 @@
      *     k=1,4),i=1,npairs),((fd0(k,i),k=1,4),i=1,npairs),
      *     (kblist(i),i=1,10*npairs),(kslow(i),i=1,npairs),tblist
 *
-      read (IUNIT) (list(1,i),(list(k,i),k=2,list(1,i)+2),i=1,ntot)
+      read (IUNIT)  (iminr(i),k=1,ntot),
+     *     (list(1,i),(list(k,i),k=2,list(1,i)+2),i=1,ntot)
 
       read (IUNIT) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *       NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,NLSTDELAY(1),
@@ -307,6 +308,7 @@
      *     (NLSTDELAY(K),K=1,NLSTDELAY(1)+1)
 
 *     LIST
+      write(10,*) IMINR(1:ntot)
       DO i=1,ntot
          write(10,*) list(1:list(1,i)+2,i)
       END DO
@@ -476,6 +478,7 @@
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
      *     (NLSTDELAY(K),K=1,NLSTDELAY(1)+1)
 *     LIST
+      read(10,*) IMINR(1:ntot)
       DO i=1,ntot
          read(10,*) list(1,i),list(2:list(1,i)+1,i)
       END DO
@@ -567,7 +570,8 @@
      *     k=1,4),i=1,npairs),((fd0(k,i),k=1,4),i=1,npairs),
      *     (kblist(i),i=1,10*npairs),(kslow(i),i=1,npairs),tblist
 *
-      write(IUNIT) ((list(k,i),k=1,list(1,i)+2),i=1,ntot)
+      write(IUNIT) (iminr(i),i=1,ntot),
+     *     ((list(k,i),k=1,list(1,i)+2),i=1,ntot)
 
       write(IUNIT) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,

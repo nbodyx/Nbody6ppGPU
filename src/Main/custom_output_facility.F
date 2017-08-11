@@ -1,7 +1,8 @@
-*     Developed by Maxwell Xu CAI (NAOC/KIAA)
+*     Developed by Maxwell Xu CAI (Leiden University)
 *     For bug report/feedback, please email maxwellemail@gmail.com
 *     The binary format is developed by Long Wang (May 11, 2015)
 *
+*     Version 3.0 -- Bug fixes, Nov 16, 2016 
 *     Version 2.0 -- Bug fixes & finetuning, June 12, 2014
 *     Version 1.4 -- June 11, 2014
 *     Version 1.0 -- Initial release, Nov 2013
@@ -18,14 +19,15 @@
       USE HDF5
       INCLUDE 'params.h'
 *       SAVE Block
-      INTEGER :: h5_file_id, h5_step, h5_group_id, h5_dset_ids(256)
-      INTEGER :: h5_vec_len
+      INTEGER(HID_T) :: h5_file_id, h5_step, h5_group_id
+      INTEGER(HID_T), DIMENSION(1) :: h5_dset_ids(256)
+      INTEGER*4 :: h5_vec_len
       REAL*8 :: h5_current_time
       CHARACTER(LEN=64) :: h5_file_name
       CHARACTER(LEN=64) :: h5_fname
       COMMON/h5part/ h5_file_id, h5_step, h5_group_id, h5_dset_ids,
-     &     h5_vec_len, h5_file_name, h5_current_time
-      INTEGER ERROR
+     &     h5_current_time, h5_vec_len, h5_file_name
+      INTEGER*4 :: ERROR
       
 *       Close any previously opened file (if any)
       IF (h5_file_id .GT. 0) CALL HDF5_CLOSE
@@ -62,13 +64,14 @@
       USE HDF5
       INCLUDE 'params.h'
 *       SAVE Block
-      INTEGER :: h5_file_id, h5_step, h5_group_id, h5_dset_ids(256)
-      INTEGER :: h5_vec_len
+      INTEGER(HID_T) :: h5_file_id, h5_step, h5_group_id
+      INTEGER(HID_T), DIMENSION(1) :: h5_dset_ids(256)
+      INTEGER*4 :: h5_vec_len
       REAL*8 :: h5_current_time
       CHARACTER(LEN=64) :: h5_file_name
       COMMON/h5part/ h5_file_id, h5_step, h5_group_id, h5_dset_ids,
-     &     h5_vec_len, h5_file_name, h5_current_time
-      INTEGER ERROR
+     &     h5_current_time, h5_vec_len, h5_file_name
+      INTEGER*4 :: ERROR
 
       IF (h5_file_id .GT. 0) THEN
         CALL h5fclose_f(h5_file_id, ERROR)
@@ -90,25 +93,25 @@
 #ifdef H5OUTPUT
       USE HDF5
       IMPLICIT NONE
-      INTEGER :: group_id ! the group ID to be written upon
+      INTEGER(HID_T) :: group_id ! the group ID to be written upon
       CHARACTER(LEN=*), INTENT(IN) :: dset_name ! The name of the dset
-      INTEGER :: vec_len ! the data array
+      INTEGER*4 :: vec_len ! the data array
       REAL*4  :: vec(vec_len)     ! the data array
-      REAL  :: vec_written(vec_len)   ! the data actually written
-      INTEGER :: offset  ! offset of vec (by default, start from 1)
-      INTEGER :: dset_id ! IF not 0, write to that dset; otherwise create new
-      INTEGER :: original_dset_len ! The original dset length, if expanding
+      REAL*4  :: vec_written(vec_len)   ! the data actually written
+      INTEGER*4 :: offset  ! offset of vec (by default, start from 1)
+      INTEGER(HID_T) :: dset_id ! IF not 0, write to that dset; otherwise create new
+      INTEGER*4 :: original_dset_len ! The original dset length, if expanding
       LOGICAL :: finalize ! Finalize the dataset, no more data can be added to it
-      INTEGER :: I ! Loop variable
-      INTEGER :: error
-      INTEGER :: dspace_id
-      INTEGER :: memspace_id
-      INTEGER :: crp_list ! Dataset creation property identifier
-      INTEGER(8), DIMENSION(2) :: data_dims
-      INTEGER(8), DIMENSION(2) :: data_maxdims
-      INTEGER(8), DIMENSION(2) :: data_chunkdims
-      INTEGER(8), DIMENSION(2) :: data_start
-      INTEGER(8), DIMENSION(2) :: data_count
+      INTEGER*4 :: I ! Loop variable
+      INTEGER*4 :: error
+      INTEGER(HID_T) :: dspace_id
+      INTEGER(HID_T) :: memspace_id
+      INTEGER(HID_T) :: crp_list ! Dataset creation property identifier
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_dims
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_maxdims
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_chunkdims
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_start
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_count
 
       data_dims(1) = vec_len
       data_dims(2) = 1
@@ -191,25 +194,25 @@ c$$$  25      CONTINUE
      &     vec, vec_len, offset, dset_id, original_dset_len,finalize)
 #ifdef H5OUTPUT
       USE HDF5
-      INTEGER :: group_id ! the group ID to be written upon
+      INTEGER(HID_T) :: group_id ! the group ID to be written upon
       CHARACTER(LEN=*), INTENT(IN) :: dset_name ! The name of the dset
-      INTEGER :: vec_len ! the data array
-      INTEGER :: offset  ! offset of vec (by default, start from 1)
-      INTEGER :: vec(vec_len+offset-1)     ! the data array
-      INTEGER :: dset_id ! IF not 0, write to that dset; otherwise create new
-      INTEGER :: original_dset_len ! The original dset length, before expanding
+      INTEGER*4 :: vec_len ! the data array
+      INTEGER*4 :: offset  ! offset of vec (by default, start from 1)
+      INTEGER*4 :: vec(vec_len+offset-1)     ! the data array
+      INTEGER(HID_T) :: dset_id ! IF not 0, write to that dset; otherwise create new
+      INTEGER*4 :: original_dset_len ! The original dset length, before expanding
       LOGICAL :: finalize ! Finalize the dataset, no more data can be added to it
-      INTEGER  :: vec_written(vec_len+offset-1)   !if vec starts not from 1, use this
-      INTEGER :: I ! Loop variable
-      INTEGER :: error
-      INTEGER :: dspace_id
-      INTEGER :: memspace_id
-      INTEGER :: crp_list ! Dataset creation property identifier
-      INTEGER(8), DIMENSION(2) :: data_dims
-      INTEGER(8), DIMENSION(2) :: data_maxdims
-      INTEGER(8), DIMENSION(2) :: data_chunkdims
-      INTEGER(8), DIMENSION(2) :: data_start
-      INTEGER(8), DIMENSION(2) :: data_count
+      INTEGER*4  :: vec_written(vec_len+offset-1)   !if vec starts not from 1, use this
+      INTEGER(HID_T) :: I ! Loop variable
+      INTEGER*4 :: error
+      INTEGER(HID_T) :: dspace_id
+      INTEGER(HID_T) :: memspace_id
+      INTEGER(HID_T) :: crp_list ! Dataset creation property identifier
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_dims
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_maxdims
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_chunkdims
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_start
+      INTEGER(HSIZE_T), DIMENSION(2) :: data_count
 
       data_dims(1) = vec_len
       data_dims(2) = 1
@@ -288,9 +291,9 @@ c$$$  25      CONTINUE
       IMPLICIT NONE
       CHARACTER(LEN=*) :: att_name
       REAL*8 :: val
-      INTEGER :: loc_id
-      INTEGER :: attrib_space_id
-      INTEGER :: attrib_id
+      INTEGER(HID_T) :: loc_id
+      INTEGER(HID_T) :: attrib_space_id
+      INTEGER(HID_T) :: attrib_id
       INTEGER :: error
 
       INTEGER(8), DIMENSION(2) :: data_dims
@@ -318,9 +321,9 @@ c$$$  25      CONTINUE
       IMPLICIT NONE
       CHARACTER(LEN=*) :: att_name
       INTEGER :: val
-      INTEGER :: loc_id
-      INTEGER :: attrib_space_id
-      INTEGER :: attrib_id
+      INTEGER(HID_T) :: loc_id
+      INTEGER(HID_T) :: attrib_space_id
+      INTEGER(HID_T) :: attrib_id
       INTEGER :: error
 
       INTEGER(8), DIMENSION(2) :: data_dims
@@ -343,14 +346,17 @@ c$$$  25      CONTINUE
 
       SUBROUTINE custom_update_file(TTOT,DELTAT)
 #ifdef H5OUTPUT
+      USE HDF5
+      IMPLICIT NONE
       REAL*8 :: TTOT, DELTAT
       CHARACTER(LEN=20) :: TCHAR
       CHARACTER(LEN=64) :: h5_file_name
-      COMMON/h5part/ h5_file_id, h5_step, h5_group_id, h5_dset_ids,
-     &     h5_vec_len, h5_file_name, h5_current_time
-      INTEGER :: h5_file_id, h5_step, h5_group_id, h5_dset_ids(256)
-      INTEGER :: h5_vec_len
+      INTEGER(HID_T) :: h5_file_id, h5_step, h5_group_id
+      INTEGER(HID_T), DIMENSION(1) :: h5_dset_ids(256)
+      INTEGER*4 :: h5_vec_len
       REAL*8 :: h5_current_time
+      COMMON/h5part/ h5_file_id, h5_step, h5_group_id, h5_dset_ids,
+     &     h5_current_time, h5_vec_len, h5_file_name
 
 *     Close any previously opened file (if any)
       IF (h5_file_id .GT. 0) CALL HDF5_CLOSE
@@ -358,6 +364,7 @@ c$$$  25      CONTINUE
 
       call string_left(TCHAR,TTOT,DELTAT)
       h5_file_name='snap.40_'//trim(TCHAR)//'.h5part'
+      h5_file_name = trim(h5_file_name)
 #else
       COMMON/BINARYOUT/ DTOUT
       REAL*8 DELTAT,DTOUT
@@ -372,18 +379,19 @@ c$$$  25      CONTINUE
       USE HDF5
       INCLUDE 'params.h'
       INCLUDE 'output_single.h'
-      INTEGER :: h5_file_id, h5_step, h5_group_id, h5_dset_ids(256)
-      INTEGER :: h5_vec_len
+      INTEGER(HID_T) :: h5_file_id, h5_step, h5_group_id
+      INTEGER(HID_T), DIMENSION(1) ::  h5_dset_ids(256)
+      INTEGER*4 :: h5_vec_len
       REAL*8 :: h5_current_time
       REAL*8 :: TTOT
-      INTEGER :: N_SINGLE,KSEV,KMODE
+      INTEGER*4 :: N_SINGLE,KSEV,KMODE
       CHARACTER(LEN=64) :: h5_file_name
-      CHARACTER(LEN=16) :: h5_step_name
-      CHARACTER(LEN=20) :: h5_step_group_name
+      CHARACTER(LEN=64) :: h5_step_name
+      CHARACTER(LEN=64) :: h5_step_group_name
       COMMON/h5part/ h5_file_id, h5_step, h5_group_id, h5_dset_ids,
-     &     h5_vec_len, h5_file_name, h5_current_time
-      INTEGER ERROR
-      INTEGER :: original_vec_len
+     &     h5_current_time, h5_vec_len, h5_file_name
+      INTEGER*4 :: error
+      INTEGER*4 :: original_vec_len
       LOGICAL :: finalize
 
 C*     single
@@ -397,6 +405,7 @@ C      REAL*4 S_M, S_X1, S_X2, S_X3, S_V1, S_V2, S_V3
 CC      REAL*4 S_F1, S_F2, S_F3
 C      REAL*4 S_RS, S_L, S_TE, S_RC, S_MC
 C      INTEGER NS_KW,NS_NAM
+      IF (N_SINGLE.LE.0) RETURN
 
 *       CALL INIT if not yet done.
       IF (h5_file_id.eq.0) then
@@ -438,7 +447,6 @@ C      INTEGER NS_KW,NS_NAM
       ENDIF 
       original_vec_len = 0
       finalize = .TRUE.
-      IF (N_SINGLE.LE.0) RETURN
 
 *     Write datasets
       CALL HDF5_write_real_vector_as_dset(h5_group_id, 'X1',
@@ -466,33 +474,33 @@ C      INTEGER NS_KW,NS_NAM
      &     original_vec_len,finalize)
 
       CALL HDF5_write_real_vector_as_dset(h5_group_id, 'POT',
-     &     S_POT, N_SINGLE, 1, h5_dset_ids(8),
+     &     S_POT, N_SINGLE, 1, h5_dset_ids(9),
      &     original_vec_len,finalize)
       
 *     stellar evolution data
       IF(KSEV.GT.0) THEN
          CALL HDF5_write_real_vector_as_dset(h5_group_id, 'RS',
-     &        S_RS, N_SINGLE, 1, h5_dset_ids(9),
+     &        S_RS, N_SINGLE, 1, h5_dset_ids(10),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_group_id, 'L',
-     &        S_L, N_SINGLE, 1, h5_dset_ids(10),
+     &        S_L, N_SINGLE, 1, h5_dset_ids(11),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_group_id, 'TE',
-     &        S_TE, N_SINGLE, 1, h5_dset_ids(11),
+     &        S_TE, N_SINGLE, 1, h5_dset_ids(12),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_group_id, 'RC',
-     &        S_RC, N_SINGLE, 1, h5_dset_ids(12),
+     &        S_RC, N_SINGLE, 1, h5_dset_ids(13),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_group_id, 'MC',
-     &        S_MC, N_SINGLE, 1, h5_dset_ids(13),
+     &        S_MC, N_SINGLE, 1, h5_dset_ids(14),
      &        original_vec_len,finalize)
          CALL HDF5_write_integer_vector_as_dset(h5_group_id, 'KW',
-     &        NS_KW, N_SINGLE, 1, h5_dset_ids(14),
+     &        NS_KW, N_SINGLE, 1, h5_dset_ids(15),
      &        original_vec_len,finalize)
       END IF
 
       CALL HDF5_write_integer_vector_as_dset(h5_group_id, 'NAM',
-     &     NS_NAM, N_SINGLE, 1, h5_dset_ids(15),
+     &     NS_NAM, N_SINGLE, 1, h5_dset_ids(16),
      &     original_vec_len,finalize)
 
       CALL h5fflush_f(h5_group_id, H5F_SCOPE_LOCAL_F, error)
@@ -549,18 +557,19 @@ C      INTEGER NS_KW,NS_NAM
       USE HDF5
       INCLUDE 'params.h'
       INCLUDE 'output_binary.h'
-      INTEGER :: h5_file_id, h5_step, h5_group_id, h5_dset_ids(256)
-      INTEGER :: h5_subgroup_id ! ID for the Step#i groups
-      INTEGER :: h5_vec_len
+      INTEGER(HID_T) :: h5_file_id, h5_step, h5_group_id
+      INTEGER(HID_T), DIMENSION(1) :: h5_dset_ids(256)
+      INTEGER(HID_T) :: h5_subgroup_id ! ID for the Step#i groups
+      INTEGER*4 :: h5_vec_len
       REAL*8 :: h5_current_time,TTOT
-      INTEGER :: N_BINARY,KSEV,KMODE
+      INTEGER*4 :: N_BINARY,KSEV,KMODE
       CHARACTER(LEN=64) :: h5_file_name
       CHARACTER(LEN=64) :: h5_step_name
-      CHARACTER(LEN=20) :: h5_step_group_name
+      CHARACTER(LEN=64) :: h5_step_group_name
       COMMON/h5part/ h5_file_id, h5_step, h5_group_id, h5_dset_ids,
-     &     h5_vec_len, h5_file_name, h5_current_time
-      INTEGER ERROR
-      INTEGER :: original_vec_len
+     &     h5_current_time, h5_vec_len, h5_file_name
+      INTEGER*4 :: ERROR
+      INTEGER*4 :: original_vec_len
       LOGICAL :: finalize ! if TRUE, finalize the datasets
 
 C*     Binary
@@ -582,6 +591,7 @@ CC      REAL*4 B_FC1, B_FC2, B_FC3
 C      REAL*4 B_RS1, B_L1, B_TE1, B_RS2, B_L2, B_TE2
 C      REAL*4 B_RC1, B_MC1, B_RC2, B_MC2,B_A, B_ECC, B_P
 C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
+      IF (N_BINARY.LE.0) RETURN
 
 *       CALL INIT if not yet done.
       IF (h5_file_id.eq.0) then
@@ -636,7 +646,6 @@ C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
           finalize = .TRUE.
       ENDIF
 
-      IF (N_BINARY.LE.0) RETURN
       
 *       Write datasets
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'XC1',
@@ -687,79 +696,79 @@ C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
      &     original_vec_len,finalize)
 
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'POT',
-     &     B_POT, N_BINARY, 1, h5_dset_ids(45),
+     &     B_POT, N_BINARY, 1, h5_dset_ids(46),
      &     original_vec_len,finalize)
       
 *     stellar evolution data
       IF(KSEV.GT.0) THEN
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RS1',
-     &        B_RS1, N_BINARY, 1, h5_dset_ids(46),
+     &        B_RS1, N_BINARY, 1, h5_dset_ids(47),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'L1',
-     &        B_L1, N_BINARY, 1, h5_dset_ids(47),
+     &        B_L1, N_BINARY, 1, h5_dset_ids(48),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'TE1',
-     &        B_TE1, N_BINARY, 1, h5_dset_ids(48),
+     &        B_TE1, N_BINARY, 1, h5_dset_ids(49),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RS2',
-     &        B_RS2, N_BINARY, 1, h5_dset_ids(49),
+     &        B_RS2, N_BINARY, 1, h5_dset_ids(50),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'L2',
-     &        B_L2, N_BINARY, 1, h5_dset_ids(50),
+     &        B_L2, N_BINARY, 1, h5_dset_ids(51),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'TE2',
-     &        B_TE2, N_BINARY, 1, h5_dset_ids(51),
+     &        B_TE2, N_BINARY, 1, h5_dset_ids(52),
      &        original_vec_len,finalize)
 
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RC1',
-     &        B_RC1, N_BINARY, 1, h5_dset_ids(52),
+     &        B_RC1, N_BINARY, 1, h5_dset_ids(53),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'MC1',
-     &        B_MC1, N_BINARY, 1, h5_dset_ids(53),
+     &        B_MC1, N_BINARY, 1, h5_dset_ids(54),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RC2',
-     &        B_RC2, N_BINARY, 1, h5_dset_ids(54),
+     &        B_RC2, N_BINARY, 1, h5_dset_ids(55),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'MC2',
-     &        B_MC2, N_BINARY, 1, h5_dset_ids(55),
+     &        B_MC2, N_BINARY, 1, h5_dset_ids(56),
      &        original_vec_len,finalize)
       END IF
 
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'A',
-     &     B_A, N_BINARY, 1, h5_dset_ids(56),
+     &     B_A, N_BINARY, 1, h5_dset_ids(57),
      &     original_vec_len,finalize)
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'ECC',
-     &     B_ECC, N_BINARY, 1, h5_dset_ids(57),
+     &     B_ECC, N_BINARY, 1, h5_dset_ids(58),
      &     original_vec_len,finalize)
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'P',
-     &     B_P, N_BINARY, 1, h5_dset_ids(58),
+     &     B_P, N_BINARY, 1, h5_dset_ids(59),
      &     original_vec_len,finalize)
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'G',
-     &     B_G, N_BINARY, 1, h5_dset_ids(59),
+     &     B_G, N_BINARY, 1, h5_dset_ids(60),
      &     original_vec_len,finalize)
       
 *     stellar evolution data
       IF(KSEV.GT.0) THEN
          CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KW1',
-     &        NB_KW1, N_BINARY, 1, h5_dset_ids(60),
+     &        NB_KW1, N_BINARY, 1, h5_dset_ids(61),
      &        original_vec_len,finalize)
          CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KW2',
-     &        NB_KW2, N_BINARY, 1, h5_dset_ids(61),
+     &        NB_KW2, N_BINARY, 1, h5_dset_ids(62),
      &        original_vec_len,finalize)
       END IF
 
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KWC',
-     &     NB_KWC, N_BINARY, 1, h5_dset_ids(62),
+     &     NB_KWC, N_BINARY, 1, h5_dset_ids(63),
      &     original_vec_len,finalize)
 
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM1',
-     &     NB_NAM1, N_BINARY, 1, h5_dset_ids(63),
+     &     NB_NAM1, N_BINARY, 1, h5_dset_ids(64),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM2',
-     &     NB_NAM2, N_BINARY, 1, h5_dset_ids(64),
+     &     NB_NAM2, N_BINARY, 1, h5_dset_ids(65),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAMC',
-     &     NB_NAMC, N_BINARY, 1, h5_dset_ids(65),
+     &     NB_NAMC, N_BINARY, 1, h5_dset_ids(66),
      &     original_vec_len,finalize)
 
       CALL h5fflush_f(h5_subgroup_id, H5F_SCOPE_LOCAL_F, error)
@@ -847,18 +856,19 @@ C      INTEGER NB_KW1, NB_NAM1, NB_KW2, NB_NAM2, NB_KWC, NB_NAMC
       USE HDF5
       INCLUDE 'params.h'
       INCLUDE 'output_merger.h'
-      INTEGER :: h5_file_id, h5_step, h5_group_id, h5_dset_ids(256)
-      INTEGER :: h5_subgroup_id
-      INTEGER :: h5_vec_len
+      INTEGER(HID_T) :: h5_file_id, h5_step, h5_group_id
+      INTEGER(HID_T), DIMENSION(1) :: h5_dset_ids(256)
+      INTEGER(HID_T) :: h5_subgroup_id
+      INTEGER*4 :: h5_vec_len
       REAL*8 :: h5_current_time,TTOT
-      INTEGER :: N_MERGER,KSEV,KMODE
+      INTEGER*4 :: N_MERGER,KSEV,KMODE
       CHARACTER(LEN=64) :: h5_file_name
       CHARACTER(LEN=64) :: h5_step_name
-      CHARACTER(LEN=20) :: h5_step_group_name
+      CHARACTER(LEN=64) :: h5_step_group_name
       COMMON/h5part/ h5_file_id, h5_step, h5_group_id, h5_dset_ids,
-     &     h5_vec_len, h5_file_name, h5_current_time
-      INTEGER ERROR
-      INTEGER :: original_vec_len
+     &     h5_current_time, h5_vec_len, h5_file_name
+      INTEGER*4 ::  ERROR
+      INTEGER*4 :: original_vec_len
       LOGICAL :: finalize
 
 C*     Merger
@@ -889,6 +899,7 @@ C      REAL*4 M_RC1, M_MC1, M_RC2, M_MC2, M_RC3, M_MC3
 C      REAL*4 M_A0, M_ECC0, M_P0, M_A1, M_ECC1, M_P1
 C      INTEGER NM_KW1, NM_NAM1, NM_KW2, NM_NAM2
 C      INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
+      IF (N_MERGER.LE.0) RETURN
 
 *       CALL INIT if not yet done.
       IF (h5_file_id.eq.0) then
@@ -944,7 +955,6 @@ C      INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
           finalize = .TRUE.
       ENDIF 
 
-      IF (N_MERGER.LE.0) RETURN
 
 *       Write datasets
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'XC1',
@@ -1018,105 +1028,105 @@ C      INTEGER NM_KW3, NM_NAM3, NM_KWC, NM_NAMC
      &     original_vec_len,finalize)
 
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'POT',
-     &     M_POT, N_MERGER, 1, h5_dset_ids(117),
+     &     M_POT, N_MERGER, 1, h5_dset_ids(103),
      &     original_vec_len,finalize)
 
 *     stellar evolution data
       IF(KSEV.GT.0) THEN
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RS1',
-     &        M_RS1, N_MERGER, 1, h5_dset_ids(103),
+     &        M_RS1, N_MERGER, 1, h5_dset_ids(104),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'L1',
-     &        M_L1, N_MERGER, 1, h5_dset_ids(104),
+     &        M_L1, N_MERGER, 1, h5_dset_ids(105),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'TE1',
-     &        M_TE1, N_MERGER, 1, h5_dset_ids(105),
+     &        M_TE1, N_MERGER, 1, h5_dset_ids(106),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RS2',
-     &        M_RS2, N_MERGER, 1, h5_dset_ids(106),
+     &        M_RS2, N_MERGER, 1, h5_dset_ids(107),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'L2',
-     &        M_L2, N_MERGER, 1, h5_dset_ids(107),
+     &        M_L2, N_MERGER, 1, h5_dset_ids(108),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'TE2',
-     &        M_TE2, N_MERGER, 1, h5_dset_ids(108),
+     &        M_TE2, N_MERGER, 1, h5_dset_ids(109),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RS3',
-     &        M_RS3, N_MERGER, 1, h5_dset_ids(109),
+     &        M_RS3, N_MERGER, 1, h5_dset_ids(110),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'L3',
-     &        M_L3, N_MERGER, 1, h5_dset_ids(110),
+     &        M_L3, N_MERGER, 1, h5_dset_ids(111),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'TE3',
-     &        M_TE3, N_MERGER, 1, h5_dset_ids(111),
+     &        M_TE3, N_MERGER, 1, h5_dset_ids(112),
      &        original_vec_len,finalize)
 
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RC1',
-     &        M_RC1, N_MERGER, 1, h5_dset_ids(112),
+     &        M_RC1, N_MERGER, 1, h5_dset_ids(113),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'MC1',
-     &        M_MC1, N_MERGER, 1, h5_dset_ids(113),
+     &        M_MC1, N_MERGER, 1, h5_dset_ids(114),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RC2',
-     &        M_RC2, N_MERGER, 1, h5_dset_ids(114),
+     &        M_RC2, N_MERGER, 1, h5_dset_ids(115),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'MC2',
-     &        M_MC2, N_MERGER, 1, h5_dset_ids(115),
+     &        M_MC2, N_MERGER, 1, h5_dset_ids(116),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'RC3',
-     &        M_RC3, N_MERGER, 1, h5_dset_ids(116),
+     &        M_RC3, N_MERGER, 1, h5_dset_ids(117),
      &        original_vec_len,finalize)
          CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'MC3',
-     &        M_MC3, N_MERGER, 1, h5_dset_ids(117),
+     &        M_MC3, N_MERGER, 1, h5_dset_ids(118),
      &        original_vec_len,finalize)
       END IF
 
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'A0',
-     &     M_A0, N_MERGER, 1, h5_dset_ids(118),
+     &     M_A0, N_MERGER, 1, h5_dset_ids(119),
      &     original_vec_len,finalize)
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'ECC0',
-     &     M_ECC0, N_MERGER, 1, h5_dset_ids(119),
+     &     M_ECC0, N_MERGER, 1, h5_dset_ids(120),
      &     original_vec_len,finalize)
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'P0',
-     &     M_P0, N_MERGER, 1, h5_dset_ids(120),
+     &     M_P0, N_MERGER, 1, h5_dset_ids(121),
      &     original_vec_len,finalize)
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'A1',
-     &     M_A1, N_MERGER, 1, h5_dset_ids(121),
+     &     M_A1, N_MERGER, 1, h5_dset_ids(122),
      &     original_vec_len,finalize)
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'ECC1',
-     &     M_ECC1, N_MERGER, 1, h5_dset_ids(122),
+     &     M_ECC1, N_MERGER, 1, h5_dset_ids(123),
      &     original_vec_len,finalize)
       CALL HDF5_write_real_vector_as_dset(h5_subgroup_id, 'P1',
-     &     M_P1, N_MERGER, 1, h5_dset_ids(123),
+     &     M_P1, N_MERGER, 1, h5_dset_ids(124),
      &     original_vec_len,finalize)
 
 *     stellar evolution data
       IF(KSEV.GT.0) THEN
          CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KW1',
-     &        NM_KW1, N_MERGER, 1, h5_dset_ids(124),
+     &        NM_KW1, N_MERGER, 1, h5_dset_ids(125),
      &        original_vec_len,finalize)
          CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KW2',
-     &        NM_KW2, N_MERGER, 1, h5_dset_ids(125),
+     &        NM_KW2, N_MERGER, 1, h5_dset_ids(126),
      &        original_vec_len,finalize)
          CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KW3',
-     &        NM_KW3, N_MERGER, 1, h5_dset_ids(126),
+     &        NM_KW3, N_MERGER, 1, h5_dset_ids(127),
      &        original_vec_len,finalize)
       END IF
 
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'KWC',
-     &     NM_KWC, N_MERGER, 1, h5_dset_ids(127),
+     &     NM_KWC, N_MERGER, 1, h5_dset_ids(128),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM1',
-     &     NM_NAM1, N_MERGER, 1, h5_dset_ids(128),
+     &     NM_NAM1, N_MERGER, 1, h5_dset_ids(129),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM2',
-     &     NM_NAM2, N_MERGER, 1, h5_dset_ids(129),
+     &     NM_NAM2, N_MERGER, 1, h5_dset_ids(130),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAM3',
-     &     NM_NAM3, N_MERGER, 1, h5_dset_ids(130),
+     &     NM_NAM3, N_MERGER, 1, h5_dset_ids(131),
      &     original_vec_len,finalize)
       CALL HDF5_write_integer_vector_as_dset(h5_subgroup_id, 'NAMC',
-     &     NM_NAMC, N_MERGER, 1, h5_dset_ids(131),
+     &     NM_NAMC, N_MERGER, 1, h5_dset_ids(132),
      &     original_vec_len,finalize)
 
       CALL h5fflush_f(h5_subgroup_id, H5F_SCOPE_LOCAL_F, error)

@@ -246,30 +246,30 @@ C            B_FDC3(IK) = REAL(FDOT(3,I)*FDSCALE_OUT)
                B_A(IK) = REAL(SEMI*RAU_OUT)
             ELSE
 *     If perturbation is too strong (Gamma>GALIMIT) or the binding energy is positive, the K.S. may not be a binary.
-               TMASK(I1) = TTOT
-               TMASK(I2) = TTOT
+               TMASK(J1) = TTOT
+               TMASK(J2) = TTOT
                TMASK(I)  = TTOT
                N_SINGLE = N_SINGLE + 1
                IK = N_SINGLE
-               call custom_store_single(I1,IK)
+               call custom_store_single(J1,IK)
 *     correction for the force and potential
-               DR3I = BODY(I2)/R(IPAIR)**3
+               DR3I = BODY(J2)/R(IPAIR)**3
                S_F1(IK) = S_F1(IK) - REAL(XIREL(1)*DR3I*FSCALE_OUT)
                S_F2(IK) = S_F2(IK) - REAL(XIREL(2)*DR3I*FSCALE_OUT)
                S_F3(IK) = S_F3(IK) - REAL(XIREL(3)*DR3I*FSCALE_OUT)
                S_POT(IK) = S_POT(IK) -
-     &              REAL(BODY(I2)/R(IPAIR)*POTSCALE_OUT)
+     &              REAL(BODY(J2)/R(IPAIR)*POTSCALE_OUT)
 
                N_SINGLE = N_SINGLE + 1
                IK = N_SINGLE
-               call custom_store_single(I2,IK)
+               call custom_store_single(J2,IK)
 *     correction for the force and potential
-               DR3I = -BODY(I1)/R(IPAIR)**3
+               DR3I = -BODY(J1)/R(IPAIR)**3
                S_F1(IK) = S_F1(IK) - REAL(XIREL(1)*DR3I*FSCALE_OUT) 
                S_F2(IK) = S_F2(IK) - REAL(XIREL(2)*DR3I*FSCALE_OUT) 
                S_F3(IK) = S_F3(IK) - REAL(XIREL(3)*DR3I*FSCALE_OUT) 
                S_POT(IK) = S_POT(IK) -
-     &              REAL(BODY(I1)/R(IPAIR)*POTSCALE_OUT)
+     &              REAL(BODY(J1)/R(IPAIR)*POTSCALE_OUT)
                
             END IF
 *     CONTINUE

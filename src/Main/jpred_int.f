@@ -26,6 +26,7 @@
 *         NBPRED = NBPRED + 1
 *         TPRED(I) = TTIME
 *      END IF
+*
       IF(I.GT.N) THEN
          JPAIR = I - N
          IF(TRES(JPAIR).NE.TTIME.AND.LIST(1,2*JPAIR-1).GT.0) THEN

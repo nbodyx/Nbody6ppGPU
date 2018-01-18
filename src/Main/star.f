@@ -53,7 +53,7 @@
 *
 *
       mass0 = mass
-      if(mass0.gt.100.d0) mass = 100.d0
+c      if(mass0.gt.100.d0) mass = 100.d0
 *
       if(kw.ge.7.and.kw.le.9) goto 90
       if(kw.ge.10) goto 95

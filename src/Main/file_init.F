@@ -12,6 +12,8 @@
 *
       CHARACTER*10 FILE(100)
       CHARACTER*4 FRAG(100)
+      character*14 str
+      external fsync
 *
 #ifdef PARALLEL
 #define MPIINIT 1
@@ -181,11 +183,13 @@ C      FRAG(4) = 'bdat'
 #ifdef PARALLEL
       if(rank.eq.0) then
 #endif
-      IF (KZ(1).GT.0.AND.ISTART.EQ.1)
-     &OPEN (UNIT=1,STATUS='UNKNOWN',FORM='UNFORMATTED',FILE=FILE(1))
+*     IF (KZ(1).GT.0.AND.ISTART.EQ.1)THEN
+*     OPEN (UNIT=1,STATUS='UNKNOWN',FORM='UNFORMATTED',FILE=FILE(1))
+*     END IF
 *
-      IF (KZ(2).GT.0.AND.ISTART.EQ.2)
-     &OPEN (UNIT=2,STATUS='UNKNOWN',FORM='UNFORMATTED',FILE=FILE(2))
+*     IF (KZ(2).GT.0.AND.ISTART.EQ.2)THEN
+*     OPEN (UNIT=2,STATUS='NEW',FORM='UNFORMATTED',FILE=FILE(2))
+*     END IF
 *
       IF (ISTART.GT.0) RETURN
 *

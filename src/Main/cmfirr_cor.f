@@ -20,7 +20,8 @@
 *       Obtain coordinates & velocity by prediction or copying.
 *****   The perturber list may include unpredicted particle
 *!$omp critical
-          call jpred_int(J,time)
+        ttime = time
+          call jpred_int(J,ttime)
 *!$omp end critical          
 ***** Note: fast-math will bring bug here if K is not saved or printed**
           K = J

@@ -81,7 +81,8 @@ c$$$      end if
             IBL = KVEC(IBH)+N
 *     Escape the chain case
             IF(NAME(IBL).LE.0) RETURN
-            CALL JPRED_INT(IBL,TIME)
+            TTIME = TIME
+            CALL JPRED_INT(IBL,TTIME)
 *     Do KS transformation even perturber list is zero
             JPAIR = 2*KVEC(IBH)-1 
             IF(LIST(1,JPAIR).EQ.0) THEN
@@ -108,7 +109,8 @@ c$$$            call flush(120)
 c$$$            IF(XDOT(1,IBL)*VSTAR.GT.100) call abort()
 *     --07/02/14 17:14-lwang-end----------------------------------------*
          ELSE
-            call JPRED_INT(IBL,TIME)
+            TTIME = TIME
+            call JPRED_INT(IBL,TTIME)
          END IF
 
 *     Output neighbor information into file mbhnb.46

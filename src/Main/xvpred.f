@@ -78,6 +78,7 @@ c$$$      end if
           XDOT(2,I) = (FDOT(2,I)*S1 + F(2,I))*S2 + X0DOT(2,I)
           XDOT(3,I) = (FDOT(3,I)*S1 + F(3,I))*S2 + X0DOT(3,I)
 
+      TTIME = TIME
 *       Resolve the components of any perturbed pair.
       IF (I.GT.N) THEN
           JPAIR = I - N
@@ -86,7 +87,7 @@ c$$$      end if
               ZZ = 1.0
 *       Distinguish between low and high-order prediction of U & UDOT.
               IF (GAMMA(JPAIR).GT.1.0D-04) ZZ = 0.0
-              CALL KSRES2(JPAIR,J1,J2,ZZ,TIME)
+              CALL KSRES2(JPAIR,J1,J2,ZZ,TTIME)
 *!$omp end critical
           END IF
       END IF

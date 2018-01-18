@@ -9,7 +9,7 @@
       REAL*8  XBACK(3,LMAX),XDBACK(3,LMAX)
 *     --03/05/14 15:20-lwang-debug--------------------------------------**
 ***** Note:------------------------------------------------------------**
-c$$$      COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),predall
+c$$$      COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
 c$$$      REAL*8 TPRED
 c$$$      LOGICAL predall
 *     --03/05/14 15:20-lwang-end----------------------------------------*

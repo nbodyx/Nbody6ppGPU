@@ -16,7 +16,8 @@
 *      if (.not.NOPRED(I)) RPRED(I)=.false.
 *      if (NOPRED(I).and.RPRED(I)) print*,rank,K,'not predict',time
 *       NOPRED(I) = .true.
-      call jpred_int(I,TIME)
+      ttime = TIME
+      call jpred_int(I,ttime)
       XI(1:3) = X(1:3,I)
       XIDOT(1:3) = XDOT(1:3,I)
 *          PHII(I) = 0.D0

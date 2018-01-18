@@ -141,10 +141,11 @@
 *
       IF(rank.EQ.0)THEN
       WRITE (6,40) TTOT, N, NNB, NPAIRS, NMERGE, MULT, NS, NSTEPI,
-     &         NSTEPB,NSTEPR, NSTEPU, ERROR, BE(3)
+     &         NSTEPB,NSTEPR, NSTEPU, ERROR, BE(3),ZMASS
    40 FORMAT (//,' TIME[NB] ',1P,E15.6,0P,'  N ',I8,'  <NB> ',I5,
      &     '  NPAIRS ',I7,'  NMERGE ',I5,' MULT ',I4,' NS ',I8,
-     &     '  NSTEP(I,B,R,U) ',4I13,'  DE ',E15.6,'  E ',F17.6)
+     &     '  NSTEP(I,B,R,U) ',4I13,'  DE ',E15.6,'  E ',F17.6,
+     &     ' M ',F12.8)
       END IF
 *
       IF (KZ(21).GT.0) THEN

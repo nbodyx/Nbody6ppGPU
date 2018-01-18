@@ -85,6 +85,10 @@
 C      PERI = SEP*(1-ECC)
       IF (SEP.LT.R1.OR.SEP.LT.R2) THEN
            COALS = .TRUE.
+cnew-abbas-26/07/2017
+           KW1 = KTYPE(KSTAR(I1),KSTAR(I2))
+           IF (KW1.GT.100) KW1 = KW1 - 100
+cnew-abbas-26/07/2017
       END IF
 *
 *       Skip small mass loss unless coalescence (May 2003).

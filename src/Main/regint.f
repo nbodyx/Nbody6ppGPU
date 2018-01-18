@@ -24,7 +24,6 @@
 !$omp&  DRDV,DRDP,DP,RIJP,RSM,RI)
       DO II = 1, NI
          I = IREG(II+IOFF-1)
-         
 *     Set neighbor radius limit
  2       RS2 = RS(I)*RS(I)
 *     Mass weighted neighbor radius
@@ -48,7 +47,7 @@
             DV(3) = XDOT(3,J) - XDOT(3,I)
 *     
             RIJ2 = A1*A1 + A2*A2 + A3*A3
-*     Velocity crterion
+*     Velocity criterion
             DP(1) = A1 + DV(1)*DTR(I)
             DP(2) = A2 + DV(2)*DTR(I)
             DP(3) = A3 + DV(3)*DTR(I)

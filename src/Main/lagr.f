@@ -425,6 +425,7 @@
             RSLAGR(J) = SQRT(RSNGL(I))
  17      CONTINUE
 *
+         IF (NPAIRS.GT.0) THEN
          ZMB = 0.0D0
          I = 0
 *     
@@ -440,6 +441,7 @@
             IF (I.LT.NBIN.AND.ZMB.LT.FLAGR(J)*ZBMASS0) GO TO 22
             RBLAGR(J) = SQRT(RBIN(I))
  18      CONTINUE
+         END IF
 *
       END IF
 *

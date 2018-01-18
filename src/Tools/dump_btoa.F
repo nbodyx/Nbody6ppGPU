@@ -21,7 +21,7 @@
 *     NQ (MMAX)
 *     NS (MMAX)
       
-      PARAMETER  (NA=84,NB=168,NC=265,NE=12,NM=20,NL=99,
+      PARAMETER  (NA=85,NB=168,NC=265,NE=12,NM=20,NL=99,
      &     ND1=52,ND2=288)
       INTEGER*4  C_NAMES,C_COUNTS,C_STARSI,C_RAND2
       REAL*8  C_PARAMS,C_STARSR,C_PLPOT,C_GALAXY
@@ -59,7 +59,7 @@
      &               BODY0(NMAX),EPOCH(NMAX),SPIN(NMAX),XSTAR(NMAX),
      &               ZLMSTY(NMAX),FIDOT(3,NMAX),D0(3,NMAX),
      &               FRDOT(3,NMAX),D0R(3,NMAX),KSTAR(NMAX),NAME(NMAX),
-     &               IMINR(NMAX), LIST(LMAX,NMAX)
+     &               IMINR(NMAX),LIST(LMAX,NMAX)
       COMMON/PAIRS/  U(4,KMAX),U0(4,KMAX),UDOT(4,KMAX),FU(4,KMAX),
      &               FUDOT(4,KMAX),FUDOT2(4,KMAX),FUDOT3(4,KMAX),
      &               H(KMAX),HDOT(KMAX),HDOT2(KMAX),HDOT3(KMAX),
@@ -204,7 +204,7 @@
      *     (spin(i),i=1,ntot),(xstar(i),i=1,ntot),(zlmsty(i),i=1,ntot),
      *     ((fidot(k,i),k=1,3),i=1,ntot),((d0(k,i),k=1,3),i=1,ntot),
      *     ((frdot(k,i),k=1,3),i=1,ntot),((d0r(k,i),k=1,3),i=1,ntot),
-     *     (kstar(i),i=1,ntot),(name(i),i=1,ntot)
+     *     (kstar(i),i=1,ntot),(iminr(i),i=1,ntot),(name(i),i=1,ntot)
 *
       read (IUNIT) ((u(k,i),k=1,4),i=1,npairs),((u0(k,i),k=1,4),i=1,
      *     npairs),((udot(k,i),k=1,4),i=1,npairs),((fu(k,i),k=1,4),i=1,
@@ -301,7 +301,7 @@
      *     sf(1:7,1:npairs)
       write(10,*) h0(1:npairs),fp0(1:4,1:npairs),
      *     fd0(1:4,1:npairs),tblist
-      write(10,*) kblist(1:10*npairs),kslow(1:npairs),
+      write(10,*) kblist(1:10*npairs),kslow(1:npairs),iminr(1:ntot),
      *     name(1:ntot)
       write(10,*) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
@@ -472,7 +472,7 @@
      *     sf(1:7,1:npairs)
       read(10,*) h0(1:npairs),fp0(1:4,1:npairs),
      *     fd0(1:4,1:npairs),tblist
-      read(10,*) kblist(1:10*npairs),kslow(1:npairs),
+      read(10,*) kblist(1:10*npairs),kslow(1:npairs),iminr(1:ntot),
      *     name(1:ntot)
       read(10,*) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *     NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
@@ -556,7 +556,7 @@
      *     (spin(i),i=1,ntot),(xstar(i),i=1,ntot),(zlmsty(i),i=1,ntot),
      *     ((fidot(k,i),k=1,3),i=1,ntot),((d0(k,i),k=1,3),i=1,ntot),
      *     ((frdot(k,i),k=1,3),i=1,ntot),((d0r(k,i),k=1,3),i=1,ntot),
-     *     (kstar(i),i=1,ntot),(name(i),i=1,ntot)
+     *     (kstar(i),i=1,ntot),(iminr(i),i=1,ntot),(name(i),i=1,ntot)
 *     PAIRS
       write (IUNIT) ((u(k,i),k=1,4),i=1,npairs),((u0(k,i),k=1,4),i=1,
      *     npairs),((udot(k,i),k=1,4),i=1,npairs),((fu(k,i),k=1,4),i=1,

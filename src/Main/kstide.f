@@ -73,6 +73,8 @@
 *
 *       Consider sequential circularization or GR evolution.
       IF (KZ(27).EQ.1) THEN
+         RI = SQRT(X(1,I)**2 + X(2,I)**2 + X(3,I)**2)
+         VI = SQRT(XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2)
 *       Suppress the old PT procedure (DH => ECC from AM0 = const).
 *         ECC2 = ECC**2 + 2.0D0*AM0*DH/BODY(I)
 *         ECC2 = MAX(ECC2,ECCM2)
@@ -132,7 +134,9 @@
               call ksparmpi(K_store,K_int,K_KSTAR,I,0,KSTAR(I))
               if(rank.eq.0)
      &        WRITE (6,8)  WHICH1, NAME(I1), NAME(I2), KSTAR(I1),
-     &                     KSTAR(I2), TTOT, ECC, ECC1, P, SEMI1, R1
+     &                     KSTAR(I2), BODY(I1)*ZMBAR, BODY(I2)*ZMBAR,
+     &                     TTOT, ECC, ECC1, P, SEMI1, R1,
+     &                     RADIUS(I1)*SU,RADIUS(I2)*SU, RI, VI
           ELSE IF (ECC1.LE.ECCM) THEN
               WHICH1 = 'END CIRC'
               KSTAR(I) = 10
@@ -141,10 +145,13 @@
               NCIRC = NCIRC + 1
               if(rank.eq.0)
      &        WRITE (6,8)  WHICH1, NAME(I1), NAME(I2), KSTAR(I1),
-     &                     KSTAR(I2), TTOT, ECC, ECC1, P, SEMI1, R1
+     &                     KSTAR(I2), BODY(I1)*ZMBAR, BODY(I2)*ZMBAR,
+     &                     TTOT, ECC, ECC1, P, SEMI1, R1,
+     &                     RADIUS(I1)*SU,RADIUS(I2)*SU, RI, VI
+    8     FORMAT (' ',A8,' NM,KW=',2I8,2I4,' M1,2[*]',1P,2E9.2,
+     &            ' T,e,e1,p,a=',5E9.2,' RMIN,RAD1,2[*]',3E9.2,
+     &            ' RI,VI=',2E9.2)
           END IF
-    8     FORMAT (' ',A8,'    NAM K* T E0 EF P AF R* ',
-     &                        2I6,2I4,F9.2,2F8.3,F7.1,1P,2E10.2)
       END IF
 *
 *       Set new pericentre.

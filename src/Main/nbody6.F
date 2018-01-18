@@ -117,6 +117,7 @@
 *       Backup kstart value before call mydump
           KSTART0 = KSTART
           CALL MYDUMP(0,1)
+*
 *       Reset kstart to input value
           KSTART = KSTART0
 *       

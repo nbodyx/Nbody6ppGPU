@@ -17,7 +17,8 @@
           IPAIR = KVEC(I)
           IF (I.EQ.2*IPAIR) I2 = 1
           ICM = N + IPAIR
-          call jpred_int(icm,time)
+          ttime = time
+          call jpred_int(icm,ttime)
 *       Save local variables for individual chain contributions.
           DO 1 K = 1,3
               XIS(K) = XI(K)
@@ -30,7 +31,8 @@
 *       Evaluate terms for the original chain c.m. interaction.
       DR2 = 0.0
       DRDV = 0.0
-      call jpred_int(ICH,TIME)
+      ttime = time
+      call jpred_int(ICH,ttime)
       DO 5 K = 1,3
           DX(K) = X(K,ICH) - XI(K)
           DV(K) = XDOT(K,ICH) - XIDOT(K)

@@ -32,6 +32,7 @@
 *     calculate the pot, a & jerk on the GPU
       DO L=istart,iend,maxthr
 
+*     print*,' calc reg l=',l
          ni = maxthr
          IF( (L+ni).GT.iend ) ni = iend - L + 1
 
@@ -114,7 +115,10 @@ C$$$            CALL IRR_SIMD_SET_LIST(IDI,LISTGP(1,II))
 C$$$#endif
          END DO
 #else
-*     OpemMP version of regular force, fdot, potential and neighbor list
+*     OpenMP version of regular force, fdot, potential and neighbor list
+
+*        print*,' call reg l,ni=',l,ni,ireg(L),
+*    &   (x(1,IREG(L+ii-1)),ii=1,ni)
          call cputim(tt53)
          CALL regint(L,NI,IREG,IFIRST,NTOT,X,XDOT,BODY,STEPR,BODYM,
      &        M_FLAG,NB_FLAG,NNBOPT,RS,GPU_A,GPU_JERK,LISTGP,PHIDBL)

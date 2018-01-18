@@ -207,14 +207,23 @@
          RI = SQRT((X(1,NTOT) - RDENS(1))**2 +
      &        (X(2,NTOT) - RDENS(2))**2 +
      &        (X(3,NTOT) - RDENS(3))**2)
+         VI = SQRT(XDOT(1,NTOT)**2+XDOT(2,NTOT)**2+XDOT(3,NTOT)**2)
+         PD = TWOPI*SEMI*SQRT(DABS(SEMI)/BODY(NTOT))*TSTAR*365.24D6
          if(rank.eq.0)
-     &        WRITE (6,60)  NAME(ICOMP), NAME(JCOMP), 
-     &        BODY(ICOMP)*ZMBAR,BODY(JCOMP)*ZMBAR,DTAU(IPAIR),
-     &        R(IPAIR), R(IPAIR)*RAU, RI, H(IPAIR), IPAIR, NAME(N+IPAIR)
- 60      FORMAT (' NEW KSREG   NAME(I1)',
-     &        I10,' NAME(I2)',I10,' M(I1)[M*]',
-     &        F9.3,' M(I2)[M*]',F9.3,' DTAU',F8.3,' R12[NB,AU]',1P,2E9.1
-     &        ,0P,' RI[NB]',F7.2,' H',F9.2,' IPAIR',I9,' NAME(ICM)',I10)
+     &    WRITE (6,60)  TIME+TOFF,NAME(ICOMP),NAME(JCOMP),
+     &         NAME(NTOT),KSTAR(ICOMP),KSTAR(JCOMP),KSTAR(NTOT),
+     &         IPAIR,DTAU(IPAIR),BODY(ICOMP),BODY(JCOMP),
+     &         R(IPAIR),SQRT(ECC2),SEMI,EB,PD,H(IPAIR),GAMMA(IPAIR),
+     &         STEP(NTOT),LIST(1,ICOMP),LIST(1,NTOT),
+     &         BODY(ICOMP)*ZMBAR,BODY(JCOMP)*ZMBAR,
+     &         RADIUS(ICOMP)*SU,RADIUS(JCOMP)*SU,R(IPAIR)*SU,RI,VI
+  60      FORMAT (/,' NEW KSREG   TIME[NB]',1P,E17.10,' NM1,2,S=',
+     &         3I10,' KW1,2,S=',3I4,' IPAIR',I9,' DTAU',E10.2,
+     &         ' M1,2[NB]',2E10.2,' R12[NB]',E10.2,
+     &         ' e,a,eb[NB]=',2E12.4,E10.2,' P[d]=',E10.2,' H',E10.2,
+     &         ' GAMMA',1P,E10.2,' STEP(ICM)',E10.2,' NPERT',I5,
+     &         ' NB(ICM)',I5,' M1,2[*]',2E10.2,' RAD1,2,S[*]',3E10.2,
+     &         ' RI,VI[NB]=',2E10.2)
          call flush(6)
       END IF
 *     

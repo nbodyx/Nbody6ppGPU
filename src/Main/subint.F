@@ -34,6 +34,7 @@ c$$$      COMMON/KSSTAT/ISTEPP,ISTEPU,IBINP,IBINU
 *
 *       Determine correct index after restart (NNTB = 0 initially).
       IF (IRUN.EQ.0) THEN
+c         NNTB = 0
          IRUN = 1
          TI = 1.0D+10
 *     Find smallest sum by looping backwards (avoids multiple entries).

@@ -600,7 +600,8 @@ C     &           + XREL(3,IM)*VREL(3,IM)
 *
          ELSE
 *     --Wide binary case--
-            call JPRED_int(I2,TIME)
+            ttime = TIME
+            call JPRED_int(I2,ttime)
             RIJ2 = 0.D0
             VIREL2 = 0.D0
             RDOT = 0.D0

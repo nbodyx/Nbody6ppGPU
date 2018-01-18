@@ -40,7 +40,7 @@
      &        (3.d0*lum))**(1.d0/3.d0)
          tc = 0.4311D0*tc
          ttid = twopi/(1.0d-10 + ABS(oorb - ospin))
-         fc = MIN(1.d0,(ttid/(2.d0*tc)**2))
+         fc = MIN(1.d0,(ttid/(2.d0*tc))**2)
          tcqr = 2.d0*fc*q*raa6*menv/(21.d0*tc*mass)
          rg2 = (k2*(mass-mc))/mass
       else

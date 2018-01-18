@@ -11,6 +11,7 @@
       INCLUDE 'common2.h'
       INCLUDE 'mpi_base.h'
       REAL*8   G0(3),Y(NMX8),R2(NMX,NMX),KSCH
+      REAL*8   RI(NMX),VI(NMX)
       INTEGER  IJ(NMX),IOLD(NMX)
       LOGICAL  CHECK,KSLOW,KCOLL,stopB,ICASE
       COMMON/SLOW1/   TK2(0:NMX),EJUMP,KSCH(NMX),KSLOW,KCOLL
@@ -397,11 +398,20 @@
           if(rank.eq.0) WRITE (6,*) ' Stepsize = 0!', char(7)
           STOP
       END IF
-*
-      IF (rank.eq.0.and.KZ30.GT.2) THEN
-          WRITE (6,30)  STEP, TMAX-CHTIME, GPERT, (1.0/RINV(K),K=1,N-1)
-   30     FORMAT (' CHAIN:   STEP TM-CHT G R  ',1P,8E9.1)
-      END IF
+* Temporary Output RSP Sep 2017
+*     IF (rank.eq.0.and.KZ30.GE.2) THEN
+*     IF (rank.eq.0.and.KZ30.GT.2) THEN
+*         CALL TRANSX
+*         KK = 0
+*         DO 302 K = 1,N
+*         RI(K) = SQRT(X(KK+1)**2 + X(KK+2)**2 + X(KK+3)**2)
+*         VI(K) = SQRT(V(KK+1)**2 + V(KK+2)**2 + V(KK+3)**2)
+* 302     KK = KK + 3
+*         WRITE (6,30)  STEP, TMAX-CHTIME, GPERT, (1.0/RINV(K),K=1,N-1)
+*  30     FORMAT (' CHAIN:   STEP TM-CHT G R  ',1P,8E9.1)
+*         WRITE (6,301) CHTIME,(M(K),SIZE(K),RI(K),VI(K),K=1,N)
+* 301     FORMAT (' CHAIN CHTIME M,R,RI,VI=',1P,(4E12.5,/))
+*     END IF
 *
 *       Determine two-body distances for stability test and collision search.
       IF (CHTIME.GT.TIME0.AND.JC.EQ.0) THEN
@@ -645,10 +655,20 @@
           CALL TRANSX
           ECH = ENERGY
           TIMEC = CHTIME
-          IF (rank.eq.0.and.KZ30.GT.2) THEN
+* Temporary Output RSP Sep 2017
+          IF (rank.eq.0.and.KZ30.GE.2) THEN
+*         IF (rank.eq.0.and.KZ30.GT.2) THEN
+          CALL TRANSX
+          KK = 0
+          DO 305 K = 1,N
+          RI(K) = SQRT(X(KK+1)**2 + X(KK+2)**2 + X(KK+3)**2)
+          VI(K) = SQRT(V(KK+1)**2 + V(KK+2)**2 + V(KK+3)**2)
+  305     KK = KK + 3
               WRITE (6,55)  NSTEP1, T0S(ISUB)+TIMEC, TMAX-TIMEC,
      &                      (1.0/RINV(K),K=1,N-1)
    55         FORMAT (' CHAIN:  NSTEP T DTR R ',I5,F10.4,1P,6E9.1)
+       WRITE(6,302)TIMEC,(K,M(K),SIZE(K),RI(K),VI(K),K=1,N)
+  302  FORMAT(' CHAIN T[NB] M,R[*],R,V[NB-CH]=',1P,E12.5,10(I4,4E12.5))
           END IF
 *       Avoid checking after switch (just in case).
           IF (ISW.LE.1) THEN
@@ -748,6 +768,13 @@
       IF (rank.eq.0.and.KZ30.GT.1.AND.QPERI.LT.1.0) THEN
           WRITE (6,80)  RIJ(1,2), RIJ(1,3), RIJ(2,3), RCOLL, QPERI
    80     FORMAT (' END CHAIN:   RIJ RCOLL QPERI ',1P,5E10.1)
+          KK = 0
+          DO 304 K = 1,N
+          RI(K) = SQRT(X(KK+1)**2 + X(KK+2)**2 + X(KK+3)**2)
+          VI(K) = SQRT(V(KK+1)**2 + V(KK+2)**2 + V(KK+3)**2)
+  304     KK = KK + 3
+       WRITE(6,303)CHTIME,(K,M(K),SIZE(K),RI(K),VI(K),K=1,N)
+  303  FORMAT(' CHEND: T[NB] M,R[*],R,V[NB-CH]=',1P,E12.5,10(I4,4E12.5))
           call flush(6)
       END IF
 *

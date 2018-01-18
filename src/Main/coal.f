@@ -106,6 +106,7 @@
    10 CONTINUE
       RI = SQRT(RI2)
       RIJ = SQRT(RIJ2)
+*      VIJ = SQRT(VIJ2)
       SEMI = 2.d0/RIJ - VIJ2/ZM
       SEMI = 1.d0/SEMI
       TK = DAYS*SEMI*SQRT(ABS(SEMI)/ZM)
@@ -194,6 +195,9 @@
       ENDIF
       T0(I1) = TIME
       T0(I2) = TADJ + DTADJ
+*RSP Oct17 set ghost parameters for identification in printout
+      RADIUS(I2) = 0.D0
+      SPIN(I2) = 0.D0
 *     remove from NXTLST
       call delay_remove_tlist(I2,STEP,DTK)
 C      CALL DTCHCK(TIME,STEP(I2),DTK(40))
@@ -449,12 +453,18 @@ C 50      FORMAT (1X,F7.1,2I6,3I4,3F5.1,2F7.2,F6.1,F7.2,F9.5,1P,E9.1)
       end if
 *
       if(rank.eq.0)then
-      WRITE (6,55)  WHICH1, IQCOLL, NAME1, NAME2, KSTAR(I1), KSTAR(I2),
-     &              KW1, ZMNEW*ZMBAR, RCOLL*SU, EB, DP, DM*ZMBAR, VINF
- 55   FORMAT (/,A8,'COAL:  IQCOLL',I3,'  NAME(I1)',I10,'  NAME(I2)',I10,
-     &     '  K*(I1)',I3,'  K*(I2)',I3,'  K*(INEW)',I3,
-     &     '  M(INEW)[M*]',F6.2,'  RCOLL[R*]',1P,E8.1,'  EB[NB]',E9.1,
-     &     '  DP[NB]',E9.1,'  DM[M*]',0P,F6.2,'  VINF[km/s]',F4.1)
+          RI = SQRT((X(1,I1) - RDENS(1))**2 +
+     &              (X(2,I1) - RDENS(2))**2 +
+     &              (X(3,I1) - RDENS(3))**2)
+          VI = SQRT(XDOT(1,I1)**2+XDOT(2,I1)**2+XDOT(3,I1)**2)
+      WRITE (6,55) WHICH1,IQCOLL,TTOT,NAME1,NAME2,KSTAR(I1),KSTAR(I2),
+     &   KW1,MASS(1),MASS(2),RIJ,ECC,SEMI,EB,DP,TK,ZM1,ZM2,ZMNEW*ZMBAR,
+     &   DM*ZMBAR,RADIUS(I1)*SU,RADIUS(I2)*SU,RCOLL*SU,VINF,RI,VI
+ 55   FORMAT (/,A8,'COAL: IQCOLL',I3,' TIME[NB]',1P,E17.10,' N1,2',2I10,
+     &     ' KW1,2,S',3I4,' M1,2[NB]',1P,2E10.2,' R12[NB]',E10.2,
+     &         ' e,a,eb,dp[NB]=',2E12.4,2E10.2,' P[d]=',E10.2,
+     &     '  M12S,DM[*]',4E10.2,' RAD1,2[*]',2E10.2,' RCOLL[R*]',E10.2,
+     &     ' VINF[km/s]',E10.2,' RI,VI[NB]=',2E10.2)
       end if
 *
       KSTAR(I1) = KW1

@@ -30,7 +30,8 @@
       NNB0 = LIST(1,I)
       DO 20 LL = 2,NNB0+1
           K = LIST(LL,I)
-          call jpred_int(K,TIME)
+          ttime = TIME
+          call jpred_int(K,ttime)
 *          call jpred(K,time,time)
 *          if (.not.NOPRED(K)) RPRED(K)=.false.
 *          if (NOPRED(K).and.RPRED(K)) print*,rank,K,'not predict',time

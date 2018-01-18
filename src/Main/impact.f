@@ -345,17 +345,27 @@ C      IF (KZ(30).EQ.-2.AND.KCHAIN.EQ.0) GO TO 100
      &              (X(2,I) - RDENS(2))**2 +
      &              (X(3,I) - RDENS(3))**2)
           VI = SQRT(XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2)
+          PD = TWOPI*SEMI*SQRT(DABS(SEMI)/(BODY(I)+BODY(JCOMP)))
+     &                             *TSTAR*365.24D6
+          PD1 = TWOPI*SEMI1*SQRT(DABS(SEMI1)/BODY(I))*TSTAR*365.24D6
           if(rank.eq.0)
      &    WRITE (6,20)  WHICH1, TTOT, I, JCOMP, IPAIR, NAME(I1),
-     &        NAME(I2), NAME(JCOMP), NAME(I), H(IPAIR), R(IPAIR),
-     &                  BODY(I), BODY(JCOMP), PERT4, RIJ, PMIN,
-     &                  EB1/EB, RI, VI, LIST(1,I1)
-   20     FORMAT (/,' NEW',A8,1P,' TIME',E12.5,0P,' INCM',I9,
-     &         ' I3',I9,' INPAIR',I9,' NAME(I1~3,INCM)',4I9,
-     &         '  H',F10.2,'  R12',1P,E10.3,'  M(INCM)',E10.3,'  M(I3)',
-     &         E10.3,'  G4',E10.3,'  RIN3',E8.1,'  PERIM',E8.1,
-     &         '  EB1/EB0',E8.1,'  RI',E10.3,'  VI',E10.3,'  NP',I4
-     &         '  [ALL NB UNIT]')
+     &      NAME(I2), NAME(JCOMP), NAME(I), KSTAR(I1), KSTAR(I2),
+     &      KSTAR(JCOMP), KSTAR(I), BODY(I1), BODY(I2), BODY(JCOMP),
+     &      BODY(I)+BODY(JCOMP),R(IPAIR),H(IPAIR),SEMI,ECC,EB,PD,
+     &      SEMI1,ECC1,EB1,PD1,PERT4, RIJ, PMIN, EB1/EB, LIST(1,I1), 
+     &      BODY(I1)*ZMBAR,BODY(I2)*ZMBAR,BODY(JCOMP)*ZMBAR, 
+     &      (BODY(I)+BODY(JCOMP))*ZMBAR,RADIUS(I1)*SU,RADIUS(I2)*SU,
+     &      RADIUS(JCOMP)*SU,R(IPAIR)*SU,RIJ*SU,RI,VI
+   20     FORMAT (/,' NEW',A8,1P,' TIME',E12.5,' INCM',I9,
+     &         ' I3',I9,' INPAIR',I9,' N1,2,3,INCM',4I10,
+     &         ' KW1,2,3,IN',4I4,' M1,2[NB]',2E10.2,' M3,TOT',2E10.2,
+     &         '  R12',E10.2,' H',E10.2,
+     &         ' IN e,a,eb[NB]',2E12.4,E10.2,' P[d]',E10.2,
+     &         ' OUT e,a,eb[NB]',2E12.4,E10.2,' P[d]',E10.2,
+     &         '  G4',E10.3,'  RIN3',E8.1,'  PERIM',E8.1,'  EB1/EB0',
+     &         E8.1,'  NP',I4,' M1,2,3,TOT[*]',4E10.2,' RAD1,2,3[*]',
+     &         3E10.2,' IN,OUT Sep[*]',2E10.2,'  RI,VI[NB]',2E10.2)
           call flush(6)
       END IF
 *
@@ -986,11 +996,18 @@ C     &         'ANGLE',ANGLE,'BODY1',BODY(I1),'BODY(I2)',BJ
      &              (X(2,I) - RDENS(2))**2 +
      &              (X(3,I) - RDENS(3))**2)
           VI = SQRT(XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2)
+          PD = TWOPI*SEMI*SQRT(DABS(SEMI)/(BODY(I)+BODY(JCOMP)))
+     &                             *TSTAR*365.24D6
+          PD1 = TWOPI*SEMI1*SQRT(DABS(SEMI1)/BODY(I))*TSTAR*365.24D6
           if(rank.eq.0)
      &    WRITE (6,20)  WHICH1, TTOT, I, JCOMP, IPAIR, NAME(I1),
-     &        NAME(I2), NAME(JCOMP), NAME(I), H(IPAIR), R(IPAIR),
-     &                  BODY(I), BODY(JCOMP), PERT4, RIJ, PMIN,
-     &                  EB1/EB, RI, VI, LIST(1,I1)
+     &      NAME(I2), NAME(JCOMP), NAME(I), KSTAR(I1), KSTAR(I2),
+     &      KSTAR(JCOMP), KSTAR(I), BODY(I1), BODY(I2), BODY(JCOMP),
+     &      BODY(I)+BODY(JCOMP),R(IPAIR),H(IPAIR),SEMI,ECC,EB,PD,
+     &      SEMI1,ECC1,EB1,PD1,PERT4, RIJ, PMIN, EB1/EB, LIST(1,I1),
+     &      BODY(I1)*ZMBAR,BODY(I2)*ZMBAR,BODY(JCOMP)*ZMBAR,
+     &      (BODY(I)+BODY(JCOMP))*ZMBAR,RADIUS(I1)*SU,RADIUS(I2)*SU,
+     &      RADIUS(JCOMP)*SU,R(IPAIR)*SU,RIJ*SU,RI,VI
           END IF
 *       Note rare case of two hierarchies merging and identify ghost names.
           IF (NAME(I).LT.0.AND.NAME(JCOMP).LT.0) THEN
@@ -1011,11 +1028,18 @@ C     &         'ANGLE',ANGLE,'BODY1',BODY(I1),'BODY(I2)',BJ
      &              (X(2,I) - RDENS(2))**2 +
      &              (X(3,I) - RDENS(3))**2)
           VI = SQRT(XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2)
+          PD = TWOPI*SEMI*SQRT(DABS(SEMI)/(BODY(I)+BODY(JCOMP)))
+     &                             *TSTAR*365.24D6
+          PD1 = TWOPI*SEMI1*SQRT(DABS(SEMI1)/BODY(I))*TSTAR*365.24D6
           if(rank.eq.0)
      &    WRITE (6,20)  WHICH1, TTOT, I, JCOMP, IPAIR, NAME(I1),
-     &           NAME(I2), NAME(JCOMP), NAME(I), H(IPAIR), R(IPAIR),
-     &                  BODY(I), BODY(JCOMP), PERT4, RIJ, PMIN,
-     &                  EB1/EB, RI, VI, LIST(1,I1)
+     &      NAME(I2), NAME(JCOMP), NAME(I), KSTAR(I1), KSTAR(I2),
+     &      KSTAR(JCOMP), KSTAR(I), BODY(I1), BODY(I2), BODY(JCOMP),
+     &      BODY(I)+BODY(JCOMP),R(IPAIR),H(IPAIR),SEMI,ECC,EB,PD,
+     &      SEMI1,ECC1,EB1,PD1,PERT4, RIJ, PMIN, EB1/EB, LIST(1,I1),
+     &      BODY(I1)*ZMBAR,BODY(I2)*ZMBAR,BODY(JCOMP)*ZMBAR,
+     &      (BODY(I)+BODY(JCOMP))*ZMBAR,RADIUS(I1)*SU,RADIUS(I2)*SU,
+     &      RADIUS(JCOMP)*SU,R(IPAIR)*SU,RIJ*SU,RI,VI
       END IF
 *
 *       Check for diagnostic output of quadruples.

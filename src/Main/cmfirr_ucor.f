@@ -26,7 +26,8 @@
 *       Perform differential correction for regularized c.m. neighbours.
    40 DO 50 LL = NNB2+1,NNB1
           J = KLIST(LL)
-          call jpred_int(J,TIME)
+          ttime = TIME
+          call jpred_int(J,ttime)
 *       See whether to sum over binary components.
           JPAIR = J - N
           J1 = 2*JPAIR - 1

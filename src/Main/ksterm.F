@@ -137,32 +137,42 @@ c$$$      END IF
           RI = SQRT((X(1,ICM) - RDENS(1))**2 +
      &              (X(2,ICM) - RDENS(2))**2 +
      &              (X(3,ICM) - RDENS(3))**2)
+          VI = SQRT(XDOT(1,ICM)**2+XDOT(2,ICM)**2+XDOT(3,ICM)**2)
           if(rank.eq.0)
      &    WRITE (8,8)  TIME+TOFF, NAME(I1), NAME(I2), K, BODY(I1),
      &                 BODY(I2), EB, SEMI, R(IPAIR), 
-     &                 GAMMA(IPAIR), RI
+     &                 GAMMA(IPAIR), RI, VI
  8        FORMAT ('END BINARY   Time[NB] ',1P,E25.16,0P,'  NAME(I1) '
      &         ,I11,'  NAME(I2) ',I11,'  FLAG-RB ',I3,'  M(I1)[NB] ',
      &         1P,E13.4,'  M(I2)[NB] ',E13.4,'  EB[NB] ',E20.11,
      &         '  SEMI[NB] ',E15.6,'  R12[NB] ',E15.6,'  GAMMA[NB] ',
-     &         E13.4,'  RI[NB] ',E15.6,0P)
+     &         E13.4,'  RI,VI[NB] ',2E15.6,0P)
       END IF
 *
    10 IF (KZ(10).GT.1) THEN
           RI = SQRT((X(1,ICM) - RDENS(1))**2 +
      &              (X(2,ICM) - RDENS(2))**2 +
      &              (X(3,ICM) - RDENS(3))**2)
+          VI = SQRT(XDOT(1,ICM)**2+XDOT(2,ICM)**2+XDOT(3,ICM)**2)
+          SEMI = -0.5*BODY(ICM)/H(IPAIR)
+      ECC2 = (1.0-R(IPAIR)/SEMI)**2+TDOT2(IPAIR)**2/(BODY(ICM)*SEMI)
+          EB = -0.5*BODY(I1)*BODY(I2)/SEMI
+          PD = TWOPI*SEMI*SQRT(DABS(SEMI)/BODY(ICM))*TSTAR*365.24D6
           if(rank.eq.0)
-     &    WRITE (6,15)  TIME+TOFF, NAME(I1),NAME(I1+1),
-     &         BODY(I1)*ZMBAR, BODY(I1+1)*ZMBAR,
-     &          DTAU(IPAIR),R(IPAIR), RI, H(IPAIR), IPAIR, NAME(ICM),
-     &         GAMMA(IPAIR), STEP(I1), LIST(1,I1), LIST(1,ICM)
-   15     FORMAT (/,' END KSREG   TIME[NB]',1P,E17.10,0P,' NAME(I1)',
-     &         I10,' NAME(I2)',I10,' M(I1)[M*]',
-     &         F9.3,' M(I2)[M*]',F9.3,' DTAU',F8.3,' R12[NB]',1P,E9.1
-     &         ,0P,' RI[NB]',F7.2,' H',F9.2,' IPAIR',I9,' NAME(ICM)'
-     &         ,I10,' GAMMA',F8.3,' STEP(I1)',1P,E11.1,0P,' NPERT',I5
-     &         ,' NB(ICM)',I5)
+     &    WRITE (6,15)  TIME+TOFF,NAME(I1),NAME(I2),
+     &         NAME(ICM),KSTAR(I1),KSTAR(I2),KSTAR(ICM),
+     &         IPAIR,DTAU(IPAIR),BODY(I1),BODY(I2),
+     &         R(IPAIR),SQRT(ECC2),SEMI,EB,PD,H(IPAIR),GAMMA(IPAIR),
+     &         STEP(ICM),LIST(1,I1),LIST(1,ICM),
+     &         BODY(I1)*ZMBAR,BODY(I2)*ZMBAR,
+     &         RADIUS(I1)*SU,RADIUS(I2)*SU,R(IPAIR)*SU,RI,VI
+  15      FORMAT (/,' END KSREG   TIME[NB]',1P,E17.10,' NM1,2,S=',
+     &         3I10,' KW1,2,S=',3I4,' IPAIR',I9,' DTAU',E10.2,
+     &         ' M1,2[NB]',2E10.2,' R12[NB]',E10.2,
+     &         ' e,a,eb[NB]=',2E12.4,E10.2,' P[d]=',E10.2,' H',E10.2,
+     &         ' GAMMA',1P,E10.2,' STEP(ICM)',E10.2,' NPERT',I5,
+     &         ' NB(ICM)',I5,' M1,2[*]',2E10.2,' RAD1,2,S[*]',3E10.2,
+     &         ' RI,VI[NB]=',2E10.2)
 *     --04/15/14 21:40-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 c$$$          if(rank.eq.0.and.name(icm).eq.2567) call abort()
@@ -235,6 +245,8 @@ c$$$     &     'N',(NAME(LIST(2+K,I1)),K=1,5)
       NPAIRS = NPAIRS - 1
       NTOT = N + NPAIRS
       IFIRST = 2*NPAIRS + 1
+*       Initialize NNTB correctly
+      IF (NPAIRS.EQ.0) NNTB = 0
 *
 *       Save name of components & flag for modifying LISTD in UPDATE.
       JLIST(1) = NAME(I1)

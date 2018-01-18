@@ -9,7 +9,7 @@
 *
       COMMON/NAMES/  NTOT,NPAIRS,NTTOT,N,NNBMAX,NCRIT,NFIX,NMERGE,NSUB,
      &               IPHASE,IFIRST,ICOMP,JCOMP,ICLOSE,JCLOSE,JCMAX,
-     &               KSPAIR,NRUN,MODEL,NC,NZERO,NBZERO,NBIN0,NHI0,
+     &               KSPAIR,NRUN,NCOMM,MODEL,NC,NZERO,NBZERO,NBIN0,NHI0,
      &               NAME0,NCH,NCHAOS,IDUM1,KZ(50),NNBOPT,NIMBH,
      &               ITAIL0,NTAIL, !Tidal tail position indicators
      &               NEW2(5)

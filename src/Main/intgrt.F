@@ -272,7 +272,6 @@ C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
       END DO
 *     --07/07/14 23:44-lwang-end----------------------------------------*
 #endif
-
 *     Determine MPI NXTLST and Regular block
       NREG = 0
       DO L = 1, NXTLEN
@@ -506,7 +505,6 @@ C        if (TCCT.gt.2.0) stop
       end if
 *     --08/27/13 16:38-lwang-end-debug----------------------------------*
 #endif
-
 *     Do full prediction when regular block step come
       ipredall = .false.
       IF(NREG.GT.0) THEN
@@ -521,10 +519,10 @@ C        if (TCCT.gt.2.0) stop
 
 *     Predict chain variables and perturbers at new block-time.
       IF (NCH.GT.0) THEN
-          CALL JPRED_int(ICH,TIME)
+          ttime = TIME
+          CALL JPRED_int(ICH,ttime)
           CALL XCPRED(2)
       END IF
-
 #ifdef PARALLEL
       IF(NXTLEN.LE.isernb)THEN
 #endif
@@ -543,13 +541,29 @@ C        if (TCCT.gt.2.0) stop
          call cputim(ttsimdc)
          ttsimdcalc = ttsimdcalc + (ttsimdc-ttnb1)*60.
 #else
+*         print*,' before nbint,t,nxtlen,lst=',time,nxtlen,
+*    &                              (nxtlst(k),k=1,nxtlen)
+*         print*,' step(lst)=',(step(nxtlst(k)),k=1,nxtlen)
+*         print*,' x(1,lst)=',(x(1,nxtlst(k)),k=1,nxtlen)
+*         print*,' x0(1,lst)=',(x0(1,nxtlst(k)),k=1,nxtlen)
+*         print*,' xdot(1,lst)=',(xdot(1,nxtlst(k)),k=1,nxtlen)
+*         print*,' x0dot(1,lst)=',(x0dot(1,nxtlst(k)),k=1,nxtlen)
+
+*         print*,' before nbint 108 ',(x(k,108),k=1,3)
 *     OpenMP version of irregular force and fdot
-         CALL NBINT(TIME,NXTLEN,NXTLST,X,XDOT,BODY,FIRR_SIMD,FD_SIMD,
-     &        LIST,IMINR_TMP)
+*           print*,' intgrt i,n,npairs=',i,n,npairs
+        CALL NBINT(TIME,NXTLEN,NXTLST,X,XDOT,BODY,FIRR_SIMD,FD_SIMD,
+    &        LIST,IMINR_TMP)
+*         print*,' after nbint =',time
+*         print*,' firr,fd_simd=',
+*    &   ((firr_simd(k,l),fd_simd(k,l),k=1,3),l=1,nxtlen)
+
 #endif
 !$omp parallel do if(NXTLEN.GE.ITHREAD) private(L,I)
          DO L = 1,NXTLEN
             I = NXTLST(L)
+*         print*,' enter NBINT_CORR i,l=',i,l
+*         print*,' firr,fd_simd=',(firr_simd(k,l),fd_simd(k,l),k=1,3)
             CALL NBINT_COR(I,FIRR_SIMD(1,L),FD_SIMD(1,L))
          END DO
 !$omp end parallel do
@@ -856,8 +870,9 @@ c$$$**!$omp end parallel do
               I = ICOMP
               ICOMP = MIN(ICOMP,JCOMP)
               JCOMP = MAX(I,JCOMP)
-              call jpred_int(icomp,time)
-              call jpred_int(jcomp,time)
+              ttime = time
+              call jpred_int(icomp,ttime)
+              call jpred_int(jcomp,ttime)
 *     --09/25/13 21:44-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 c$$$              if(time.ge.0.3) then
@@ -1114,6 +1129,12 @@ c$$$  call mpi_barrier(MPI_COMM_WORLD,ierr)
             call cputim(tt999)
             ibarcount=ibarcount+1
             ttbar = ttbar + (tt999-tt998)*60
+
+c          print*,' before do nreg=',time
+c          print*,' x(1,1-10)=',(x(1,nxtlst(k)),k=1,nxtlen)
+c          print*,' x0(1,1-10)=',(x0(1,nxtlst(k)),k=1,nxtlen)
+c          print*,' xdot(1,1-10)=',(xdot(1,nxtlst(k)),k=1,nxtlen)
+c          print*,' x0dot(1,1-10)=',(x0dot(1,nxtlst(k)),k=1,nxtlen)
 
 !$omp parallel do if(NREG.GE.ITHREAD) private(L,I,NNB)
             DO L = 1,NREG

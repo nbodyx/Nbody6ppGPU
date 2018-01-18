@@ -1,6 +1,10 @@
 #ifndef SIMD_DEFINE
 #define SIMD_DEFINE
 
+#ifndef __USE_GNU
+#define __USE_GNU
+#endif
+
 #ifdef __USE_INTEL
 #undef __USE_GNU
 #include "immintrin.h"

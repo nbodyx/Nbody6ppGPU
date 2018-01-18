@@ -34,7 +34,8 @@ c$$$      print*,'CHFIRR I FIRR',I,FIRR(1:3)
       RPERT2 = CMSEP2*(0.5*RSUM)**2
       DO 30 L = 2,NPC
           J = LISTC(L)
-          call jpred_int(J,TIME)
+          ttime = TIME
+          call jpred_int(J,ttime)
           DX(1) = X(1,J) - XI(1)
           DX(2) = X(2,J) - XI(2)
           DX(3) = X(3,J) - XI(3)

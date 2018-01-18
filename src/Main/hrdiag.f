@@ -77,9 +77,9 @@
       if(nsflag.eq.1) mxns = mxns1
 *
       mass0 = mass
-      if(mass0.gt.100.d0) mass = 100.d0
+c      if(mass0.gt.100.d0) mass = 100.d0
       mt0 = mt
-      if(mt0.gt.100.d0) mt = 100.d0
+c      if(mt0.gt.100.d0) mt = 100.d0
 *
 * Make evolutionary changes to stars that have not reached KW > 5.
 *

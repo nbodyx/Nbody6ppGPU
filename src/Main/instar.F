@@ -265,9 +265,14 @@
  65      continue
  60   continue
 *
-      if(rank.eq.0)
-     &WRITE (6,75)  KTYPE
-   75 FORMAT (/,11X,' KTYPE: ',15I4,14(/,19X,15I4))
+      if(rank.eq.0)then
+      WRITE (6,76)  (K,K=1,14)
+   76 FORMAT (/,11X,' KTYPE: ',14I4)
+      do 80 I=1,14
+      WRITE (6,75)  I,(KTYPE(I,K),K=1,14)
+   75 FORMAT (/,11X,I5,': |',15I4)
+ 80   continue
+      end if
 *
       RETURN
       END

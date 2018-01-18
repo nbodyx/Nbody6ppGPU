@@ -566,12 +566,16 @@ c#endif
          MENV(K) = ME
          RENV(K) = RE
          K2STR(K) = K2
+         RI = SQRT(X(1,I)**2 + X(2,I)**2 + X(3,I)**2)
+         VI = SQRT(XDOT(1,I)**2 + XDOT(2,I)**2 + XDOT(3,I)**2)
 *
 *       Ensure that type change occurs at time TEV.
          IF(KW.NE.KSTAR(I).OR.DABS(M1-M0)/M0.GT.0.05D0)THEN
             IF (rank.eq.0.and.KW.GE.13) THEN
-                WRITE (6,190)  I, NAME(I), KSTAR(I), KW, MASS(K)
-  190           FORMAT (' NS/BH FORMATION    ',2I7,2I4,F7.2)
+                WRITE (6,190)  I, NAME(I), KSTAR(I), KW, MASS(K), M0,
+     &              RADIUS(I)*SU, VI, RI, RCC, MC
+  190           FORMAT (' NS/BH FORMATION  ',2I10,2I4,' M new/old[*]',
+     &     1P,2E9.1,' RAD[*]',E9.1,' R,V=',2E9.1,' RCC,MC=',2E9.1)
             END IF
             KWOLD = KW
             KW = KSTAR(I)

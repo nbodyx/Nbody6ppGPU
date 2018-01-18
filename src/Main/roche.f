@@ -92,6 +92,7 @@
 *       Save the original stellar types and initialize coalescence flag.
           KW1 = KSTAR(J1)
           KW2 = KSTAR(J2)
+          IXXX = 0
           COALS = .FALSE.
 *         if(rank.eq.0)
 *    &    write(6,*)' start roche ',name(j1),name(j2),kw1,kw2,
@@ -259,6 +260,16 @@ C     &                FILE='ROCHE')
               CALL FLUSH(85)
               end if
           ENDIF
+          
+          if(rank.eq.0)then
+          WRITE (6,5555)  NAME(J1), NAME(J2), KW1, KW2,
+     &              BODY(J1)*ZMBAR, BODY(J2)*ZMBAR,
+     &              RADIUS(J1)*SU,RADIUS(J2)*SU
+ 5555       FORMAT (' BEGIN ROCHE.F:  NAME1,2 ',2I10,
+     &     '  KW1,2 ',2I3,' M1,2 [M*] ',1P,2E10.3,
+     &     '  RAD1,2[*]',1P,2E10.3)  
+          end if
+
 *
 *       Evaluate 1/10 of nuclear time interval (yrs).
           M1 = MASS(1)
@@ -327,6 +338,16 @@ C     &                FILE='ROCHE')
       TDYN = 5.05D-05*SQRT(RAD(1)**3/MASS(1))
 * Identify special cases.
 *
+
+      if(rank.eq.0)then
+          WRITE (6,5556)  NAME(J1), NAME(J2), KW1, KW2,
+     &              BODY(J1)*ZMBAR, BODY(J2)*ZMBAR,
+     &              RADIUS(J1)*SU,RADIUS(J2)*SU
+ 5556       FORMAT (' 2 ROCHE.F:  NAME1,2 ',2I10,
+     &     '  KW1,2 ',2I3,' M1,2 [M*] ',1P,2E10.3,
+     &     '  RAD1,2[*]',1P,2E10.3)  
+      end if
+
       IF(KSTAR(J1).EQ.2)THEN
          QC = 4.D0
       ELSEIF(KSTAR(J1).EQ.3.OR.KSTAR(J1).EQ.5.OR.KSTAR(J1).EQ.6)THEN
@@ -428,6 +449,7 @@ C     &                FILE='ROCHE')
             IF(DM2.LT.DM1) SUPEDD = .TRUE.
             MASS(2) = MASS(2) + DM2
          ENDIF
+         IXXX = 1 
          COALS = .TRUE.
          IF(MASS(2).GT.0.D0) MASS(1) = 0.D0
          KW1 = KSTAR(J2)
@@ -540,6 +562,7 @@ C     &                FILE='ROCHE')
             NAS = NAS + 1
             KW1 = 15
          ENDIF
+         IXXX = 2
          COALS = .TRUE.
          GOTO 60
 *
@@ -552,6 +575,7 @@ C     &                FILE='ROCHE')
          KW1 = 14
          DM2 = DM1
          MASS(2) = MASS(2) + DM2
+         IXXX = 3
          COALS = .TRUE.
          NGB = NGB + 1
          GOTO 60
@@ -564,6 +588,7 @@ C     &                FILE='ROCHE')
          KW1 = KSTAR(J2)
          DM2 = DM1
          MASS(2) = MASS(2) + DM2
+         IXXX = 4
          COALS = .TRUE.
          GOTO 60
       ELSE
@@ -733,6 +758,7 @@ C     &                FILE='ROCHE')
                MASS(1) = MASS(1) - KM*(DM1 + DMS(1))
                MASS(2) = 0.D0
                KW1 = KSTAR(J1)
+               IXXX = 5
                COALS = .TRUE.
                GOTO 60
             ELSEIF(KSTAR(J1).LE.10.AND.KST.GE.11)THEN
@@ -750,6 +776,7 @@ C     &                FILE='ROCHE')
                      MASS(1) = MASS(1) - KM*(DM1 + DMS(1))
                      MASS(2) = 0.D0
                      KW1 = KSTAR(J1)
+                     IXXX = 6
                      COALS = .TRUE.
                      GOTO 60
                   ENDIF
@@ -772,6 +799,7 @@ C     &                FILE='ROCHE')
                MASS(1) = MASS(1) - DM1 - KM*DMS(1)
                MASS(2) = 0.D0
                KW1 = KSTAR(J1)
+               IXXX = 7
                COALS = .TRUE.
                GOTO 60
             ENDIF
@@ -1118,6 +1146,18 @@ C     &                FILE='ROCHE')
      &                TPHYS,AJ(K),TK,MASS0(K),MASS0(3-K),
      &                MASS(K),TK,ZMET,ECC,TK,JSPIN(K),TK,CH5
 *
+          if(rank.eq.0)then
+          WRITE (6,5557)  NAME(J1), NAME(J2), KW1, KW2,
+     &              KSTAR(J1),KSTAR(J2),
+     &              BODY(J1)*ZMBAR, BODY(J2)*ZMBAR,
+     &              RADIUS(J1)*SU,RADIUS(J2)*SU,RAD(1),RAD(2),IXXX
+ 5557       FORMAT (' END ROCHE.F:  NAME1,2 ',2I10,
+     &     '  KW1,2 ',2I3,' KSTAR 1,2 ', 2I3,' M1,2 [M*] ',1P,2E10.3,
+     &     '  RADIUS1,2[*]',1P,2E10.3,' RAD1,2 ',1P,2E10.3,
+     &     ' IXXX= ',I3)  
+          end if
+                                                 
+
           CALL coal(IPAIR,KW1,MASS)
           GO TO 200
       ENDIF
@@ -1376,7 +1416,14 @@ C     &                FILE='ROCHE')
 ***** Note:add---------------------------------------------------------**
 * Perform coalescence check after shrinkage.
                IF (RAD(1)+RAD(2).LT.SEP)THEN
+                  IXXX = 8
                   COALS = .TRUE.
+* Abbas bug fix ---------------------
+                  KW1 = KTYPE(KSTAR(J1),KSTAR(J2))
+                  IF (KW1.GT.100) KW1 = KW1 - 100
+* -----------------------------------              
+                  WRITE(6,*) ' IXXX=8 K(1),K(2) ', KSTAR(J1),KSTAR(J2),
+     &            ' KW1,KW2 ',KW1,KW2,' J1, J2 ', NAME(J1), NAME(J2)     
                   GO TO 60
                ENDIF
 *     --02/28/13 9:59-lwang-end-add------------------------------------*
@@ -1495,7 +1542,7 @@ C     &                FILE='ROCHE')
 *       Produce diagnostics for cases involving degenerate objects.
           IF (ITER.EQ.1.AND.INEW.GT.0.AND.KSTAR(J2).GE.10) THEN
               IF (ABS(DTM).GT.1.0D-20) THEN
-                  PD = DAYS*SEMI*SQRT(SEMI/BODY(I))
+          PD = TWOPI*SEMI*SQRT(DABS(SEMI)/BODY(I))*TSTAR*365.24D6
                   if(rank.eq.0)
      &            WRITE (22,58)  NAME(J1), NAME(J2),
      &                           KSTAR(J1), KSTAR(J2),

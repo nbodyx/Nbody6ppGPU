@@ -147,7 +147,6 @@
    50     CONTINUE
 *     recover kstart
           KSTART = KSDUM
-      END IF
 *     Diagnostic
       if(rank.eq.0) write(6,51) SQRT(SMMIN)*RAU, SQRT(SMMAX)*RAU,
      &      XMMIN*ZMBAR, XMMAX*ZMBAR, TMMIN*DAYS, TMMAX*DAYS
@@ -155,7 +154,7 @@
      &     ' R12(max)[AU]',F15.6,' MCM(min)[M*]',F15.6,
      &     ' MCM(max)[M*]',F15.6,' P[min][days]',1P,E15.6,
      &     ' P[max][days]',E15.6,0P)
-
+      END IF
 *       Set initial neighbour list & corresponding radius.
       RS0 = RC
       call cputim(tt1)

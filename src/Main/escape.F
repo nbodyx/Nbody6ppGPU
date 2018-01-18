@@ -82,7 +82,6 @@
  8          CONTINUE
 *     Check escape criterion for tidal case or isolated system.
             EI = 0.5*VI2 - POTI
-
 #ifdef TT
 *** FlorentR - add nbody6tt
           IF (KZ(14).EQ.4.OR.KZ(14).EQ.3.OR.KZ(14).EQ.9) THEN
@@ -199,6 +198,7 @@
       RSI = RS(I)
 *
 *       Accumulate escaper names and save current name in case I > N.
+            PRINT*,' ESCAPE Check POTI PHIDBL=',POTI,PHIDBL(I)
       NCORR = NCORR + 1
       JLIST(NCORR) = NAME(I)
       NAMEI = NAME(I)
@@ -389,7 +389,10 @@
           ECC = SQRT(ECC2)
           PMIN  = SEMI*(1.0 - ECC)
           RATIO = MAX(RADIUS(2*IPAIR-1),RADIUS(2*IPAIR))/PMIN
-          NAME1 = NAME(2*IPAIR-1)
+          I1 = 2*IPAIR - 1
+          I2 = 2*IPAIR
+          NAME1 = NAME(I1)
+          NAME2 = NAME(I2)
           KSTAR1 = KSTAR(2*IPAIR-1)
           PB = DAYS*SEMI*SQRT(SEMI/ZMB)
       ELSE
@@ -425,7 +428,6 @@
 *
 *       Distinguish between actual and ghost binary (mergers come later).
       IF (BODY(2*IPAIR-1).GT.0.0D0) THEN
-          NAME2 = NAME(2*IPAIR)
 *
 *       Include rare case of higher-order system (4, 5 or 6 members).
           IF (NAMEI.LT.-2*NZERO) THEN
@@ -460,20 +462,20 @@
 *
           if(rank.eq.0)then
           VI = SQRT(0.5*VI2*ZMASS/ZKIN)
-          WRITE (6,200)  IPAIR, NAME(2*IPAIR-1), NAME2,
-     &                   KSTAR(2*IPAIR-1), KSTAR(2*IPAIR), KSTARI,
-     &                   LIST(2,2*IPAIR), BODY(2*IPAIR-1)*ZMBAR,
-     &                   BODY(2*IPAIR)*ZMBAR, EB, RATIO, VI, ECC, EI, PB
-  200     FORMAT (/,' BINARY ESCAPE    KS =',I5,'  NM =',2I6,
-     &                '  K* =',4I3,'  M =',2F5.1,'  EB =',F8.4,
+          WRITE (6,200)  IPAIR,NAME1,NAME2,KSTAR(I1),KSTAR(I2),KSTARI,
+     &                   LIST(2,I2), BODY(2*IPAIR-1)*ZMBAR,
+     &                   BODY(2*IPAIR)*ZMBAR,EB,RATIO,VI,ECC,EI,PB,
+     &              RADIUS(I1)*SU,RADIUS(I2)*SU
+  200     FORMAT (/,' BINARY ESCAPE    KS =',I5,'  NM1,2=',2I10,
+     &           '  KW1,2,S,LS=',4I4,'  M =',1P,2E9.1,'  EB =',0P,F8.4,
      &                '  R*/PM =',F5.2,'  V/<V> =',F5.2,'  E =',F5.2,
-     &                '  EI =',F8.5,'  P =',1P,E8.1)
+     &                '  EI =',F8.5,'  P =',1P,E8.1,
+     &                '  RAD1,2[*]',1P,2E9.1)
           end if
       ELSE
           if(rank.eq.0)
-     &    WRITE (6,202)  IPAIR, NAME(2*IPAIR-1), NAME(2*IPAIR),
-     &                   LIST(2,2*IPAIR), KSTAR(JM), CM(3,IM)*ZMBAR,
-     &                   CM(4,IM)*ZMBAR, EB1, ECC, SEMI, PB
+     &    WRITE (6,202)  IPAIR,NAME1,NAME2,LIST(2,2*IPAIR),KSTAR(JM),
+     &                   CM(3,IM)*ZMBAR,CM(4,IM)*ZMBAR,EB1,ECC,SEMI,PB
   202     FORMAT (/,' QUAD ESCAPE    KS =',I5,'  NM =',2I6,
      &                '  K* =',2I3,'  M =',2F5.1,'  EB =',F8.4,
      &                '  E =',F7.3,'  A =',1P,E8.1,'  P =',E8.1)
@@ -502,6 +504,8 @@
       N = N - 1
       NPAIRS = NPAIRS - 1
       IFIRST = 2*NPAIRS + 1
+*       Initialize NNTB correctly
+      IF (NPAIRS.EQ.0) NNTB = 0 
 *
 *       Move up all tables of regularized pairs below IPAIR.
       IF (IPAIR.LE.NPAIRS) THEN

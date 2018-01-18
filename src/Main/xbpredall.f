@@ -25,12 +25,13 @@
          XDOT(2,J) = (FDOT(2,J)*S1 + F(2,J))*S2 + X0DOT(2,J)
          XDOT(3,J) = (FDOT(3,J)*S1 + F(3,J))*S2 + X0DOT(3,J)
          TPRED(J) = TIME
+         TTIME = TIME
          IF (J.GT.N) THEN
             JPAIR = J - N
             IF (LIST(1,2*JPAIR - 1).GT.0) THEN
                ZZ = 1.0
                IF (GAMMA(JPAIR).GT.1.0D-04) ZZ = 0.0
-               CALL KSRES2(JPAIR,J1,J2,ZZ,TIME)
+               CALL KSRES2(JPAIR,J1,J2,ZZ,TTIME)
             END IF
 *     --03/07/14 21:22-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**

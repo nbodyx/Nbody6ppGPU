@@ -1,4 +1,4 @@
-      SUBROUTINE MYDUMP(II,J)
+      SUBROUTINE MYDUMP(II,JUNIT)
 *
 *
 *       COMMON save or read.
@@ -12,13 +12,13 @@
 #ifdef TT
       INCLUDE 'tt.h'
 #endif
-      PARAMETER  (NA=84,NB=168,NC=530,ND=392+MLR+MLD+MLV,NE=24,NM=40,
+      PARAMETER  (NA=85,NB=168,NC=530,ND=392+MLR+MLD+MLV,NE=24,NM=40,
      &    NG=132,NL=99,NO=20*MCL+16,NP=32*NTMAX,NQ=31*MMAX,
      &    NS=44*MMAX)
-      REAL*4  A,B,C,D,E,G,L,M,O,P,Q,S
-      INTEGER K,I,NTSAVE,NPARTMP(10)
+      REAL*4  B,C,D,E,G,L,M,O,P,Q,S
+      INTEGER K,I,NTSAVE,NPARTMP(10),KSTAR,NCOMM,IA
 *
-      COMMON/NAMES/  NTOT,NPAIRS,NTTOT,A(NA)
+      COMMON/NAMES/  NTOT,NPAIRS,NTTOT,IA(NA)
       COMMON/COUNTS/ B(NB)
       COMMON/PARAMS/ C(NC)
       COMMON/STARS/  D(ND)
@@ -40,7 +40,7 @@
      &               BODY0(NMAX),EPOCH(NMAX),SPIN(NMAX),XSTAR(NMAX),
      &               ZLMSTY(NMAX),FIDOT(3,NMAX),D0(3,NMAX),
      &               FRDOT(3,NMAX),D0R(3,NMAX),KSTAR(NMAX),NAME(NMAX),
-     &               LIST(LMAX,NMAX)
+     &               IMINR(NMAX),LIST(LMAX,NMAX)
 *
       COMMON/PAIRS/  U(4,KMAX),U0(4,KMAX),UDOT(4,KMAX),FU(4,KMAX),
      &               FUDOT(4,KMAX),FUDOT2(4,KMAX),FUDOT3(4,KMAX),
@@ -50,19 +50,37 @@
      &               FP0(4,KMAX),FD0(4,KMAX),KBLIST(10*KMAX),
      &               KSLOW(KMAX),TBLIST
 *
+      REAL*8 CC(265)
+      EQUIVALENCE (CC(1),C(1))
 *
-*       Open unit #J by reading dummy and rewinding.
-      if(rank.eq.0)then
-      CALL FILE_INIT(J)
-      REWIND J
-      READ (J,ERR=10,END=10)  DUMMY
-   10 REWIND J
-      end if
+      CHARACTER*27 FILE(2)
+      CHARACTER*20 TCHAR
+      CHARACTER*7 FRAG(2)
+      DATA FRAG/'comm.1_','comm.2_'/
+      DATA J0/0/
+      SAVE J
 *
 *       Read or save all COMMON variables (valid for tape or disc).
       IF (II.NE.0) THEN
 
          if(rank.eq.0) then
+*     Save comm.n data in separate files split by time
+*     Make sure TTOT is still in CC(158) see common6.h
+         TTOT = CC(158)
+         DTADJ = CC(3)
+         IF(TTOT.LE.1.D-5)THEN
+           J0 = JUNIT
+           J = J0 + 198
+         END IF
+         J = J + 1
+         NCOMM = IA(16)
+         IF(MOD(J-201,NCOMM).EQ.0)THEN
+         call string_left(TCHAR,TTOT,DTADJ)
+         write(FILE(JUNIT),118) FRAG(JUNIT),TCHAR
+ 118     format(A7,A20)
+         print*,' MYDUMP ',TTOT,TCHAR,J,FILE(JUNIT)
+      OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',FILE=FILE(JUNIT))
+*
 *     Also write params.h to help data transfer
             NPARTMP(1) = NMAX
             NPARTMP(2) = KMAX
@@ -76,7 +94,8 @@
             NPARTMP(10) = NTMAX
             WRITE (J) NPARTMP
 *     
-            WRITE (J) ntot,npairs,nttot,a,b,c,d,e,g,l,m,o,p,q,s
+            WRITE (J) ntot,npairs,nttot,ia,b,c,d,e,g,l,m,o,p,q,s
+         END IF
        end if
 *
 *       Check expanding arrays to include possible tidal tails (up to NTTOT).
@@ -86,6 +105,7 @@
         END IF
 *
         if(rank.eq.0)then
+         IF(MOD(J-201,NCOMM).EQ.0)THEN
         WRITE (J) ((x(k,i),k=1,3),i=1,ntot),((x0(k,i),k=1,3),i=1,ntot),
      *   ((x0dot(k,i),k=1,3),i=1,ntot),((xdot(k,i),k=1,3),i=1,ntot),
      *   ((f(k,i),k=1,3),i=1,ntot),((fdot(k,i),k=1,3),i=1,ntot),
@@ -101,7 +121,7 @@
      *   (spin(i),i=1,ntot),(xstar(i),i=1,ntot),(zlmsty(i),i=1,ntot),
      *   ((fidot(k,i),k=1,3),i=1,ntot),((d0(k,i),k=1,3),i=1,ntot),
      *   ((frdot(k,i),k=1,3),i=1,ntot),((d0r(k,i),k=1,3),i=1,ntot),
-     *   (kstar(i),i=1,ntot),(name(i),i=1,ntot)
+     *   (kstar(i),i=1,ntot),(iminr(i),i=1,ntot),(name(i),i=1,ntot)
 *
         write (J) ((u(k,i),k=1,4),i=1,npairs),((u0(k,i),k=1,4),i=1,
      *    npairs),((udot(k,i),k=1,4),i=1,npairs),((fu(k,i),k=1,4),i=1,
@@ -115,7 +135,7 @@
      *    k=1,4),i=1,npairs),((fd0(k,i),k=1,4),i=1,npairs),
      *    (kblist(i),i=1,10*npairs),(kslow(i),i=1,npairs),tblist
 *
-        write (J) ((list(k,i),k=1,list(1,i)+2),i=1,ntot)
+        write (J) (list(1,i),(list(k,i),k=2,list(1,i)+1),i=1,ntot)
 *
         write (J) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *       NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,
@@ -130,25 +150,28 @@
      &       ((tteigenv(k,i),k=1,3),i=1,3),(ttrtide(k),k=1,3)
 *** FRenaud
 #endif
-
         END FILE J
         CLOSE (UNIT=J)
+        END IF
         end if
 *
 *       Restore standard array pointer.
         NTOT = NTSAVE
       else
         if(rank.eq.0) then
+*
+        J = II + 1
+        OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',FILE='comm.1')
            READ (J) NPARTMP
 
 *     Safe check
-C           IF(NPARTMP(4).NE.INT(MMAX)) then
-C              write(6,*) 'Error! MMAX mismatch (Data:',NPARTMP(4),
-C     &             'Current:', MMAX
-C              call flush(6)
-C              call abort()
-C           END IF
-
+            IF(NPARTMP(4).NE.INT(MMAX)) then
+               write(6,*) 'Error! MMAX mismatch (Data:',NPARTMP(4),
+     &             'Current:', MMAX
+               call flush(6)
+               call abort()
+            END IF
+*
            IF(NPARTMP(5).NE.INT(MLD)) then
               write(6,*) 'Error! MLD mismatch (Data:',NPARTMP(5),
      &             'Current:', MLD
@@ -191,7 +214,13 @@ C           END IF
               call abort()
            END IF
            
-           READ (J) ntot,npairs,nttot,a,b,c,d,e,g,l,m,o,p,q,s
+           READ (J) ntot,npairs,nttot,ia,b,c,d,e,g,l,m,o,p,q,s
+
+            PRINT*,' R MYDUMP J,II,NPARTMP=',J,II,NPARTMP,
+     *             ' ntot,npairs,nttot=',ntot,npairs,nttot,
+     *      ' sum na+...+ns=',NA+NB+NC+ND+NE+NG+NL+NM+NO+NP+NQ+NS
+            PRINT*,' NA-NS=',NA,NB,NC,ND,NE,NG,NL,NM,NO,NP,NQ,NS
+
         end if
 *
         if (rank.eq.0.and.ntot.gt.nmax) then
@@ -233,7 +262,7 @@ C           END IF
      *   (spin(i),i=1,ntot),(xstar(i),i=1,ntot),(zlmsty(i),i=1,ntot),
      *   ((fidot(k,i),k=1,3),i=1,ntot),((d0(k,i),k=1,3),i=1,ntot),
      *   ((frdot(k,i),k=1,3),i=1,ntot),((d0r(k,i),k=1,3),i=1,ntot),
-     *   (kstar(i),i=1,ntot),(name(i),i=1,ntot)
+     *   (kstar(i),i=1,ntot),(iminr(i),i=1,ntot),(name(i),i=1,ntot)
 *
         read (J) ((u(k,i),k=1,4),i=1,npairs),((u0(k,i),k=1,4),i=1,
      *    npairs),((udot(k,i),k=1,4),i=1,npairs),((fu(k,i),k=1,4),i=1,
@@ -247,8 +276,8 @@ C           END IF
      *    k=1,4),i=1,npairs),((fd0(k,i),k=1,4),i=1,npairs),
      *    (kblist(i),i=1,10*npairs),(kslow(i),i=1,npairs),tblist
 *
-        read (J) (list(1,i),(list(k,i),k=2,list(1,i)+2),i=1,ntot)
-
+         read (J) (list(1,i),(list(k,i),k=2,list(1,i)+1),i=1,ntot)
+*
         read (J) NXTLIMIT,NGHOSTS,NXTLST(1:NXTLIMIT+NGHOSTS),NXTLEN,
      *       NDTK(1:64),NDTMIN,NDTMAX,NXTLEVEL,NLSTDELAY(1),
      *       (NLSTDELAY(K),K=2,NLSTDELAY(1)+1)
@@ -293,7 +322,7 @@ C           END IF
          CALL MPI_BCAST(ntot,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
          CALL MPI_BCAST(npairs,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
          CALL MPI_BCAST(nttot,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
-         CALL MPI_BCAST(A(1),NA,MPI_REAL4,0,MPI_COMM_WORLD,ierr)
+         CALL MPI_BCAST(IA(1),NA,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
          CALL MPI_BCAST(B(1),NB,MPI_REAL4,0,MPI_COMM_WORLD,ierr)
          CALL MPI_BCAST(C(1),NC,MPI_REAL4,0,MPI_COMM_WORLD,ierr)
          CALL MPI_BCAST(D(1),ND,MPI_REAL4,0,MPI_COMM_WORLD,ierr)
@@ -309,7 +338,7 @@ C           END IF
 *       read (J) x,x0,xn,xndot,x0dot,f,fdot,xdot (3,ntot)
 *                fi,d1,d2,d3,fr,d1r,d2r,d3r,fidot,d0,frdot,d0r (3,ntot)
 *                body, rs, step, t0, stepr, t0r,timenw,radius, tev (ntot)
-*                tev0,body0,epoch,spin,xstar,zlmsty,kstar (ntot)
+*                tev0,body0,epoch,spin,xstar,zlmsty,kstar (ntot),iminr(ntot)
        CALL MPI_BCAST(X(1,1),3*NTOT,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
        CALL MPI_BCAST(XDOT(1,1),3*NTOT,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
        CALL MPI_BCAST(X0(1,1),3*NTOT,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
@@ -344,6 +373,8 @@ C           END IF
        CALL MPI_BCAST(XSTAR(1),NTOT,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
        CALL MPI_BCAST(ZLMSTY(1),NTOT,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
        CALL MPI_BCAST(KSTAR(1),NTOT,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+       CALL MPI_BCAST(IMINR(1),NTOT,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+
 *
 *       read u,u0,udot,fu,fudot,fudot2,fudot3,fp0,fd0 (4,npairs) sf(7,npairs)
 *            h,hdot,hdot2,hdot3,hdot4,dtau,tdot2,tdot3,r,r0,gamma,h0 (npairs)

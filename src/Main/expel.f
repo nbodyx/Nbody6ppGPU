@@ -244,8 +244,8 @@ cnew-abbas-26/07/2017
    12       CONTINUE
             if(rank.eq.0)WRITE (6,13)  NAME(I), KSTAR(I), BODY(I)*ZMBAR
    13       FORMAT (' MASSLESS GHOST    NAM K* M ',I6,I4,1P,E10.2)
-*       Include special treatment for velocity kick of KS binary.
-          ELSE IF (KW1.GE.10) THEN
+*       Include special treatment for velocity kick of KS binary. (WD should be excluded)
+          ELSE IF (KW1.GE.13) THEN
 *
               IF (ECC.LE.0.001D0) KSTAR(N+IPAIR) = 10
 *       Re-initialize the KS solution with new perturber list.

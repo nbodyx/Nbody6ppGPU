@@ -847,7 +847,8 @@ C     &                FILE='ROCHE')
 *
 * For very close systems include gravitational radiation.
 *
-         IF(SEP.LE.10.0)THEN
+C         IF(SEP.LE.10.0)THEN
+         IF(KSTAR(J1).GE.13.OR.KSTAR(J2).GE.13) THEN
             CALL GRRAD(MASS(1),MASS(2),SEP,ECC,JORB,DJGR,DELET1)
             DJGR = DJGR*DTM0
             DJORB = DJORB + DJGR

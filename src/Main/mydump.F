@@ -66,20 +66,25 @@
          if(rank.eq.0) then
 *     Save comm.n data in separate files split by time
 *     Make sure TTOT is still in CC(158) see common6.h
-         TTOT = CC(158)
-         DTADJ = CC(3)
-         IF(TTOT.LE.1.D-5)THEN
-           J0 = JUNIT
-           J = J0 + 198
-         END IF
-         J = J + 1
-         NCOMM = IA(16)
-         IF(MOD(J-201,NCOMM).EQ.0)THEN
-         call string_left(TCHAR,TTOT,DTADJ)
-         write(FILE(JUNIT),118) FRAG(JUNIT),TCHAR
- 118     format(A7,A20)
-         print*,' MYDUMP ',TTOT,TCHAR,J,FILE(JUNIT)
-      OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',FILE=FILE(JUNIT))
+            TTOT = CC(158)
+            DTADJ = CC(3)
+            IF(TTOT.LE.1.D-5)THEN
+               J0 = JUNIT
+               J = J0 + 198
+            END IF
+            J = J + 1
+            NCOMM = IA(16)
+            IF(MOD(J-201,NCOMM).EQ.0) THEN
+               call string_left(TCHAR,TTOT,DTADJ)
+               write(FILE(JUNIT),118) FRAG(JUNIT),TCHAR
+ 118           format(A7,A20)
+               print*,' MYDUMP ',TTOT,TCHAR,J,FILE(JUNIT)
+               OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',
+     &              FILE=FILE(JUNIT))
+            else 
+               OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',
+     &              FILE='comm.2')
+            end if
 *
 *     Also write params.h to help data transfer
             NPARTMP(1) = NMAX
@@ -96,16 +101,15 @@
 *     
             WRITE (J) ntot,npairs,nttot,ia,b,c,d,e,g,l,m,o,p,q,s
          END IF
-       end if
 *
 *       Check expanding arrays to include possible tidal tails (up to NTTOT).
         NTSAVE = NTOT
         IF (NTTOT.GT.0) THEN
             NTOT = NTTOT
         END IF
-*
+*     
         if(rank.eq.0)then
-         IF(MOD(J-201,NCOMM).EQ.0)THEN
+*         IF(MOD(J-201,NCOMM).EQ.0)THEN
         WRITE (J) ((x(k,i),k=1,3),i=1,ntot),((x0(k,i),k=1,3),i=1,ntot),
      *   ((x0dot(k,i),k=1,3),i=1,ntot),((xdot(k,i),k=1,3),i=1,ntot),
      *   ((f(k,i),k=1,3),i=1,ntot),((fdot(k,i),k=1,3),i=1,ntot),
@@ -152,8 +156,8 @@
 #endif
         END FILE J
         CLOSE (UNIT=J)
-        END IF
-        end if
+*        END IF
+      end if
 *
 *       Restore standard array pointer.
         NTOT = NTSAVE

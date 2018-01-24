@@ -5,8 +5,8 @@
 *       --------------------------------------------
 *
       INCLUDE 'common6.h'
-      INTEGER  NTYPE(17)
-      real*8 thookf,tbgbf
+      INTEGER  NTYPE(17),NMASS(3)
+      real*8 thookf,tbgbf, mass
       external thookf,tbgbf
 *
 *
@@ -16,6 +16,8 @@ C      IF (NMDOT.GT.0) THEN
          NTYPE(J) = 0
  5    CONTINUE
 *     
+      NMASS(1:3) = 0
+
       KM = 1
       DO 10 J = 1,N
          KW = KSTAR(J) + 1
@@ -23,7 +25,11 @@ C      IF (NMDOT.GT.0) THEN
          KW = MAX(KW,1)
          NTYPE(KW) = NTYPE(KW) + 1
          KM = MAX(KM,KW)
+         MASS = BODY(J)*ZMBAR
+         IF(MASS.ge.8.0) NMASS(1) = NMASS(1) + 1
+         IF(MASS.ge.3.0) NMASS(2) = NMASS(2) + 1
  10   CONTINUE
+      NMASS(3) = N
 *
       if(rank.eq.0)then
          WRITE (6,15)
@@ -82,15 +88,17 @@ C      END IF
      &           'EBIN EMERGE ECOLL EMDOT ECDOT EKICK ESESC ',
      &           'EBESC EMESC DEGRAV EBIND MMAX ',
      &           'NMDOT NRG NHE NRS NNH NWD NSN NBH NBS ',
-     &           'ZMRG ZMHE ZMRS ZMNH ZMWD ZMSN ZMDOT NTYPE(1:16)')
+     &           'ZMRG ZMHE ZMRS ZMNH ZMWD ZMSN ZMDOT NTYPE(1:16) ',
+     &           'NM8 NM3 NMT')
          end if
          write(35,41) TTOT*TSTAR, NDISS, NTIDE, NSYNC, NCOLL, NCOAL,
      &        NDD, NCIRC,NROCHE, NRO, NCE, NHYP, NHYPC, NKICK,
      &        EBIN, EMERGE,ECOLL, EMDOT, ECDOT, EKICK, ESESC, EBESC,
      &        EMESC, DEGRAV, E(3), ZMX,
      &        NMDOT, NRG, NHE, NRS, NNH, NWD, NSN, NBH, NBS,
-     &        ZMRG, ZMHE, ZMRS, ZMNH, ZMWD, ZMSN, ZMDOT,NTYPE(1:16)
- 41      FORMAT(E26.17,13I12,12E26.17,9I12,7E26.17,16I12)
+     &        ZMRG, ZMHE, ZMRS, ZMNH, ZMWD, ZMSN, ZMDOT,NTYPE(1:16),
+     &        NMASS(1:3)
+ 41      FORMAT(E26.17,13I12,12E26.17,9I12,7E26.17,19I12)
          call flush(35)
       END IF
 *

@@ -1,4 +1,4 @@
-      SUBROUTINE MYDUMP(II,JUNIT)
+      SUBROUTINE MYDUMP(II,J)
 *
 *
 *       COMMON save or read.
@@ -54,11 +54,11 @@
       EQUIVALENCE (CC(1),C(1))
 *
       CHARACTER*27 FILE(2)
+      CHARACTER*7  FILECOMM(2)
       CHARACTER*20 TCHAR
       CHARACTER*7 FRAG(2)
+      DATA FILECOMM/'comm.1','comm.2'/
       DATA FRAG/'comm.1_','comm.2_'/
-      DATA J0/0/
-      SAVE J
 *
 *       Read or save all COMMON variables (valid for tape or disc).
       IF (II.NE.0) THEN
@@ -68,22 +68,17 @@
 *     Make sure TTOT is still in CC(158) see common6.h
             TTOT = CC(158)
             DTADJ = CC(3)
-            IF(TTOT.LE.1.D-5)THEN
-               J0 = JUNIT
-               J = J0 + 198
-            END IF
-            J = J + 1
             NCOMM = IA(16)
-            IF(MOD(J-201,NCOMM).EQ.0) THEN
+            IF(DMOD(TTOT,DBLE(NCOMM)).EQ.0) THEN
                call string_left(TCHAR,TTOT,DTADJ)
-               write(FILE(JUNIT),118) FRAG(JUNIT),TCHAR
+               write(FILE(J),118) FRAG(J),TCHAR
  118           format(A7,A20)
-               print*,' MYDUMP ',TTOT,TCHAR,J,FILE(JUNIT)
+               print*,' MYDUMP ',TTOT,TCHAR,J,FILE(J)
                OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',
-     &              FILE=FILE(JUNIT))
+     &              FILE=FILE(J))
             else 
                OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',
-     &              FILE='comm.2')
+     &              FILE=FILECOMM(J))
             end if
 *
 *     Also write params.h to help data transfer
@@ -164,8 +159,8 @@
       else
         if(rank.eq.0) then
 *
-        J = II + 1
-        OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',FILE='comm.1')
+        OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',
+     &       FILE=FILECOMM(1))
            READ (J) NPARTMP
 
 *     Safe check
@@ -301,6 +296,7 @@
 
 #endif
 
+        close (UNIT=J)
         end if
 
 *     Reinitialize KVEC

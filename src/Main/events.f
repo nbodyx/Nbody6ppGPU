@@ -5,7 +5,7 @@
 *       --------------------------------------------
 *
       INCLUDE 'common6.h'
-      INTEGER  NTYPE(17),NMASS(3)
+      INTEGER  NTYPE(17),NMASS(9)
       real*8 thookf,tbgbf, mass
       external thookf,tbgbf
 *
@@ -16,9 +16,11 @@ C      IF (NMDOT.GT.0) THEN
          NTYPE(J) = 0
  5    CONTINUE
 *     
-      NMASS(1:3) = 0
+      NMASS(1:9) = 0
 
       KM = 1
+      RH2 = RSCALE*RSCALE
+      RT2 = RTIDE*RTIDE
       DO 10 J = 1,N
          KW = KSTAR(J) + 1
          KW = MIN(KW,16)
@@ -26,10 +28,21 @@ C      IF (NMDOT.GT.0) THEN
          NTYPE(KW) = NTYPE(KW) + 1
          KM = MAX(KM,KW)
          MASS = BODY(J)*ZMBAR
-         IF(MASS.ge.8.0) NMASS(1) = NMASS(1) + 1
-         IF(MASS.ge.3.0) NMASS(2) = NMASS(2) + 1
+         RJ2 = X(1,J)*X(1,J) + X(2,J)*X(2,J) + X(3,J)*X(3,J)
+         IF(MASS.ge.8.0) then
+            NMASS(1) = NMASS(1) + 1
+            IF(RJ2.le.RT2) NMASS(2) = NMASS(2) + 1
+            IF(RJ2.le.RH2) NMASS(3) = NMASS(3) + 1
+            IF(RJ2.le.RC2) NMASS(4) = NMASS(4) + 1
+         end if
+         IF(MASS.ge.3.0) then
+            NMASS(5) = NMASS(5) + 1
+            IF(RJ2.le.RT2) NMASS(6) = NMASS(6) + 1
+            IF(RJ2.le.RH2) NMASS(7) = NMASS(7) + 1
+            IF(RJ2.le.RC2) NMASS(8) = NMASS(8) + 1
+         end if
  10   CONTINUE
-      NMASS(3) = N
+      NMASS(9) = N
 *
       if(rank.eq.0)then
          WRITE (6,15)
@@ -89,7 +102,7 @@ C      END IF
      &           'EBESC EMESC DEGRAV EBIND MMAX ',
      &           'NMDOT NRG NHE NRS NNH NWD NSN NBH NBS ',
      &           'ZMRG ZMHE ZMRS ZMNH ZMWD ZMSN ZMDOT NTYPE(1:16) ',
-     &           'NM8 NM3 NMT')
+     &           'NM8 NM8T NM8H NM8C NM3 NM3T NM3H NM3C NMT')
          end if
          write(35,41) TTOT*TSTAR, NDISS, NTIDE, NSYNC, NCOLL, NCOAL,
      &        NDD, NCIRC,NROCHE, NRO, NCE, NHYP, NHYPC, NKICK,
@@ -97,8 +110,8 @@ C      END IF
      &        EMESC, DEGRAV, E(3), ZMX,
      &        NMDOT, NRG, NHE, NRS, NNH, NWD, NSN, NBH, NBS,
      &        ZMRG, ZMHE, ZMRS, ZMNH, ZMWD, ZMSN, ZMDOT,NTYPE(1:16),
-     &        NMASS(1:3)
- 41      FORMAT(E26.17,13I12,12E26.17,9I12,7E26.17,19I12)
+     &        NMASS(1:9)
+ 41      FORMAT(E26.17,13I12,12E26.17,9I12,7E26.17,25I12)
          call flush(35)
       END IF
 *

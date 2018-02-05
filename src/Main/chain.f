@@ -655,21 +655,20 @@
           CALL TRANSX
           ECH = ENERGY
           TIMEC = CHTIME
-* Temporary Output RSP Sep 2017
-          IF (rank.eq.0.and.KZ30.GE.2) THEN
-*         IF (rank.eq.0.and.KZ30.GT.2) THEN
-          CALL TRANSX
-          KK = 0
-          DO 305 K = 1,N
-          RI(K) = SQRT(X(KK+1)**2 + X(KK+2)**2 + X(KK+3)**2)
-          VI(K) = SQRT(V(KK+1)**2 + V(KK+2)**2 + V(KK+3)**2)
-  305     KK = KK + 3
-              WRITE (6,55)  NSTEP1, T0S(ISUB)+TIMEC, TMAX-TIMEC,
-     &                      (1.0/RINV(K),K=1,N-1)
-   55         FORMAT (' CHAIN:  NSTEP T DTR R ',I5,F10.4,1P,6E9.1)
-       WRITE(6,302)TIMEC,(K,M(K),SIZE(K),RI(K),VI(K),K=1,N)
-  302  FORMAT(' CHAIN T[NB] M,R[*],R,V[NB-CH]=',1P,E12.5,10(I4,4E12.5))
-          END IF
+*     Temporary Output RSP Sep 2017
+          IF (rank.eq.0.and.KZ30.GT.2) THEN
+             KK = 0
+             DO 305 K = 1,N
+                RI(K) = SQRT(X(KK+1)**2 + X(KK+2)**2 + X(KK+3)**2)
+                VI(K) = SQRT(V(KK+1)**2 + V(KK+2)**2 + V(KK+3)**2)
+ 305            KK = KK + 3
+                WRITE (6,55)  NSTEP1, T0S(ISUB)+TIMEC, TMAX-TIMEC,
+     &               (1.0/RINV(K),K=1,N-1)
+                WRITE (6,302) TIMEC,(K,M(K),SIZE(K),RI(K),VI(K),K=1,N)
+ 55             FORMAT (' CHAIN:  NSTEP T DTR R ',I5,F10.4,1P,6E9.1)
+ 302            FORMAT (' CHAIN T[NB] M,R[*],R,V[NB-CH]=',
+     &               1P,E12.5,10(I4,4E12.5))
+           END IF
 *       Avoid checking after switch (just in case).
           IF (ISW.LE.1) THEN
               CALL CHMOD_CHAIN(ISUB,KCASE)

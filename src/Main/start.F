@@ -71,6 +71,20 @@
 
 *       Initial massive black hole input
       IF (KZ(24).EQ.1) CALL IMBHINIT
+
+#ifdef TRACE_STAR
+*     Initial star trace
+      IF (KZ(49).EQ.1.and.rank.eq.0) then
+         read (5,*) NAMEST,NAMEED
+         write(6,*) 'STAR TRACE: NAME start: ',NAMEST,
+     &        ' NAME end: ',NAMEED
+      endif
+#if MPIINIT
+      CALL MPI_BCAST(NAMEST,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(NAMEED,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+#endif
+
+#endif
 *
 *       Set sequential name, maximum mass & primary velocity, initial single/binary total mass
       BODY1 = 0.0

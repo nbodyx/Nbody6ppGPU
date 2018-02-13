@@ -139,6 +139,9 @@
                end if
                CALL custom_output(NXTLEN,NXTLST,
      &              NXTLIMIT,NGHOSTS)
+#ifdef TRACE_STAR
+               call star_trace(NXTLEN,NXTLST)
+#endif
             END IF
 
 *     Sorting NXTLST
@@ -1268,6 +1271,9 @@ c$$$         ttmov = ttmov +(tt334-tt333)*60
       IF(KZ(46).GT.0.AND.DMOD(TIME,DTOUT).EQ.0) THEN
          call custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS,IMINR)
       END IF
+#ifdef TRACE_STAR
+      call star_trace(NXTLEN,NXTLST)
+#endif
       call cputim(ttiout2)
       ttout = ttout + (ttiout2 - ttiout1)*60.
 

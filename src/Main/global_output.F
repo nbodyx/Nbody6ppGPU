@@ -564,7 +564,7 @@ C!$omp end parallel do
                MSPBLAGR(kk) = MSPBLAGR(kk-1)
                NSPBLAGR(kk) = NSPBLAGR(kk-1)
             END IF
-            IF (A(1,KK).eq.0)  A(:,KK) = A(:,KK-1)
+            IF (A(KK,1).eq.0)  A(KK,:) = A(KK-1,:)
          END IF
 
 *     half mass radius
@@ -966,7 +966,7 @@ C!$omp end parallel do
       INTEGER kb,nl(NN),I,kn
       REAL rl(NN),ml(NN),vl(NN,7),vta(3,NN),el(NN)
 
-      IF (KB.Lt.NN) then
+      IF (KB.GT.1.AND.KB.Lt.NN) then
          kn = kb -1
          rl(kb:NN-1) = rl(kn) 
          nl(kb:NN-1) = nl(kn) 
@@ -979,6 +979,16 @@ C!$omp end parallel do
          DO I = kb, NN-1
             vta(1:3,I) = vta(1:3,kn)
          END DO
+      elseif (KB.EQ.1) THEN
+         rl(:) = 0
+         nl(:) = 0
+         ml(:) = 0
+         Do I = 2,5
+            vl(:,I) = 0
+         END DO
+         vl(:,7) = 0
+         el(:) = 0
+         vta(1:3,:) = 0
       end if
       
       return
@@ -1067,10 +1077,14 @@ C!$omp end parallel do
       INTEGER kb,I,kn
       REAL sl(NN,7)
 
-      IF (KB.Lt.NN) THEN
+      IF (KB.GT.1.AND.KB.Lt.NN) THEN
          kn = kb - 1
          DO I = 2,7
             sl(kb:NN-1,I) = sl(kn,I)
+         END DO
+      ELSEIF(KB.EQ.1) THEN
+         DO I = 2,7
+            sl(:,I) = 0
          END DO
       END IF
 

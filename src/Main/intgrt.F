@@ -100,36 +100,36 @@
 
 *     HDF5 format output initialization                  
 *     At the first time, full dataset need to be stored,
-               if(rank.eq.0) then
-#ifdef H5OUTPUT
-                  IF(KZ(46).eq.1)
-     &                 write(6,*) 'HDF5 output active particles ',
-     &                 'with time interval ',DTK(KZ(47)+1)
-                  IF(KZ(46).eq.3)
-     &                 write(6,*) 'HDF5 output all particles ',
-     &                 'with time interval ',DTK(KZ(47)+1)
-#else
-                  IF(KZ(46).eq.1)
-     &                 write(6,*) 'Binary output active particles ',
-     &                 'with time interval ',DTK(KZ(47)+1)
-                  IF(KZ(46).eq.3)
-     &                 write(6,*) 'Binary output all particles ',
-     &                 'with time interval ',DTK(KZ(47)+1)
-                  IF(KZ(46).eq.2)
-     &                 write(6,*) 'ANSI output active particles ',
-     &                 'with time interval ',DTK(KZ(47)+1)
-                  IF(KZ(46).eq.4)
-     &                 write(6,*) 'ANSI output all particles  ',
-     &                 'with time interval ',DTK(KZ(47)+1)
-#endif                  
-                  IF(KZ(46).GE.3.AND.KZ(46).LE.4.AND.SMAX.GT.
-     &                 DTK(KZ(47)+1)) then
-                     write(6,*) 'Warning!: Maximum time step ',SMAX,
-     &                    ' > Output interval ',DTK(KZ(47)+1),
-     &                    ' Wide bianries cannot be detected for ',
-     &                    ' Non-active particles!'
-                  END IF
-               end if
+*               if(rank.eq.0) then
+*#ifdef H5OUTPUT
+*                  IF(KZ(46).eq.1)
+*     &                 write(6,*) 'HDF5 output active particles ',
+*     &                 'with time interval ',DTK(KZ(47)+1)
+*                  IF(KZ(46).eq.3)
+*     &                 write(6,*) 'HDF5 output all particles ',
+*     &                 'with time interval ',DTK(KZ(47)+1)
+*#else
+*                  IF(KZ(46).eq.1)
+*     &                 write(6,*) 'Binary output active particles ',
+*     &                 'with time interval ',DTK(KZ(47)+1)
+*                  IF(KZ(46).eq.3)
+*     &                 write(6,*) 'Binary output all particles ',
+*     &                 'with time interval ',DTK(KZ(47)+1)
+*                  IF(KZ(46).eq.2)
+*     &                 write(6,*) 'ANSI output active particles ',
+*     &                 'with time interval ',DTK(KZ(47)+1)
+*                  IF(KZ(46).eq.4)
+*     &                 write(6,*) 'ANSI output all particles  ',
+*     &                 'with time interval ',DTK(KZ(47)+1)
+*#endif                  
+*                  IF(KZ(46).GE.3.AND.KZ(46).LE.4.AND.SMAX.GT.
+*     &                 DTK(KZ(47)+1)) then
+*                     write(6,*) 'Warning!: Maximum time step ',SMAX,
+*     &                    ' > Output interval ',DTK(KZ(47)+1),
+*     &                    ' Wide bianries cannot be detected for ',
+*     &                    ' Non-active particles!'
+*                  END IF
+*               end if
                if(rank.eq.0) then
                   IF(KZ(46).EQ.1.OR.KZ(46).EQ.3) THEN
                      call custom_update_file(TTOT,DELTAT)
@@ -140,7 +140,9 @@
                CALL custom_output(NXTLEN,NXTLST,
      &              NXTLIMIT,NGHOSTS)
 #ifdef TRACE_STAR
-               call star_trace(NXTLEN,NXTLST)
+               IF (KZ(49).EQ.1.and.rank.eq.0) then
+                  call star_trace(NXTLEN,NXTLST)
+               END IF 
 #endif
             END IF
 
@@ -1272,7 +1274,9 @@ c$$$         ttmov = ttmov +(tt334-tt333)*60
          call custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS,IMINR)
       END IF
 #ifdef TRACE_STAR
-      call star_trace(NXTLEN,NXTLST)
+      IF (KZ(49).EQ.1.and.rank.eq.0) then
+         call star_trace(NXTLEN,NXTLST)
+      END IF 
 #endif
       call cputim(ttiout2)
       ttout = ttout + (ttiout2 - ttiout1)*60.

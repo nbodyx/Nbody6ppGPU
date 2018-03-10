@@ -15,7 +15,11 @@
       F2 = F(1)**2 + F(2)**2 + F(3)**2
       FDOT2 = FDOT(1)**2 + FDOT(2)**2 + FDOT(3)**2
 *
-      TSTEP2 = 0.25*ETA*SQRT(MIN(V2/F2,F2/FDOT2))
+      IF (V2.GT.0.0) THEN
+         TSTEP2 = 0.25*ETA*SQRT(MIN(V2/F2,F2/FDOT2))
+      ELSE
+         TSTEP2 = 0.25*ETA*SQRT(F2/FDOT2)
+      ENDIF
 *
       RETURN
 *

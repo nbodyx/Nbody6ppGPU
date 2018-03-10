@@ -287,8 +287,14 @@ C!$omp reduction(+:C1) reduction(+:C2) reduction(+:C3)
             NKW(1,kwi(1)) = NKW(1,kwi(1)) + 1
             MKW(1,kwi(1)) = MKW(1,kwi(1)) + S_M(I)
             KI = KTab(KWI(1))
-            NPK(KI) = NPK(KI) + 1
-            TPMASS(KI) = TPMASS(KI) + S_M(I)
+            IF(KI==-1) then
+               write(6,*) 'Warning: type 15 founded! I=',I,
+     &              'N=',NS_NAM(I),'M=',S_M(I)
+               call flush(6)
+            ELSE
+               NPK(KI) = NPK(KI) + 1
+               TPMASS(KI) = TPMASS(KI) + S_M(I)
+            ENDIF
          END IF
 *     Maximum mass
          MM = MAX(MM,S_M(I))
@@ -323,8 +329,16 @@ C!$omp reduction(+:C1) reduction(+:C2) reduction(+:C3)
             END IF
             DO L = 1,2
                KI = KTab(KWI(L))
-               NPK(KI) = NPK(KI) + 1
-               TPMASS(KI) = TPMASS(KI) + mki(L)
+               IF(KI==-1) then
+                  write(6,*) 'Warning: type 15 founded! I=',I,
+     &                 'N1,2=',NB_NAM1(I),NB_NAM2(I),
+     &                 'M1,2=',B_M1(I),B_M2(I),
+     &                 'K*1,2=',NB_KW1(I),NB_KW2(I)
+                  call flush(6)
+               ELSE
+                  NPK(KI) = NPK(KI) + 1
+                  TPMASS(KI) = TPMASS(KI) + mki(L)
+               END IF
             END DO
          END IF
 *     Maximum mass

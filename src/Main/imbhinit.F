@@ -32,6 +32,11 @@
      &     VIMBH(1:3)
  1    format('MBH Initialization:  NAME',I12,' M[M*]',E15.5,
      &     ' X(1:3)[PC]',3E15.5,' V(1:3)[km/s]',3E15.5)
+      IF(BIMBH.EQ.0.and.rank.eq.0) THEN
+         write(6,*) 'Warning!: input MBH mass is zero!'
+         call flust(6)
+         abort()
+      ENDIF
       
       RETURN
       

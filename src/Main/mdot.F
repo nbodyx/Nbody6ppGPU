@@ -14,7 +14,7 @@
      &               BR(NTMAX),EOSC(4,NTMAX),EDEC(NTMAX),TOSC(NTMAX),
      &               RP(NTMAX),ES(NTMAX),CM(2,NTMAX),IOSC(NTMAX),
      &               NAMEC(NTMAX)
-      INTEGER JX(2),KACC,MLIST(NMAX),ML,ML0
+      INTEGER JX(2),KACC,MLIST(NMAX),ML,ML0,I_BK
       REAL*8 MASS(2),MASSC(2),RAD(2),RADC(2),LUMIN(2)
       REAL*8 AGE0(2),TM0(2),TBGB(2),MENV(2),RENV(2),K2STR(2)
       REAL*8 TSCLS(20),LUMS(10),GB(10),TM,TN
@@ -80,6 +80,7 @@ c$$$      NCNUM = 0
 *     Find global index of next star to be checked (NB! reset KS & IKS).
  4    ML = ML + 1
       I = MLIST(ML)
+      I_BK = I
 *     Avoid the same binary or merger do the loop again
       IF(TEV(I).GT.TIME) THEN
          IF(ML.LT.ML0) THEN
@@ -88,7 +89,8 @@ c$$$      NCNUM = 0
             GO TO 103
          END IF
       END IF
- 5    KS = 0
+ 5    I = I_BK
+      KS = 0
       KSPAIR = 0
       IKS = 0
       ITRY = 0
@@ -1645,18 +1647,8 @@ c$$$   80 CONTINUE
 *
 *       See whether any other stars should be considered.
 c$$$      IF (TMDOT.LT.TIME) GO TO 1
-      IF (TEV(I).GT.TIME) THEN
-         TMDOT = MIN(TMDOT,TEV(I))
-         IF(I.GT.N) THEN
-            I1 = 2*(I - N) - 1
-            I2 = I1 + 1
-            TM = MIN(TEV(I1),TEV(I2))
-            IF (TM.GT.TIME) THEN
-               TMDOT = MIN(TMDOT, TM)
-            ELSE
-               GO TO 5
-            END IF
-         END IF
+      IF (TEV(I_BK).GT.TIME) THEN
+         TMDOT = MIN(TMDOT,TEV(I_BK))
       ELSE
          GO TO 5
       END IF

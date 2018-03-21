@@ -1647,6 +1647,16 @@ c$$$   80 CONTINUE
 c$$$      IF (TMDOT.LT.TIME) GO TO 1
       IF (TEV(I).GT.TIME) THEN
          TMDOT = MIN(TMDOT,TEV(I))
+         IF(I.GT.N) THEN
+            I1 = 2*(I - N) - 1
+            I2 = I1 + 1
+            TM = MIN(TEV(I1),TEV(I2))
+            IF (TM.GT.TIME) THEN
+               TMDOT = MIN(TMDOT, TM)
+            ELSE
+               GO TO 5
+            END IF
+         END IF
       ELSE
          GO TO 5
       END IF

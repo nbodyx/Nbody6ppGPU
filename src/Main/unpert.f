@@ -320,7 +320,11 @@ c$$$              IF (IPHASE.LT.0) GO TO 30
           END IF
       END IF
 *
-   30 RETURN
+*       Set quantized time-step from DT > TK on continued unperturbed motion.
+ 30   IF (LIST(1,I1).EQ.0) THEN
+         DT = MAX(DT,TK)
+         STEP(I1) = DT
+      END IF
 *
       END
       

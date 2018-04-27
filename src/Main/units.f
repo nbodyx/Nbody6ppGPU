@@ -8,17 +8,18 @@
 *
 *
 *       Define GM & PC in cgs units and #AU in pc (2008 IAU values).
-      GM = 6.6743D-08*1.9884D+33
-      PC = 3.0856776D+18
-      AU = PC/1.4959787D+13  ! bug fix from D+12 4/7/11 (was OK in 2009).
+      GM = 1.32712442099D+26
+      AU = 1.49597870700D+13
+      PC = 1296000.0D0/TWOPI*AU !3.0856776e+18
 *
 *       Form scaling factors for binary periods A*SQRT(A/M) to yrs and days.
-      YRS = (RBAR*AU)**1.5/SQRT(ZMBAR)
-      DAYS = 365.24*YRS
+      YRS = (RBAR*1296000.0D0/TWOPI)**1.5/SQRT(ZMBAR)
+      DAYS = 365.25*YRS
 *
 *       Specify conversion factors for lengths to solar radii & AU.
-      SU = PC/(AU*6.955D+10)*RBAR*AU
-      RAU = RBAR*AU
+      RSUN = 6.957D+10
+      SU = PC/RSUN*RBAR
+      RAU = PC/AU*RBAR
 *
 *       Copy solar mass scaling to new variable (M = BODY*<M>).
       SMU = ZMBAR
@@ -27,7 +28,7 @@
       TSTAR = SQRT(PC/GM)*PC
 
 *     Convert time scale from units of seconds to million years.
-      TSTAR = TSTAR/(3.15D+07*1.0D+06)
+      TSTAR = TSTAR/(3.15576D+07*1.0D+06)
 
       IF (KZ(22).NE.10) THEN
          VSTAR = 1.0D-05*SQRT(GM/PC)

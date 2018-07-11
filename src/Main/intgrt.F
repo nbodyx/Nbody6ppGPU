@@ -557,8 +557,8 @@ C        if (TCCT.gt.2.0) stop
 *         print*,' before nbint 108 ',(x(k,108),k=1,3)
 *     OpenMP version of irregular force and fdot
 *           print*,' intgrt i,n,npairs=',i,n,npairs
-        CALL NBINT(TIME,NXTLEN,NXTLST,X,XDOT,BODY,FIRR_SIMD,FD_SIMD,
-    &        LIST,IMINR_TMP)
+         CALL NBINT(TIME,NXTLEN,NXTLST,X,XDOT,BODY,FIRR_SIMD,FD_SIMD,
+     &        LIST,IMINR_TMP)
 *         print*,' after nbint =',time
 *         print*,' firr,fd_simd=',
 *    &   ((firr_simd(k,l),fd_simd(k,l),k=1,3),l=1,nxtlen)

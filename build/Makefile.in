@@ -23,7 +23,7 @@ MPI_FLAGS = -D PARALLEL -D PUREMPI
 GPU_FLAGS = -D GPU
 SIMD_FLAGS = -D SIMD
 HDF5_FLAGS = -D H5OUTPUT
-DEBUG_FLAGS= -D DEBUG
+DEBUG_FLAGS= -D DEBUG -D DECISION_CHECK
 TT_FLAGS= -D TT
 INTEL_FLAGS= -D __USE_INTEL -no-wrap-margin
 
@@ -109,7 +109,7 @@ delay_add_tlist.f delay_remove_tlist.f rmesc_tlist.f shift_tlist.f k_step.f \
 imbhinit.f bhplot.f energy.f kspinit.f kspreg.f counter_reset.f util_gpu.f \
 regcor_gpu.f fpoly0.f tail0.f ntint.f xtrnlt.f fbulge.f steps2.f tstep2.f \
 custom_output.f custom_output_facility.f ksres_op.f kstran.f \
-global_output.f global_params_gether.f
+global_output.f global_params_gether.f qstab.f
 
 .SUFFIXES : .o .F
 

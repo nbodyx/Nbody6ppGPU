@@ -743,19 +743,22 @@ c$$$      print*,rank,'rmax',rmax
           IF (MIN(BODY(I1),BODY(I2)).LT.0.05*BODYM) THEN
               IF (RP.LT.R0(IPAIR)) GO TO 90
           END IF
-*       Assess the stability inside critical pericentre (safety factor 1.04).
-          IF (RP.LT.1.04*R0(IPAIR)) THEN
-              EOUT = ECC
-*       Increase tolerance near sensitive stability boundary (RM 10/2008).
-              IF (EOUT.GT.0.90) THEN
-                  DE = 0.5*(1.0 - EOUT)
-                  DE = MIN(DE,0.01D0)
-*       Add extra amount 0.011 to avoid switching.
-                  IF (ECC.GT.0.9) DE = DE + 0.011
-                  EOUT = EOUT - DE
-              END IF
+*       Assess the stability inside critical pericentre (safe estimate).
+          SEMI0 = -0.5*BODY(I1)/HM(IM)
+          IF (RP.LT.6.0*SEMI0) THEN
+C*       Assess the stability inside critical pericentre (safety factor 1.04).
+C          IF (RP.LT.1.04*R0(IPAIR)) THEN
+C              EOUT = ECC
+C*       Increase tolerance near sensitive stability boundary (RM 10/2008).
+C              IF (EOUT.GT.0.90) THEN
+C                  DE = 0.5*(1.0 - EOUT)
+C                  DE = MIN(DE,0.01D0)
+C*       Add extra amount 0.011 to avoid switching.
+C                  IF (ECC.GT.0.9) DE = DE + 0.011
+C                  EOUT = EOUT - DE
+C              END IF
 *       Note: assessment needs to use same eccentricity as for acceptance.
-              CALL ASSESS(IPAIR,IM,EOUT,SEMI,ITERM)
+              CALL ASSESS(IPAIR,IM,ECC,SEMI,ITERM)
               IF (ITERM.GT.0) THEN
                   INSTAB = INSTAB + 1
                   GO TO 90

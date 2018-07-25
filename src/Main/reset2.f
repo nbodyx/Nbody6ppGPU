@@ -278,25 +278,36 @@
 *
 *       Evaluate the general stability function.
       IF (ECC1.LT.1.0) THEN
-          NST = NSTAB(SEMI0,SEMI,ECC,ECC1,ANGLE,CM(1,IMERGE),
-     &                                    CM(2,IMERGE),BODY(JCOMP))
-          IF (NST.EQ.0) THEN
-              PCRIT = 0.98*SEMI*(1.0 - ECC1)
-              PCR = stability(CM(1,IMERGE),CM(2,IMERGE),BODY(JCOMP),
-     &                                          ECC,ECC1,ANGLE)*SEMI0
-              ISTAB = ISTAB + 1
-              IF (rank.eq.0.and.ISTAB.LT.50) THEN
-                  WRITE (6,41)  ECC, ECC1, SEMI0, SEMI, PCRIT, PCR
-   41             FORMAT (' STABLE2    E E1 A A1 PCR PC99 ',
-     &                                 2F7.3,1P,4E10.2)
-              END IF
+          QST = QSTAB(ECC,EOUT,ANGLE,CM(1,IMERGE),CM(2,IMERGE),
+     &                                            BODY(JCOMP))
+          RP = SEMI1*(1.0 - EOUT)/SEMI
+          IF (QST.LT.RP) THEN
+              PCRIT = 0.99*SEMI*(1.0 - ECC1)
           ELSE
-              PCRIT = 1.02*SEMI*(1.0 - ECC1)
+              PCRIT = 1.01*SEMI*(1.0 - ECC1)
           END IF
       ELSE
-          PCRIT = stability(CM(1,IMERGE),CM(2,IMERGE),BODY(JCOMP),
-     &                                      ECC,ECC1,ANGLE)*SEMI0
+          PCRIT = 1.01*SEMI*(1.0 - ECC1)
       END IF
+C          NST = NSTAB(SEMI0,SEMI,ECC,ECC1,ANGLE,CM(1,IMERGE),
+C     &                                    CM(2,IMERGE),BODY(JCOMP))
+C          IF (NST.EQ.0) THEN
+C              PCRIT = 0.98*SEMI*(1.0 - ECC1)
+C              PCR = stability(CM(1,IMERGE),CM(2,IMERGE),BODY(JCOMP),
+C     &                                          ECC,ECC1,ANGLE)*SEMI0
+C              ISTAB = ISTAB + 1
+C              IF (rank.eq.0.and.ISTAB.LT.50) THEN
+C                  WRITE (6,41)  ECC, ECC1, SEMI0, SEMI, PCRIT, PCR
+C   41             FORMAT (' STABLE2    E E1 A A1 PCR PC99 ',
+C     &                                 2F7.3,1P,4E10.2)
+C              END IF
+C          ELSE
+C              PCRIT = 1.02*SEMI*(1.0 - ECC1)
+C          END IF
+C      ELSE
+C          PCRIT = stability(CM(1,IMERGE),CM(2,IMERGE),BODY(JCOMP),
+C     &                                      ECC,ECC1,ANGLE)*SEMI0
+C      END IF
 *
 *       Set critical pericentre distance for stability check.
       R0(IPAIR) = PCRIT

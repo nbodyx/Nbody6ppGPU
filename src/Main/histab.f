@@ -110,7 +110,8 @@
       CALL INCLIN(XX,VV,X(1,I),XDOT(1,I),ANGLE)
 *
 *       Employ the improved stability criterion for doubtful cases.
-      RSTAB = stability(BODY(I1),BODY(I2),BODY(JJ),ECC,ECC1,ANGLE)*SEMI
+      RSTAB = QSTAB(ECC,ECC1,ANGLE,BODY(I1),BODY(I2),BODY(JJ))*SEMI
+C      RSTAB = stability(BODY(I1),BODY(I2),BODY(JJ),ECC,ECC1,ANGLE)*SEMI
 *       Note: the present stability routine includes inclination!
 *     RSTAB = YFAC*RSTAB
       PCRIT = RSTAB

@@ -124,7 +124,8 @@
                   VV(K,3) = XDOT(K,J2)
    15         CONTINUE
               CALL INCLIN(XX,VV,X(1,ICM),XDOT(1,ICM),ANGLE)
-              PCR = stability(M1,M2,M3,E0,E1,ANGLE)*SEMI
+              PCR = QSTAB(E0,E1,ANGLE,M1,M2,M3)*SEMI
+C              PCR = stability(M1,M2,M3,E0,E1,ANGLE)*SEMI
               NAM2 = NAME(J)
 *       Perform stability check.
               IF (PMIN*(1.0 - GAMMA(JPAIR)).LT.PCR.AND.E1.LT.0.96.AND.

@@ -81,19 +81,42 @@
       ECC2 = (1.0 - RI/SEMI0)**2 + TD2**2/(SEMI0*ZMB0)
       ECC = SQRT(ECC2)
 *
-*       Obtain stability parameters for the new configuration.
+*       Check general three-body stability.
       IF (ECC1.LT.1.0) THEN
-          NST = NSTAB(SEMI2,SEMI1,ECC,ECC1,ZI,CM(1,IMERGE),
-     &                                     CM(2,IMERGE),BODY(2*IPAIR))
-          IF (NST.EQ.0) THEN
+          EOUT = ECC1
+*       Increase tolerance near sensitive stability boundary (RM 10/2008).
+          IF (EOUT.GT.0.9) THEN
+              DE = 0.5*(1.0 - EOUT)
+              DE = MIN(DE,0.01D0)
+*       Add extra amount 0.011 to avoid switching.
+              DE = DE + 0.011
+              EOUT = EOUT - DE
+          END IF
+          ZI = 0.0
+          QST = QSTAB(ECC,EOUT,ZI,CM(1,IMERGE),CM(2,IMERGE),
+     &                                         BODY(2*IPAIR))
+          RP = SEMI1*(1.0 - EOUT)/SEMI
+          IF (QST.LT.RP) THEN
+              PMIN = SEMI1*(1.0 - EOUT)
               PCRIT = 0.99*PMIN
-          ELSE
-              PCRIT = 1.01*PMIN
           END IF
       ELSE
-          PCRIT = stability(CM(3,IMERGE),CM(4,IMERGE),BODY(2*IPAIR-1),
-     &                                          ECC,ECC1,0.0D0)*SEMI2
+          PCRIT = 1.01*PMIN
       END IF
+
+C*     Obtain stability parameters for the new configuration.
+C      IF (ECC1.LT.1.0) THEN
+C          NST = NSTAB(SEMI2,SEMI1,ECC,ECC1,ZI,CM(1,IMERGE),
+C     &                                     CM(2,IMERGE),BODY(2*IPAIR))
+C          IF (NST.EQ.0) THEN
+C              PCRIT = 0.99*PMIN
+C          ELSE
+C              PCRIT = 1.01*PMIN
+C          END IF
+C      ELSE
+C          PCRIT = stability(CM(3,IMERGE),CM(4,IMERGE),BODY(2*IPAIR-1),
+C     &                                          ECC,ECC1,0.0D0)*SEMI2
+C      END IF
 *
 *       Update pericentre distance on successful stability test or exit.
       IF (PMIN.GT.PCRIT.AND.H(JPAIR).LT.-ECLOSE) THEN

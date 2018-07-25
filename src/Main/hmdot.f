@@ -87,20 +87,30 @@
               EOUT = EOUT - DE
               PMIN = SEMI1*(1.0 - EOUT)
           END IF
-          NST = NSTAB(SEMI2,SEMI1,ECC,EOUT,ZI,CM(1,IMERGE),
-     &                                     CM(2,IMERGE),BODY(2*IPAIR))
-          IF (NST.EQ.0) THEN
+          QST = QSTAB(ECC,EOUT,ZI,CM(1,IMERGE),CM(2,IMERGE),
+     &                                         BODY(2*IPAIR))
+          RP = SEMI1*(1.0 - EOUT)/SEMI0
+          IF (QST.LT.RP) THEN
+              PMIN = SEMI1*(1.0 - EOUT)
               PCRIT = 0.99*PMIN
-              PCR = stability(CM(1,IMERGE),CM(2,IMERGE),BODY(2*IPAIR),
-     &                                          ECC,ECC1,ZI)*SEMI2
-          ELSE
-              PCRIT = 1.01*PMIN
           END IF
       ELSE
-          PCRIT = stability(CM(1,IMERGE),CM(2,IMERGE),BODY(2*IPAIR),
-     &                                          ECC,ECC1,ZI)*SEMI2
+          PCRIT = 1.01*PMIN
       END IF
-*
+C          NST = NSTAB(SEMI2,SEMI1,ECC,EOUT,ZI,CM(1,IMERGE),
+C     &                                     CM(2,IMERGE),BODY(2*IPAIR))
+C          IF (NST.EQ.0) THEN
+C              PCRIT = 0.99*PMIN
+C              PCR = stability(CM(1,IMERGE),CM(2,IMERGE),BODY(2*IPAIR),
+C     &                                          ECC,ECC1,ZI)*SEMI2
+C          ELSE
+C              PCRIT = 1.01*PMIN
+C          END IF
+C      ELSE
+C          PCRIT = stability(CM(1,IMERGE),CM(2,IMERGE),BODY(2*IPAIR),
+C     &                                          ECC,ECC1,ZI)*SEMI2
+C      END IF
+C*
 *       Update pericentre distance on successful stability test or exit.
       IF (PMIN.GT.PCRIT) THEN
           R0(IPAIR) = PCRIT

@@ -109,8 +109,10 @@
           END IF
 *
 *       Check stability criterion (maximum 12 tries with inclination effect).
-          PCRIT = stability(BODY(I1),BODY(I2),BS(I),ECC,ECC1,ZI)
-          PCRIT = PCRIT*SEMI
+          QST = QSTAB(ECC,ECC1,ZI,BODY(I1),BODY(I2),BS(I))
+          PCRIT = QST*SEMI
+C          PCRIT = stability(BODY(I1),BODY(I2),BS(I),ECC,ECC1,ZI)
+C          PCRIT = PCRIT*SEMI
           ITER = ITER + 1
           IF (PMIN.LT.PCRIT.AND.ITER.LE.12.AND.SEMI.LT.SEMI0) GO TO 10
 *

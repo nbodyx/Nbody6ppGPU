@@ -643,9 +643,12 @@
   235     CONTINUE
           ECC2 = (1.0 - RJ/SEMI0)**2 + TD2**2/(BODYCM*SEMI0)
           ECC0 = SQRT(ECC2)
-          Q = ZM2/BODYCM
-          XFAC = (1.0 + Q)*(1.0 + ECC)/SQRT(1.0 - ECC)
-          PCRIT = 2.8*XFAC**0.4*SEMI0
+          QST = QSTAB(ECC0,ECC,0.0D0,CM(1,JM),CM(2,JM),BODY(JCOMP))
+          PCRIT = QST*SEMI0
+C          Q = ZM2/BODYCM
+C          XFAC = (1.0 + Q)*(1.0 + ECC)/SQRT(1.0 - ECC)
+C          PCRIT = 2.8*XFAC**0.4*SEMI0
+
 *
           if(rank.eq.0)
      &    WRITE (6,240)  NAME1, NAMEG(JM), KSTAR1, KSTAR(JCOMP),

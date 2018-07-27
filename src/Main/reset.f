@@ -265,13 +265,17 @@
       EB = EB/BE(3)
       IF (rank.eq.0.and.KZ(15).GT.1) THEN
           WRITE (6,65)  IMERGE, TIME+TOFF, BODY(2*NPAIRS-1),
-     &                  BODY(2*NPAIRS), R1, SEMI1, EB, E1,
-     &                  GAMMA(NPAIRS), G1, NNB
-   65     FORMAT (' END MERGER: IMC',I3,'  TIME',F8.2,1P,'  M(I1)',E10.3
-     &         ,'  M(I2)',E10.3,'  R1N3',E8.1,'  SEMI1',E8.1,
+     &        BODY(2*NPAIRS-1)*ZMBAR,BODY(2*NPAIRS),
+     &        BODY(2*NPAIRS)*ZMBAR,
+     &        R1, SEMI1, EB, E1,
+     &        GAMMA(NPAIRS), G1, NNB
+ 65       FORMAT (' END MERGER: IMC',I3,'  TIME',F8.2,1P,
+     &         '  M(I1)[NB,M*]',E10.3,0P,F7.3,
+     &         '  M(I2)[NB,M*]',1P,E10.3,0P,F7.3,
+     &         '  R1N3',1P,E8.1,'  SEMI1',E8.1,
      &         '  EB0/BE(3)',0P,F6.3,'  EB1/EB',F6.3,
      &         '  GAMMA(IM)',1P,E8.1,'  GAMMA(INCM)',E8.1,0P,
-     &         '  NB(IM)',I5,' [All in NB Unit]')
+     &         '  NB(IM)',I5,' [NB Unit]')
       END IF
 *
 *       Check Roche look-up time.

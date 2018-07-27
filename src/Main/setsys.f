@@ -18,7 +18,7 @@
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
      &                NAMEM(MMAX),NAMEG(MMAX),KSTARM(MMAX),IFLAG(MMAX)
       SAVE JSAVE
-      INTEGER JSAVE(3)
+      INTEGER JSAVE(10)
 *
 *
 *       Check whether new (or renewed) chain or addition of member(s).
@@ -158,7 +158,7 @@
 *
 *       Save global indices of existing members (KSTERM uses JLIST).
           DO 16 L = 1,NCH
-              JPERT(L) = JLIST(L)
+              JSAVE(L) = JLIST(L)
    16     CONTINUE
 *
 *       Add energy of absorbed binary to the current initial energy.
@@ -179,7 +179,7 @@
 *
 *       Restore old members.
           DO 18 L = 1,NCH
-              JLIST(L) = JPERT(L)
+              JLIST(L) = JSAVE(L)
    18     CONTINUE
 *
 *       Add terminated KS components to chain arrays.

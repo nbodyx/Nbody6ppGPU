@@ -87,7 +87,7 @@
       write(6,*) 'IMPACT: I=',I, ' N=',N,' NAME=',NAME(I),
      &     ' NP=',NP,' JCOMP=',JCOMP,' NAME(JCOMP)=',NAME(JCOMP),
      &     ' JMAX=',JMAX,' NAME(JMAX)=',NAME(JMAX),
-     &     ' NCH=',NCH
+     &     ' NCH=',NCH,' Time=',TIME
 #endif
       CALL JPRED(JCOMP,TIME,TIME)
       RDOT = (X(1,I) - X(1,JCOMP))*(XDOT(1,I) - XDOT(1,JCOMP)) +
@@ -218,46 +218,74 @@ c$$$      end if
       IF (JCOMP.GT.N) THEN
           JPAIR = JCOMP - N
           SEMI2 = -0.5D0*BODY(JCOMP)/H(JPAIR)
+*     Get secondary binary eccentricity
+          ECC2 = (1.0D0 - R(JPAIR)/SEMI2)**2 +
+     &         TDOT2(JPAIR)**2/(BODY(JCOMP)*SEMI2)
+          ECC_2 = SQRT(ECC2)
           J1 = 2*JPAIR - 1
           EB2 = -0.5*BODY(J1)*BODY(J1+1)/SEMI2
 *       Define SEMI0 as smallest binary in case IPAIR denotes widest pair.
           SEMI0 = MIN(ABS(SEMI),ABS(SEMI2))
           SEMIX = MAX(SEMI,SEMI2)
+          ECCX = MAX(ECC,ECC_2)
           APO = APO + MAX(ABS(SEMI2),R(JPAIR))
-          SEMI = SEMI + SEMI2
-*     --04/21/14 17:42-lwang-debug--------------------------------------*
-***** Note:------------------------------------------------------------**
-c$$$          if(I.eq.9011.and.jcomp.eq.10283) then
-c$$$             print*,rank,'I',I,'N',NAME(I),'JCOMP',JCOMP,
-c$$$     &            'N',NAME(JCOMP),'SEMI',1.0/SEMI,'RMIN',0.25/RMIN
-c$$$     ^            ,'APO',APO,'RIJ',RIJ,'SEMI1',SEMI1,'PMIN',PMIN,
-c$$$     &            'FI-J',BODY(I)/RIJ**2,'FJ-I',BODY(J)/RIJ**2,
-c$$$     &            'STEPI',STEP(I),'STEPJ',STEP(JCOMP),'KCHAIN',KCHAIN
-c$$$             call flush(6)
-c$$$          end if
-*     --04/21/14 17:42-lwang-end----------------------------------------*
+          SEMIS = SEMI + SEMI2
+          RA = SEMI1*(1.0 + ECC1)
+          IF (SEMI1.LT.0.0) RA = RIJ
+          GI = PERT*(RA/RIJ)**3
 *       Do not allow negative or soft cross section
 #ifdef DECISION_CHECK
-          IF (1.0/SEMI.LT.0.5/RMIN)
-     &         write(6,*) 'IMPACT: B-B 1/SEMI(',SEMI,')<0.5/RMIN(',
+          IF (SEMIS.GT.2.0*RMIN)
+     &         write(6,*) 'IMPACT: B-B SEMIS(',SEMIS,')>2.0*RMIN(',
      &         RMIN,') L.233 quit'
 #endif
-          IF (1.0/SEMI.LT.0.5/RMIN) GO TO 100
+          IF (SEMIS.GT.2.0*RMIN) GO TO 100
+*       Delay for large distance ratio outside RMIN with strong perturbation.
+#ifdef DECISION_CHECK
+          IF (RIJ.GT.RMIN.AND.PERT.GT.GMAX)
+     &         write(6,*) 'IMPACT: RIJ(',RIJ,')>RMIN(',RMIN,') &&',
+     &         'PERT(',PERT,')>GMAX(',GMAX,') L.247'
+#endif
+          IF (RIJ.GT.RMIN.AND.PERT.GT.GMAX)
+     &         GO TO 100
 *       Consider merger for PMIN > SEMI and large semi-major axis ratio.
 #ifdef DECISION_CHECK
-          IF (PMIN.GT.SEMI.AND.SEMI2.GT.20.0*SEMI0)
-     &         write(6,*) 'IMPACT: B-B PMIN(',PMIN,')>SEMI(',SEMI,
+          IF (PMIN.GT.SEMIS.AND.SEMI2.GT.20.0*SEMI0)
+     &         write(6,*) 'IMPACT: B-B PMIN(',PMIN,')>SEMIS(',SEMIS,
      &         ') && SEMI2(',SEMI2,')>20.0 SEMI0 (',SEMI0,') L 244'
 #endif          
-          IF (PMIN.GT.SEMI.AND.SEMI2.GT.20.0*SEMI0) GO TO 30
+          IF (PMIN.GT.SEMIS.AND.SEMI2.GT.20.0*SEMI0) GO TO 30
 *      END IF
 
+*     try stability check with maximum ecc and semi of inners
+          QST = QSTAB(ECCX,ECC1,0.0D0,BODY(I1),BODY(I2),BODY(JCOMP))
+          RP = PMIN/SEMIX
+#ifdef DECISION_CHECK
+          IF (QST.LT.RP) write(6,*) 'IMPACT: B-B QST(',QST,')<RP(',RP,
+     &         ') && GI(',GI,')<=0.02 L416'
+#endif
+*     The GI should be small and consistent with the later check
+          IF (QST.LT.RP.AND.GI.LE.0.02.AND.PERT.LE.GMAX) GO TO 30
 *     Consider merger for PMIN > SEMI and large semi-major axis ratio.
 *          IF (PMIN.GT.SEMI.AND.SEMI2.GT.20.0*SEMI0
 *     &         .AND.1.0/SEMI.GE.0.5/RMIN) GO TO 30
 *       Do not allow negative or soft cross section
 *       Add PMIN > 2*RMIN to avoid chain with large PMIN
 *          IF (1.0/SEMI.LT.0.5/RMIN.AND.PMIN.GT.2*RMIN) GO TO 100
+#ifdef DECISION_CHECK
+          IF (PMIN.GT.4.0*SEMIX.AND.
+     &         (ECC1.GT.0.9.AND.ECC1.LT.1.0))
+     &         write(6,*) 'IMPACT: L348'
+#endif      
+          IF ((PMIN.GT.4.0*SEMIX.AND.ECC1.GT.0.9.AND.ECC1.LT.1.0)
+     &         .AND..not.MCF) GO TO 30
+          IF (PMIN.GT.0.1*RMIN) THEN
+#ifdef DECISION_CHECK
+             IF (PMIN.GT.A0 + SEMI2) 
+     &            write(6,*) 'IMPACT: L340'
+#endif
+             IF ((PMIN.GT.A0 + SEMI2).AND..not.MCF) GO TO 30
+          END IF
       END IF
 
 *     Check separation in case of chain regularization.
@@ -282,19 +310,19 @@ c$$$          end if
 *     ks MPI communication EBCH0
           call ksparmpi(K_store,K_real8,K_EBCH0,0,0,EBCH0)
 *     Use RIJ instead of RSUM in 3*RGRAV test (increases initial RIJ).
-C*     When there are two wide binaries with big mass ratio, add PMIN GT
-C*     2*RMIN, switch on Chain
-C*         IF ((RIJ.GT.MAX(3.0*RGRAV,RMIN).OR.RSUM.GT.2.0*RMIN).AND.
-C*      &         PMIN.GT.2.0*RMIN) GO TO 30
+*     When there are two wide binaries with big mass ratio, add PMIN GT
+*     2*RMIN, switch on Chain
+*         IF ((RIJ.GT.MAX(3.0*RGRAV,RMIN).OR.RSUM.GT.2.0*RMIN).AND.
+*      &         PMIN.GT.2.0*RMIN) GO TO 30
+          GI = 2.0*BODY(JCOMP)*(RI/RIJ)**3/BODY(I)
 #ifdef DECISION_CHECK
           IF (RIJ.GT.MAX(3.0*RGRAV,RMIN).OR.RSUM.GT.2.0*RMIN)
      &         write(6,*) 'IMPACT: RIJ(',RIJ,')>MAX(3.0*RGRAV(',RGRAV,
      &         '),RMIN(',RMIN,') || RSUM(',RSUM,')>2.0 RMIN(',RMIN,
-     &         ') L.286'
+     &         ') && GI(',GI,')<0.05 L.286'
 #endif
           IF (((RIJ.GT.MAX(3.0*RGRAV,RMIN).OR.RSUM.GT.2.0*RMIN))
-     &         .AND..not.MCF) GO TO 30
-          GI = 2.0*BODY(JCOMP)*(RI/RIJ)**3/BODY(I)
+     &         .AND.GI.LE.0.05.AND..not.MCF) GO TO 30
 *       Enforce KS orbit using MERGE for high eccentricity if PMIN > 10*RI.
 #ifdef DECISION_CHECK
           IF (ECC1.GT.0.99.AND.PMIN.GT.10.0*RI.AND.
@@ -339,79 +367,82 @@ C     &     write(6,*) 'IMPACT: L322'
 C#endif      
 C      IF ((APO.GT.0.01*RMIN.OR.JCOMP.GT.N).AND.PMIN.GT.1.5*APO) GO TO 30
 *     IF (APO.LE.0.01*RMIN.AND.PMIN.GT.2.0*APO) GO TO 30
+
 *     Remove case with large RIJ
 #ifdef DECISION_CHECK
-      IF ((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2.0*RMIN)
+      IF (((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2.0*RMIN)
+     &     .AND.PERT.GT.GMAX)
      &     write(6,*) 'IMPACT: RIJ(',RIJ,')>RMIN(',RMIN,
-     &     ') && SEMI1(',SEMI1,')>0 || RIJ>2.0 * RMIN L.303'
+     &     ') && SEMI1(',SEMI1,')>0 || RIJ>2.0 * RMIN && PERT(',
+     &     PERT,')>GMAX(',GMAX,') L.303 quit'
 #endif
-      IF ((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2.0*RMIN)
+      IF (((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2.0*RMIN)
+     &     .AND.PERT.GT.GMAX)
      &     GO TO 100
+
 #ifdef DECISION_CHECK
       IF (PERTM.GT.100.0*GSTAR)
      &     write(6,*) 'IMPACT: L334'
 #endif
       IF ((PERTM.GT.100.0*GSTAR).AND..not.MCF) GO TO 30
-   17 IF (JCOMP.GT.N.AND.PMIN.GT.0.1*RMIN) THEN
-#ifdef DECISION_CHECK
-         IF (PMIN.GT.A0 + SEMI2) 
-     &        write(6,*) 'IMPACT: L340'
-#endif
-         IF ((PMIN.GT.A0 + SEMI2).AND..not.MCF) GO TO 30
-      END IF
-#ifdef DECISION_CHECK
-      IF (JCOMP.GT.N.AND.PMIN.GT.4.0*SEMIX.AND.
-     &     (ECC1.GT.0.9.AND.ECC1.LT.1.0))
-     &     write(6,*) 'IMPACT: L348'
-#endif      
-      IF ((JCOMP.GT.N.AND.PMIN.GT.4.0*SEMIX.AND.
-     &   (ECC1.GT.0.9.AND.ECC1.LT.1.0))
-     &     .AND..not.MCF) GO TO 30
 *
 *       Check almost stable triples (factor 1.2 is experimental).
-      IF (JCOMP.LE.N.AND.PMIN.GT.2.5*SEMI) THEN
+ 17   IF (JCOMP.LE.N.AND.PMIN.GT.2.5*SEMI) THEN
           CALL HISTAB(IPAIR,JCOMP,PMIN,RSTAB)
           RA = SEMI1*(1.0 + ECC1)
           IF (SEMI1.LT.0.0) RA = RIJ
           GI = PERT*(RA/RIJ)**3
+*     using stablility criterion
+          QST = QSTAB(ECC,ECC1,0.0D0,BODY(I1),BODY(I2),BODY(JCOMP))
+          RP = PMIN/SEMI
+#ifdef DECISION_CHECK
+          IF (QST.LT.RP) write(6,*) 'IMPACT: QST(',QST,')<RP(',RP,
+     &         ') && GI(',GI,')<=0.02 L416'
+#endif
+*     The GI should be small and consistent with the later check
+          IF (QST.LT.RP.AND.GI.LE.0.02.AND.PERT.LE.GMAX.AND.
+     &         .not.MCF) GO TO 40
 *       Use estimated apocentre perturbation for decision-making.
-          IF (PMIN.GT.1.2*RSTAB) THEN
+C          IF (PMIN.GT.1.2*RSTAB) THEN
+C#ifdef DECISION_CHECK
+C              IF (GI.LT.0.05) write(6,*) 'IMPACT: GI<0.05 L361'
+C#endif 
+C              IF (GI.LT.0.05.AND..not.MCF) GO TO 30
+C*       Choose chain for critical case of highly eccentric outer orbit.
+C#ifdef DECISION_CHECK
+C              IF (ECC1.LT.0.95) write(6,*) 'IMPACT: ECC1(',
+C     &             ECC1,')<0.95 L.324'
+C#endif
+C              IF (ECC1.LT.0.95) GO TO 100
+C          ELSE IF (PMIN.GT.0.7*RSTAB) THEN
+CC*       Treat marginally stable triple according to external perturbation.
+CC#ifdef DECISION_CHECK
+CC              IF (GI.LT.0.05) write(6,*) 'IMPACT: GI<0.05 L373'
+CC#endif 
+CC              IF (GI.LT.0.05.AND..not.MCF) GO TO 30
+C#ifdef DECISION_CHECK
+C              IF (GI.LT.1.0.OR.ECC1.LT.0.9)
+C     &             write(6,*), 'IMPACT: GI(',GI,')<1.0 || ECC1(',
+C     &             ECC1,')<0.9 L.334'
+C#endif              
+C              IF (GI.LT.1.0.OR.ECC1.LT.0.9) GO TO 100
+C          END IF
+C#ifdef DECISION_CHECK
+C          IF (PMIN.GT.0.6*RSTAB.AND.PMIN.LT.0.9*RSTAB)
+C     &         write(6,*), 'PMIN(',PMIN,')>0.6 RSTAB(',RSTAB,
+C     &         ') && PMIN<0.9 RSTAB L.341'
+C#endif          
+C          IF (PMIN.GT.0.6*RSTAB.AND.PMIN.LT.0.9*RSTAB) GO TO 100
+C 
+*     Delay for large distance ratio outside 0.5*RMIN.
 #ifdef DECISION_CHECK
-              IF (GI.LT.0.05) write(6,*) 'IMPACT: GI<0.05 L361'
-#endif 
-              IF (GI.LT.0.05.AND..not.MCF) GO TO 30
-*       Choose chain for critical case of highly eccentric outer orbit.
-#ifdef DECISION_CHECK
-              IF (ECC1.LT.0.95) write(6,*) 'IMPACT: ECC1(',
-     &             ECC1,')<0.95 L.324'
-#endif
-              IF (ECC1.LT.0.95) GO TO 100
-          ELSE IF (PMIN.GT.0.7*RSTAB) THEN
-*       Treat marginally stable triple according to external perturbation.
-#ifdef DECISION_CHECK
-              IF (GI.LT.0.05) write(6,*) 'IMPACT: GI<0.05 L373'
-#endif 
-              IF (GI.LT.0.05.AND..not.MCF) GO TO 30
-#ifdef DECISION_CHECK
-              IF (GI.LT.1.0.OR.ECC1.LT.0.9)
-     &             write(6,*), 'IMPACT: GI(',GI,')<1.0 || ECC1(',
-     &             ECC1,')<0.9 L.334'
-#endif              
-              IF (GI.LT.1.0.OR.ECC1.LT.0.9) GO TO 100
-          END IF
-#ifdef DECISION_CHECK
-          IF (PMIN.GT.0.6*RSTAB.AND.PMIN.LT.0.9*RSTAB)
-     &         write(6,*), 'PMIN(',PMIN,')>0.6 RSTAB(',RSTAB,
-     &         ') && PMIN<0.9 RSTAB L.341'
-#endif          
-          IF (PMIN.GT.0.6*RSTAB.AND.PMIN.LT.0.9*RSTAB) GO TO 100
-*       Delay for large distance ratio outside 0.5*RMIN.
-#ifdef DECISION_CHECK
-          IF (RIJ.GT.MAX(10.0*APO,0.5*RMIN))
+          IF (RIJ.GT.MAX(10.0*APO,0.5*RMIN).AND.PERT.GT.GMAX)
      &         write(6,*) 'IMPACT: RIJ(',RIJ,')>MAX(10 APO(',
-     &         APO,'), 0.5 RMIN(',RMIN,')) L.348'
+     &         APO,'), 0.5 RMIN(',RMIN,')) && PERT(',PERT,
+     &         ')> GMAX(',GMAX,') L.348 quit'
 #endif
-          IF (RIJ.GT.MAX(10.0*APO,0.5*RMIN)) GO TO 100
+          IF (RIJ.GT.MAX(10.0*APO,0.5*RMIN).AND.PERT.GT.GMAX)
+     &         GO TO 100
 C#ifdef DECISION_CHECK
 C          IF (RIJ.GT.10.0*APO)
 C     &         write(6,*) 'IMPACT: RIJ(',
@@ -426,14 +457,6 @@ C#endif
 C** Suppress this condition since it do not give proper criterion for stable system  (L.Wang)
 *     Instead, qstab is used
 C          IF (PMIN.GT.2.5*APO) GO TO 40
-          QST = QSTAB(ECC,ECC1,0.0D0,BODY(I1),BODY(I2),BODY(JCOMP))
-          RP = PMIN/SEMI
-#ifdef DECISION_CHECK
-          IF (QST.LT.RP) write(6,*) 'IMPACT: QST(',QST,')<RP(',RP,
-     &         ') && GI(',GI,')<=0.02 L416'
-#endif
-*     The GI should be small and consistent with the later check
-          IF (QST.LT.RP.AND.GI.LE.0.02.AND..not.MCF) GO TO 40
       END IF
 C#ifdef DECISION_CHECK
 C      IF (PMIN.GT.3.0*SEMI.AND.JCOMP.LE.N)
@@ -441,21 +464,40 @@ C     &     write(6,*) 'IMPACT: L 408'
 C#endif
 C      IF (PMIN.GT.3.0*SEMI.AND.JCOMP.LE.N) GO TO 40
 *
-      IF (JCOMP.GT.N) THEN
-#ifdef DECISION_CHECK
-          IF (RIJ.GT.10.0*APO)
-     &         write(6,*) 'IMPACT: JCOMP>N && RIJ(',
-     &         RIJ,')>10 APO(',APO,') L.365'
-#endif
-          IF (RIJ.GT.10.0*APO) GO TO 100
-      END IF
+C      IF (JCOMP.GT.N) THEN
+C#ifdef DECISION_CHECK
+C          IF (RIJ.GT.10.0*APO)
+C     &         write(6,*) 'IMPACT: JCOMP>N && RIJ(',
+C     &         RIJ,')>10 APO(',APO,') L.365'
+C#endif
+C          IF (RIJ.GT.10.0*APO) GO TO 100
+C      END IF
 *       Skip chain if merged binary or chain c.m. (denoted by NAME <= 0).
 #ifdef DECISION_CHECK
-      IF (NAME(I).LE.0.OR.NAME(JCOMP).LE.0)
-     &     write(6,*) 'IMPACT: NAME(I)<0 || NAME(JCOMP)<0',
-     &     'L.373'
+      IF (NAME(I).LT.0.OR.NAME(JCOMP).LT.0)
+     &     write(6,*) 'IMPACT: NAME(I)(',NAME(I),
+     &     ')<0 || NAME(JCOMP)(',NAME(JCOMP),')<0',
+     &     'L.373 term merger quit'
 #endif
-      IF (NAME(I).LE.0.OR.NAME(JCOMP).LE.0) GO TO 100
+      IF (NAME(I).LT.0.OR.NAME(JCOMP).LT.0) then
+*     Terminate merger if exist
+         if (NAME(I).LT.0) THEN
+            KSPAIR = IPAIR
+         else if(NAME(JCOMP).LT.0) THEN
+            JPAIR = JCOMP - N
+            J1 = 2*JPAIR - 1
+            JCOMP = I
+            KSPAIR = JPAIR
+         END IF
+         IPHASE= 9
+         call DELAY(0,0)
+         call ksparmpi(K_store,K_int,K_DELAY,0,0,0.0)
+         flag_delay=.true.
+         GO TO 100
+      endif
+
+*     quit in the case of chain
+      IF (NAME(I).EQ.0.OR.NAME(JCOMP).EQ.0) GO TO 100
 *
 *       Compare with existing subsystem of same type (if any).
       IF (NSUB.GT.0.AND.KCHAIN.LE.0) THEN
@@ -466,7 +508,7 @@ C      IF (PMIN.GT.3.0*SEMI.AND.JCOMP.LE.N) GO TO 40
 #ifdef DECISION_CHECK
           IF (IGO.GT.0)
      &         write(6,*) 'IMPACT: NSUB(',NSUB,')>0 && KCHAIN(',
-     &         KCHAIN,')<0 && IGO(',IGO,')>0 L.389'
+     &         KCHAIN,')<0 && IGO(',IGO,')>0 L.389 quit'
 #endif
           IF (IGO.GT.0) GO TO 100
       END IF
@@ -474,7 +516,7 @@ C      IF (PMIN.GT.3.0*SEMI.AND.JCOMP.LE.N) GO TO 40
       
 *       Skip all multiple regs on zero option (mergers done by #15 > 0).
 #ifdef DECISION_CHECK
-      IF (KZ(30).EQ.0) write(6,*) 'IMPACT: KZ(30)==0 L.397'
+      IF (KZ(30).EQ.0) write(6,*) 'IMPACT: KZ(30)==0 L.397 quit'
 #endif
       IF (KZ(30).EQ.0) GO TO 100
 C*       Allow CHAIN only (#30 = -1) or TRIPLE & QUAD only (#30 < -1).
@@ -500,22 +542,29 @@ C      IF (KZ(30).EQ.-2.AND.KCHAIN.EQ.0) GO TO 100
           PD1 = TWOPI*SEMI1*SQRT(DABS(SEMI1)/BODY(I))*TSTAR*365.24D6
           if(rank.eq.0)
      &    WRITE (6,20)  WHICH1, TTOT, I, JCOMP, IPAIR, NAME(I1),
-     &      NAME(I2), NAME(JCOMP), NAME(I), KSTAR(I1), KSTAR(I2),
-     &      KSTAR(JCOMP), KSTAR(I), BODY(I1), BODY(I2), BODY(JCOMP),
-     &      BODY(I)+BODY(JCOMP),R(IPAIR),H(IPAIR),SEMI,ECC,EB,PD,
-     &      SEMI1,ECC1,EB1,PD1,PERT4, RIJ, PMIN, EB1/EB, LIST(1,I1), 
-     &      BODY(I1)*ZMBAR,BODY(I2)*ZMBAR,BODY(JCOMP)*ZMBAR, 
-     &      (BODY(I)+BODY(JCOMP))*ZMBAR,RADIUS(I1)*SU,RADIUS(I2)*SU,
-     &      RADIUS(JCOMP)*SU,R(IPAIR)*SU,RIJ*SU,RI,VI
+     &         NAME(I2), NAME(JCOMP), NAME(I), KSTAR(I1), KSTAR(I2),
+     &         KSTAR(JCOMP), KSTAR(I), BODY(I1),BODY(I1)*ZMBAR,
+     &         BODY(I2), BODY(I2)*ZMBAR, BODY(JCOMP),BODY(JCOMP)*ZMBAR,
+     &         BODY(I)+BODY(JCOMP),(BODY(I)+BODY(JCOMP))*ZMBAR,
+     &         R(IPAIR),R(IPAIR)*SU,H(IPAIR),SEMI,ECC,EB,PD,
+     &         SEMI1,ECC1,EB1,PD1,PERT4, RIJ, RIJ*SU, PMIN, EB1/EB, 
+     &         LIST(1,I1), RADIUS(I1)*SU,RADIUS(I2)*SU,
+     &         RADIUS(JCOMP)*SU,RI,VI
    20     FORMAT (/,' NEW',A8,1P,' TIME',E12.5,' INCM',I9,
-     &         ' I3',I9,' INPAIR',I9,' N1,2,3,INCM',4I10,
-     &         ' KW1,2,3,IN',4I4,' M1,2[NB]',2E10.2,' M3,TOT',2E10.2,
-     &         '  R12',E10.2,' H',E10.2,
-     &         ' IN e,a,eb[NB]',2E12.4,E10.2,' P[d]',E10.2,
-     &         ' OUT e,a,eb[NB]',2E12.4,E10.2,' P[d]',E10.2,
-     &         '  G4',E10.3,'  RIN3',E8.1,'  PERIM',E8.1,'  EB1/EB0',
-     &         E8.1,'  NP',I4,' M1,2,3,TOT[*]',4E10.2,' RAD1,2,3[*]',
-     &         3E10.2,' IN,OUT Sep[*]',2E10.2,'  RI,VI[NB]',2E10.2)
+     &         ' I3',I9,' INPAIR',I9,' NAME(I1~3,INCM)',4I10,
+     &         ' K*(I1~3,IN)',4I4,' M(I1)[NB,M*]',1P,E10.2,0P,F10.3,
+     &         ' M(I2)[NB,M*]',1P,E10.2,0P,F10.3,
+     &         ' M(I3)[NB,M*]',1P,E10.2,0P,F10.3,
+     &         ' M(Icm)[NB,M*]',1P,E10.2,0P,F10.3,
+     &         ' R12[NB,R*]',1P,2E10.2,' H[NB]',E10.2,
+     &         ' SEMI0[NB]',E12.4,' ECC0',F9.5,' EB0[NB]',E10.2,
+     &         ' P0[DAY]',E10.2,
+     &         ' SEMI1[NB]',E12.4,' ECC1',F9.5,' EB1[NB]',E10.2,
+     &         ' P1[DAY]',E10.2,
+     &         ' GAMMA4',E10.3,'  RIN3[NB,R*]',2E10.2,
+     &         ' PERIM[NB]',E8.1,'  EB1/EB0',
+     &         E8.1,'  NP',I4,' RS(I1~3)[R*]',
+     &         3E10.2,'  RI[NB]', E10.2,' VI[NB]',2E10.2)
           call flush(6)
       END IF
 *
@@ -730,8 +779,21 @@ C     &                                                  0.0D0)*SEMIX
 *     IF (BODY(I)*SMU.LT.0.4) ZF = 1.5
       IF (MIN(BODY(I1),BODY(I2)).LT.0.05*BODYM) THEN
 *       Use orbital velocity condition instead of binding energy for planets.
+#ifdef DECISION_CHECK
+          IF (SEMI1.GT.2.0*RMIN) write(6,*) 'IMPACT: L769'
+#endif
           IF (SEMI1.GT.2.0*RMIN) GO TO 16
       ELSE IF (EB.GT.EBH.OR.EB1.GT.EBS.OR.RA.GT.RFAC) THEN
+*         quit for hyperbolic case if perturber is merger or chain
+#ifdef DECISION_CHECK
+         IF(EB1.GT.0.0.AND.NAME(JCOMP).LE.0)
+     &        write(6,*) 'IMPACT: EB1(',EB1,')>0 L773'
+#endif
+         IF(EB1.GT.0.0.AND.NAME(JCOMP).LE.0) GO TO 100
+#ifdef DECISION_CHECK
+          write(6,*) 'IMPACT: EB(',EB,')>EBH(',EBH,')||EB1(',EB1,
+     &     ')>EBS(',EBS,')||RA(',RA,')>RFAC(',RFAC,') L774'
+#endif
           GO TO 16
       END IF
 *
@@ -838,6 +900,7 @@ C
           END IF
        END IF
 *
+*     already checked (suppress)
 *       Estimate relative perturbation at apocentre from actual value.
       GI = PERT*(SEMI1*(1.0 + ECC1)/RIJ)**3
 #ifdef DECISION_CHECK
@@ -857,8 +920,6 @@ C
           IF (GI.GT.1.0D-04) GO TO 16
       END IF
 
-*     Ensure the inner semi-major axis is used for subsequent tests.
-      SEMI = -0.5*BODY(I)/H(IPAIR)
       IF (NMERGE.EQ.MMAX - 1) THEN
           IF (NWARN.LT.1000) THEN
               NWARN = NWARN + 1
@@ -997,7 +1058,7 @@ CC              EOUT = EOUT - DE
               EOUT = MIN(EOUT - DE,0.9999D0)
               PMIN = SEMI1*(1.0 - EOUT)
           END IF
-          NST = NSTAB(SEMI,SEMI1,ECC,EOUT,ANGLE,BODY(I1),BODY(I2),BJ)
+C          NST = NSTAB(SEMI,SEMI1,ECC,EOUT,ANGLE,BODY(I1),BODY(I2),BJ)
           QST = QSTAB(ECC,EOUT,ANGLE,BODY(I1),BODY(I2),BJ)
           RP = PMIN/SEMI
 *     Using the new qstab (L.Wang)
@@ -1012,19 +1073,21 @@ c              PCRIT = 0.98*PMIN*(1.0 - PERT)
 c              PCR = stability(BODY(I1),BODY(I2),BODY(JCOMP),ECC,EOUT,
 c     &                                                          ANGLE)
 c              PCR = PCR*SEMI
-c*       Specify reduced peri if old criterion < PCRIT/2 (avoids switching).
-c              IF (PCR.LT.0.5*PCRIT) THEN
-c                  PCRIT = 0.75*PCRIT
-c              END IF
-c              IF (PCRIT.LT.YFAC*PCR.AND.PERT.LT.0.02.AND.
-c     &            NMTRY.LT.10) THEN
-c                  ALPH = 360.0*ANGLE/TWOPI
-c                  FAIL = PMIN*(1-PERT) - YFAC*PCR
-c                  if(rank.eq.0)
-c     &            WRITE (6,43)  TTOT, ALPH, ECC, ECC1, PMIN, FAIL, PERT
-c   43             FORMAT (' NEWSTAB    T INC EI EO PMIN FAIL PERT ',
-c     &                                 F7.1,F7.2,2F8.4,1P,3E10.2)
-c              END IF
+*       Reduce the limit slightly, also allowing for perturbation.
+              PCRIT = 0.99*PMIN*(1.0 - PERT)
+              PCR = QST*SEMI
+*       Specify reduced peri if old criterion < PCRIT/2 (avoids switching).
+              IF (PCR.LT.0.5*PCRIT) THEN
+                  PCRIT = 0.75*PCRIT
+              END IF
+              IF (PCRIT.LT.YFAC*PCR.AND.PERT.LT.0.02.AND.
+     &            NMTRY.LT.10) THEN
+                  ALPH = 360.0*ANGLE/TWOPI
+                  FAIL = PMIN*(1-PERT) - YFAC*PCR
+                  WRITE (6,43)  TTOT, ALPH, ECC, ECC1, PMIN, FAIL, PERT
+   43             FORMAT (' NEWSTAB    T INC EI EO PMIN FAIL PERT ',
+     &                                 F7.1,F7.2,2F8.4,1P,3E10.2)
+              END IF
 c*     if(rank.eq.0)then
 c*     WRITE (57,444)  BODY(I1),(X(K,I1),K=1,3),(XDOT(K,I1),K=1,3)
 c*     WRITE (57,444)  BODY(I2),(X(K,I2),K=1,3),(XDOT(K,I2),K=1,3)
@@ -1039,15 +1102,15 @@ c*    &                                       F7.1,I7,2F8.4,1P,2E10.2)
 c                  NMTRY = 0
 c              END IF
 *       Increase the limit slightly, also allowing for perturbation.
-              PCRIT = 1.1*QST*SEMI
           ELSE
               NMTRY = NMTRY + 1
               PCRIT = 1.01*PMIN
           END IF
       ELSE
-C          PCR = stability(BODY(I1),BODY(I2),BODY(JCOMP),ECC,ECC1,ANGLE)
-C          PCRIT = PCR*SEMI
-         PCRIT = PMIN
+*     Not good, used original way
+C          PCRIT = PMIN
+          PCR = stability(BODY(I1),BODY(I2),BODY(JCOMP),ECC,ECC1,ANGLE)
+          PCRIT = PCR*SEMI
       END IF
 *
 *       Check whether the main perturber dominates the outer component.
@@ -1068,14 +1131,15 @@ C          PCRIT = PCR*SEMI
       CALL TSTAB(I,ECC1,SEMI1,PM1,YFAC,ITERM)
 #ifdef DECISION_CHECK
       IF (ITERM.GT.0) 
-     &     write(6,*) 'IMPACT: L1026'
+     &     write(6,*) 'IMPACT: ITERM(',ITERM,')>0 L1026'
 #endif
       IF (ITERM.GT.0) GO TO 16
 *
 *       Check perturbed stability condition.
 #ifdef DECISION_CHECK
       IF (PMIN*(1.0 - PERT).LT.YFAC*PCRIT) 
-     &     write(6,*) 'IMPACT: L1033'
+     &     write(6,*) 'IMPACT: PMIN(',PMIN,')*(1-PERT(',
+     &     PERT,')<YFAC(',YFAC,')*PCRIT(',PCRIT,') L1033'
 #endif
       IF (PMIN*(1.0 - PERT).LT.YFAC*PCRIT) GO TO 16
 *
@@ -1227,13 +1291,14 @@ C          PCRIT = PCR*SEMI
           PD1 = TWOPI*SEMI1*SQRT(DABS(SEMI1)/BODY(I))*TSTAR*365.24D6
           if(rank.eq.0)
      &    WRITE (6,20)  WHICH1, TTOT, I, JCOMP, IPAIR, NAME(I1),
-     &      NAME(I2), NAME(JCOMP), NAME(I), KSTAR(I1), KSTAR(I2),
-     &      KSTAR(JCOMP), KSTAR(I), BODY(I1), BODY(I2), BODY(JCOMP),
-     &      BODY(I)+BODY(JCOMP),R(IPAIR),H(IPAIR),SEMI,ECC,EB,PD,
-     &      SEMI1,ECC1,EB1,PD1,PERT4, RIJ, PMIN, EB1/EB, LIST(1,I1),
-     &      BODY(I1)*ZMBAR,BODY(I2)*ZMBAR,BODY(JCOMP)*ZMBAR,
-     &      (BODY(I)+BODY(JCOMP))*ZMBAR,RADIUS(I1)*SU,RADIUS(I2)*SU,
-     &      RADIUS(JCOMP)*SU,R(IPAIR)*SU,RIJ*SU,RI,VI
+     &         NAME(I2), NAME(JCOMP), NAME(I), KSTAR(I1), KSTAR(I2),
+     &         KSTAR(JCOMP), KSTAR(I), BODY(I1),BODY(I1)*ZMBAR,
+     &         BODY(I2), BODY(I2)*ZMBAR, BODY(JCOMP),BODY(JCOMP)*ZMBAR,
+     &         BODY(I)+BODY(JCOMP),(BODY(I)+BODY(JCOMP))*ZMBAR,
+     &         R(IPAIR),R(IPAIR)*SU,H(IPAIR),SEMI,ECC,EB,PD,
+     &         SEMI1,ECC1,EB1,PD1,PERT4, RIJ, RIJ*SU, PMIN, EB1/EB, 
+     &         LIST(1,I1), RADIUS(I1)*SU,RADIUS(I2)*SU,
+     &         RADIUS(JCOMP)*SU,RI,VI
           END IF
 *       Note rare case of two hierarchies merging and identify ghost names.
           IF (NAME(I).LT.0.AND.NAME(JCOMP).LT.0) THEN
@@ -1259,13 +1324,14 @@ C          PCRIT = PCR*SEMI
           PD1 = TWOPI*SEMI1*SQRT(DABS(SEMI1)/BODY(I))*TSTAR*365.24D6
           if(rank.eq.0)
      &    WRITE (6,20)  WHICH1, TTOT, I, JCOMP, IPAIR, NAME(I1),
-     &      NAME(I2), NAME(JCOMP), NAME(I), KSTAR(I1), KSTAR(I2),
-     &      KSTAR(JCOMP), KSTAR(I), BODY(I1), BODY(I2), BODY(JCOMP),
-     &      BODY(I)+BODY(JCOMP),R(IPAIR),H(IPAIR),SEMI,ECC,EB,PD,
-     &      SEMI1,ECC1,EB1,PD1,PERT4, RIJ, PMIN, EB1/EB, LIST(1,I1),
-     &      BODY(I1)*ZMBAR,BODY(I2)*ZMBAR,BODY(JCOMP)*ZMBAR,
-     &      (BODY(I)+BODY(JCOMP))*ZMBAR,RADIUS(I1)*SU,RADIUS(I2)*SU,
-     &      RADIUS(JCOMP)*SU,R(IPAIR)*SU,RIJ*SU,RI,VI
+     &         NAME(I2), NAME(JCOMP), NAME(I), KSTAR(I1), KSTAR(I2),
+     &         KSTAR(JCOMP), KSTAR(I), BODY(I1),BODY(I1)*ZMBAR,
+     &         BODY(I2), BODY(I2)*ZMBAR, BODY(JCOMP),BODY(JCOMP)*ZMBAR,
+     &         BODY(I)+BODY(JCOMP),(BODY(I)+BODY(JCOMP))*ZMBAR,
+     &         R(IPAIR),R(IPAIR)*SU,H(IPAIR),SEMI,ECC,EB,PD,
+     &         SEMI1,ECC1,EB1,PD1,PERT4, RIJ, RIJ*SU, PMIN, EB1/EB, 
+     &         LIST(1,I1), RADIUS(I1)*SU,RADIUS(I2)*SU,
+     &         RADIUS(JCOMP)*SU,RI,VI
       END IF
 *
 *       Check for diagnostic output of quadruples.

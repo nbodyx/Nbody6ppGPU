@@ -155,24 +155,28 @@ c$$$      END IF
      &              (X(3,ICM) - RDENS(3))**2)
           VI = SQRT(XDOT(1,ICM)**2+XDOT(2,ICM)**2+XDOT(3,ICM)**2)
           SEMI = -0.5*BODY(ICM)/H(IPAIR)
-      ECC2 = (1.0-R(IPAIR)/SEMI)**2+TDOT2(IPAIR)**2/(BODY(ICM)*SEMI)
+          ECC2 = (1.0-R(IPAIR)/SEMI)**2+TDOT2(IPAIR)**2/(BODY(ICM)*SEMI)
           EB = -0.5*BODY(I1)*BODY(I2)/SEMI
           PD = TWOPI*SEMI*SQRT(DABS(SEMI)/BODY(ICM))*TSTAR*365.24D6
           if(rank.eq.0)
      &    WRITE (6,15)  TIME+TOFF,NAME(I1),NAME(I2),
      &         NAME(ICM),KSTAR(I1),KSTAR(I2),KSTAR(ICM),
-     &         IPAIR,DTAU(IPAIR),BODY(I1),BODY(I2),
+     &         IPAIR,DTAU(IPAIR),BODY(I1),BODY(I1)*ZMBAR,
+     &         BODY(I2),BODY(I2)*ZMBAR,
      &         R(IPAIR),SQRT(ECC2),SEMI,EB,PD,H(IPAIR),GAMMA(IPAIR),
      &         STEP(ICM),LIST(1,I1),LIST(1,ICM),
-     &         BODY(I1)*ZMBAR,BODY(I2)*ZMBAR,
      &         RADIUS(I1)*SU,RADIUS(I2)*SU,R(IPAIR)*SU,RI,VI
-  15      FORMAT (/,' END KSREG   TIME[NB]',1P,E17.10,' NM1,2,S=',
-     &         3I10,' KW1,2,S=',3I4,' IPAIR',I9,' DTAU',E10.2,
-     &         ' M1,2[NB]',2E10.2,' R12[NB]',E10.2,
-     &         ' e,a,eb[NB]=',2E12.4,E10.2,' P[d]=',E10.2,' H',E10.2,
-     &         ' GAMMA',1P,E10.2,' STEP(ICM)',E10.2,' NPERT',I5,
-     &         ' NB(ICM)',I5,' M1,2[*]',2E10.2,' RAD1,2,S[*]',3E10.2,
-     &         ' RI,VI[NB]=',2E10.2)
+  15      FORMAT (/,' END KSREG   TIME[NB]',1P,E17.10,' NAME(I1)',I10,
+     &         ' NAME(I2)',I10,' NAME(ICM)',I10,
+     &         ' K*(I1)',I4,' K*(I2)',I4,' K*(ICM)',I4,' IPAIR',I9,
+     &         ' DTAU',E10.2,' M(I1)[NB,M*]',E10.2,0P,F10.3
+     &         ' M(I2)[NB,M*]',1P,E10.2,0P,F10.3,' R12[NB]',1P,E10.2,
+     &         ' ECC',E12.4,' SEMI[NB]',E12.4,' EB[NB]=',E10.2,
+     &         ' P[DAY]=',E10.2,' H',E10.2,
+     &         ' GAMMA',1P,E10.2,' STEP(ICM)',E10.2,' NP',I5,
+     &         ' NB(ICM)',I5,' RS(I1)[R*]',E10.2,' RS(I2)[R*]',E10.2,
+     &         ' R12[R*]',E10.2,' RI[NB]',E10.2,' VI[NB]',E10.2
+     &         )
 *     --04/15/14 21:40-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
 c$$$          if(rank.eq.0.and.name(icm).eq.2567) call abort()

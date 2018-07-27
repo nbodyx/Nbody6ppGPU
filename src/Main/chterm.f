@@ -23,6 +23,7 @@
       COMMON/INCOND/  X4(3,NMX),XDOT4(3,NMX)
       COMMON/ECHAIN/  ECH
       COMMON/KSAVE/  K1,K2
+      
 *
 *
 *       Decide between standard termination or collision (ISUB > 0 or < 0).
@@ -76,19 +77,13 @@
       IF (I5.EQ.0) I5 = I4
       IF (I6.EQ.0) I6 = I4
 *
-      IF (rank.eq.0.and.KZ(30).GT.1) THEN
-          WRITE (6,4)  SQRT(R2(I1,I2)), SQRT(R2(I1,I3)),SQRT(R2(I2,I3)),
-     &                 SQRT(R2(I2,I4)), SQRT(R2(I3,I4))
-    4     FORMAT (' CHTERM:   RIJ[NB] (1-2 1-3 2-3 2-4 3-4) ',1P,5E10.3)
-          call flush(6)
-      END IF
 *
-      JLIST(6) = NAMEC(I1)
-      JLIST(7) = NAMEC(I2)
-      JLIST(8) = NAMEC(I3)
-      JLIST(9) = NAMEC(I4)
-      JLIST(10) = NAMEC(I5)
-      IF (NCH.EQ.6) JLIST(11) = NAMEC(I6)
+      JLIST(7) = NAMEC(I1)
+      JLIST(8) = NAMEC(I2)
+      JLIST(9) = NAMEC(I3)
+      JLIST(10) = NAMEC(I4)
+      JLIST(11) = NAMEC(I5)
+      JLIST(12) = NAMEC(I6)
 *
 *       Specify chain phase indicator and restore original name to c.m. body.
       IPHASE = 8
@@ -98,13 +93,22 @@
       ICM = 0
       DO 10 J = IFIRST,NTOT
           DO 5 L = 1,NCH
-              IF (NAME(J).EQ.JLIST(L+5)) THEN
+              IF (NAME(J).EQ.JLIST(L+6)) THEN
                   JLIST(L) = J
                   IF (BODY(J).GT.0.0D0) ICM = J
               END IF
     5     CONTINUE
    10 CONTINUE
 *
+      IF (rank.eq.0.and.KZ(30).GT.1) THEN
+          WRITE (6,4)  NCH, JLIST(1:6), NAMEC(1:6),
+     &        SQRT(R2(I1,I2)), SQRT(R2(I2,I3)),SQRT(R2(I3,I4)),
+     &        SQRT(R2(I4,I5)), SQRT(R2(I5,I6))
+    4     FORMAT (' CHTERM: NCH ',I3,' I(1-NCH)',6I10,' NAME(1-NCH) ',
+     &         6I10,' RIJ[NB] (1-2 2-3 3-4 4-5 5-6) ',1P,6E10.3)
+          call flush(6)
+      END IF
+
 *       Modify identification list for special cases NCH = 2 & NCH = 3.
       IF (NCH.EQ.2) THEN
           I3 = I1

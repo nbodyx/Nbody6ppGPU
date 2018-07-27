@@ -58,19 +58,16 @@
    20         CONTINUE
               EOUT = EOUT - DE
               EOUT = MAX(EOUT,0.0D0)
-*       Obtain new stability boundary from Valtonen's criterion (MN 2017).
-              QST = QSTAB(ECC0,EOUT,ANGLE,CM(1,IM),CM(2,IM),BODY(I2))
-          ELSE
-*       Employ basic criterion without EDOT outside safety boundary.
-              QST = QSTAB(ECC0,EOUT,ANGLE,CM(1,IM),CM(2,IM),BODY(I2))
           END IF
+*       Obtain new stability boundary from Valtonen's criterion (MN 2017).
+          QST = QSTAB(ECC0,EOUT,ANGLE,CM(1,IM),CM(2,IM),BODY(I2))
 *
           ITIME = ITIME + 1
           IF (ITIME.GT.2000000000) ITIME = 0
           IF (MOD(ITIME,1000).EQ.0) THEN
               ALPH = 360.0*ANGLE/TWOPI
-              PCRIT = QST*SEMI0
-              WRITE (6,30) ECC0, ECC, ALPH, SEMI, PCRIT, PMIN
+              PCRIT0 = QST*SEMI0
+              WRITE (6,30) ECC0, ECC, ALPH, SEMI, PCRIT0, PMIN
    30         FORMAT (' ASSESS    E0 E1 INC A1 PCR PMIN ',
      &                            2F8.4,F7.1,1P,3E9.1)
           END IF

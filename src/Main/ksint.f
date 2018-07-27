@@ -425,16 +425,17 @@ c$$$      end if
       IF (NAME(I).LT.0) THEN
 *       Terminate if apocentre perturbation > 0.25 (R > SEMI) or GI > 0.25.
           IF (HI.LT.0.0) THEN
-              SEMI = -0.5*BODY(I)/HI
+C              SEMI = -0.5*BODY(I)/HI
 *              ECC2 = (1.0 - RI/SEMI)**2 + TDOT2(IPAIR)**2/(BODY(I)*SEMI)
 *              A0 = SEMI*(1.0 + SQRT(ECC2))/RI
 *       Replace eccentricity calculation with typical value.
-              A0 = 1.5*SEMI/RI
-              GA = GI*A0*A0*A0
-              IF (GA.GT.0.25.AND.RI.GT.SEMI) IQ = .TRUE.
+C              A0 = 1.5*SEMI/RI
+C              GA = GI*A0*A0*A0
+C              IF (GA.GT.0.25.AND.RI.GT.SEMI) IQ = .TRUE.
 *       Terminate wide orbits if perturber number is relatively large.
               IF (RI.GT.20*RMIN.AND.NNB0.GT.0.8*LIST(1,I)) IQ = .TRUE.
-*              IF (GI.GT.0.1.AND.RI.GT.RMIN) IQ = .TRUE.
+              IF (GI.GT.0.1.AND.RI.GT.RMIN) IQ = .TRUE.
+              IF (GI.GT.0.01.AND.RI.GT.5.0*RMIN) IQ = .TRUE.
               IF (GI.GT.0.25) IQ = .TRUE.
               IF (MIN(BODY(I1),BODY(I2)).LT.0.05*BODYM) THEN
                   IF (GI.GT.2.0D-04) IQ = .TRUE.

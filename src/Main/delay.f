@@ -33,6 +33,8 @@
           END IF
           KSKIP = 0
 *
+*      In case the secondary merger is terminated (from impact iphase=9)
+          IF(IPHASE.EQ.9) IPHASE=7
 *      Exit in case of new merger or merger termination.
           IF (IPHASE.EQ.6.OR.IPHASE.EQ.7) THEN
               GO TO 10

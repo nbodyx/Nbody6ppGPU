@@ -3,7 +3,13 @@
 *
 *       Restore hierarchical configuration.
 *       -----------------------------------
-*
+*       process order:
+*       1. Terminate outer binary, ifirst, ifirst+1 are inner c.m. and outer
+*       2. Icomp = ifirst; Jcomp = ghost index, copy inner binary data to Icomp,Jcomp
+*       3. NEW KS with Icomp and Jcomp; The Jcomp data will be switched to ifirst+1, thus the outer data is in jcomp now
+*       4. If jcomp is c.m., just correct the energy and update ks data, no need to initial new ks
+*       
+*      
       INCLUDE 'common6.h'
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
@@ -40,12 +46,18 @@
 *
 *       Save neighbours for correction procedure and rename if moved up.
       NNB = LIST(1,I) + 1
-      DO 4 L = 2,NNB
-          J = LIST(L,I)
-          IF (J.GT.I) J = J - 1
-          IF (J.LE.2*NPAIRS.AND.J.GT.2*IPAIR) J = J - 2
-          JSAVE(L) = J
-    4 CONTINUE
+C      write(6,*) 'NNB',NNB,'LIST',LIST(2:NNB+1,I)
+      IF(IPAIR.NE.NPAIRS) THEN
+         DO 4 L = 2,NNB
+            J = LIST(L,I)
+            IF (J.EQ.2*NPAIRS) J = 2*IPAIR
+            IF (J.EQ.2*NPAIRS-1) J = 2*IPAIR-1
+            IF (J.EQ.NTOT) J = I
+            JSAVE(L) = J
+ 4       CONTINUE
+      ELSE
+         JSAVE(2:NNB) = LIST(2:NNB,I)
+      ENDIF
 *
 *       Ensure that c.m. coordinates are known to highest order.
 *      CALL XVPRED(I,0)
@@ -68,7 +80,14 @@
 *
 *       Sum first part of potential energy correction due to tidal effect.
       JLIST(1) = ICOMP
+C      write(6,*) 'ICOMP',ICOMP,'M',BODY(ICOMP),'X',X(1:3,ICOMP)
+C      write(6,*) 'NNB',NNB,'JPERT',JPERT(1:NNB),'JLIST',JLIST(1),
+C     &     'M1',BODY(JPERT(1)),'X',X(1:3,JPERT(1)),'T0',T0(JPERT(1)),
+C     & 'T',TIME
       CALL NBPOT(1,NNB,POT1)
+C      DO KK = 1, NNB
+C         write(333,*) JPERT(KK),NAME(JPERT(KK)),X(1:3,JPERT(KK))
+C      END DO
 *
 *       Find the nearest neighbour and reduce steps of active perturbers.
       RJMIN2 = 100.0
@@ -192,6 +211,10 @@
 *
 *       Restore component masses for outer binary.
       JPAIR = JCOMP1 - N
+      IF(BODY(2*JPAIR-1).NE.0.0) THEN
+         write(6,*) 'Error: end quad outer c.m. index JCOMP1',JCOMP1,
+     &        'is not consistent with jpair'
+      END IF 
       BODY(2*JPAIR-1) = CM(3,IMERGE)
       BODY(2*JPAIR) = CM(4,IMERGE)
 *
@@ -234,19 +257,30 @@
           WRITE (6,45)  JPAIR, H(JPAIR), BODY(2*JPAIR-1),
      &                  BODY(2*JPAIR), E2, EB2, R(JPAIR), GAMMA(JPAIR),
      &                  DP
-   45     FORMAT (' END QUAD: OCPAIR',I4,'  H(OCM)',F7.1,'  M(I3)',F7.4,
-     &         '  M(I4)',F7.4, '  EB1/EB0',F6.3,'  EB2/BE(3)',F6.3,
-     &         '  R34',1PE10.3,'  GAMMA(OCM)',E10.3,'  DP34',E10.3,
-     &         ' [All in NB Unit]')
+   45     FORMAT (' END QUAD: OCPAIR ',I4,'  H(OCM)',F7.1,
+     &         '  M(I3)',F7.4,'  M(I4)',F7.4, '  EB1/EB0',F6.3,
+     &         '  EB2/BE(3)',F6.3,'  R34',1PE10.3,'  GAMMA(OCM)',E10.3,
+     &         '  DP34',E10.3,' [All in NB Unit]')
       END IF
 *
 *       Include interaction of body #ICOMP & JCOMP with perturbers.
    50 JLIST(1) = ICOMP
       JLIST(2) = JCOMP
+C      write(6,*) 'NNB',NNB,'JPERT',JPERT(1:NNB),'JLIST',JLIST(1:2),
+C     &     'M1',BODY(JPERT(1)),'X',X(1:3,JPERT(1))
+C      write(6,*) 'ICOMP',ICOMP,'M',BODY(ICOMP),'X',X(1:3,ICOMP),
+C     &     'JCOMP',JCOMP,'M',BODY(JCOMP),'X',X(1:3,JCOMP)
       CALL NBPOT(2,NNB,POT2)
+C      JLIST(1) = NTOT
+C      write(6,*) 'NTOT',NTOT,'M',BODY(NTOT)
+C      CALL NBPOT(1,NNB,POT1)
+C      DO KK = 1, NNB
+C         write(334,*) JPERT(KK),NAME(JPERT(KK)),X(1:3,JPERT(KK))
+C      END DO
 *
 *       Form square of c.m. velocity correction due to tidal effects.
 *     VI2 = X0DOT(1,NTOT)**2 + X0DOT(2,NTOT)**2 + X0DOT(3,NTOT)**2
+C      write(6,*) 'Pot2',POT2,'POT1',POT1,'POT4',POT4,'POT3',POT3
       DPHI = (POT2 - POT1) + (POT4 - POT3)
 *     CORR = 1.0 + 2.0*DPHI/(BODY(NTOT)*VI2)
 *     IF (CORR.LE.0.0D0) CORR = 0.0
@@ -259,6 +293,7 @@
 *       Modify the merger energy to maintain conservation.
       EB = BODY(2*NPAIRS-1)*BODY(2*NPAIRS)*H(NPAIRS)/BODY(NTOT)
 *       Note that EMERGE may contain escaped mergers.
+C      write(6,*) 'EB',EB,'DPHI',DPHI
       EMERGE = EMERGE - EB + DPHI
 *
       E1 = E1/EB

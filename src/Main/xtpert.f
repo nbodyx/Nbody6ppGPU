@@ -48,7 +48,8 @@
 *       Check c.m. approximation (only resolve KS components once).
               IF (RIJ2.GT.CMSEP2*R(JPAIR)**2) GO TO 5
               IF (KS.EQ.0) THEN
-                  CALL KSRES(JPAIR,J1,J2,RIJ2)
+C                  CALL KSRES(JPAIR,J1,J2,RIJ2)
+                  J1 = 2*JPAIR - 1
                   KS = 1
               END IF
               KDUM = J1

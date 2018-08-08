@@ -149,7 +149,15 @@ C          VKICK = MIN(VKICK,10.0D0*VSTAR)
 C      END IF
       VKICK = VKICK/VSTAR
 *
-      IF (VKICK.EQ.0.0) GO TO 30
+      IF (VKICK.EQ.0.0) THEN
+         if(rank.eq.0) then
+            write(6,*) 'ZERO VELOCITY KICK: I',I,' NAME',NAME(I),
+     &           ' TIME[Myr]',(TIME+TOFF)*TSTAR,' K*0',KSTAR(I),
+     &           ' K*(new)',KW, ' K*(ICM)', KC, ' M0[M*]',
+     &           BODY0(I)*ZMBAR,' MN[M*]', BODY(I)*ZMBAR
+         end IF
+         GO TO 30
+      ENDIF
 *
 *       Randomize the velocity components.
 *     A(4) = 0.0

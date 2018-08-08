@@ -108,9 +108,11 @@ c$$$          IF (LIST(2,J).GT.ILAST.OR.BODY(J).EQ.0.0D0) GO TO 50
 *     Safe check
                IF(ID_ILASTCM.GT.0) THEN
                   write(6,*) 'Error! List including both Last pair ',
-     &                 'member',ILAST,'p',ID_ILAST,' and its c.m.'
-     &                 ,ILASTCM,'p',ID_ILASTCM,
-     &                 ', Name(CM)',NAME(ILASTCM),' TIME',TIME,'r',rank
+     &                 'member',ILAST,'Index in LIST',ID_ILAST,
+     &                 ' and its c.m.'
+     &                 ,ILASTCM,'Index in LIST',ID_ILASTCM,
+     &                 ', Name(CM)',NAME(ILASTCM),' TIME',TIME,'r',rank,
+     &                 'I',J,'NAME',NAME(J),'NNB',LIST(1,J)
                   CALL FLUSH(6)
                   CALL abort()
                END IF
@@ -190,9 +192,13 @@ c$$$          IF (LIST(2,J).GT.ILAST.OR.BODY(J).EQ.0.0D0) GO TO 50
 *     Safe check
             IF(ID_ILASTCM.GT.0) THEN
                write(6,*) 'Error! List including both Last pair ',
-     &              'member',ILAST,'p',ID_ILAST,' and its c.m.'
-     &              ,ILASTCM,'p',ID_ILASTCM,
-     &              ', Name(CM)',NAME(ILASTCM),' TIME',TIME,'r',rank
+     &              'member',I1_ILAST,NAME(I1_ILAST),
+     &              'Index in LIST',ID_ILAST,
+     &              ' and its c.m.',ILASTCM,NAME(ILASTCM),
+     &              'Index in LIST',ID_ILASTCM,
+     &              ' TIME',TIME,'r',rank,
+     &              'I',J,'NAME',NAME(J),'NNB',LIST(1,J),
+     &              'TERM IPAIR',IPAIR,'LAST IPAIR',ILAST
                CALL FLUSH(6)
                CALL abort()
             END IF
@@ -221,9 +227,12 @@ c$$$          IF (LIST(2,J).GT.ILAST.OR.BODY(J).EQ.0.0D0) GO TO 50
 *     Safe check
             IF(ID_IPAIR.GT.0) THEN
                write(6,*) 'Error! List including both Ipair member',
-     &              IPAIR,'p',ID_IPAIR,' and its c.m.',ILASTCM,'p',
-     &              ID_IPAIRCM,', Name(CM)',
-     &              NAME(ILASTCM),' TIME',TIME,'r',rank
+     &              'member',I1_ILAST,NAME(I1_ILAST),
+     &              'Index in LIST',ID_ILAST,
+     &              ' and its c.m.',ILASTCM,NAME(ILASTCM),
+     &              'Index in LIST',ID_ILASTCM,
+     &              ' TIME',TIME,'r',rank,
+     &              'I',J,'NAME',NAME(J),'NNB',LIST(1,J)
                CALL FLUSH(6)
                CALL abort()
             END IF

@@ -29,6 +29,7 @@
       DT8 = (TBLOCK - TPREV)/8.0D0
       TIME = TPREV + NINT(DT2/DT8)*DT8
       TIME = MIN(TBLOCK,TIME)
+C      TIME = TBLOCK
 *       Re-define initial epoch for consistency (ignore phase error).
       T0S(ISUB) = TIME - TIMEC
 *
@@ -37,22 +38,9 @@
     1     FORMAT (' REDUCE:   TIME0 TIME DT2 DT8 ',2F12.6,1P,2E10.2)
       END IF
 *
-*       Make new chain from remaining members.
-    2 LK = 0
-      DO 10 L = 1,NCH
-          IF (L.EQ.IESC) GO TO 10
-          DO 5 K = 1,3
-              LK = LK + 1
-              XCH(LK) = X4(K,L)
-              VCH(LK) = XDOT4(K,L)
-    5     CONTINUE
-   10 CONTINUE
-*
-*       Reduce chain membership and mass (global & local COMMON).
-      NCH = NCH - 1
-      NN = NCH
-      MASS = MASS - M(IESC)
-*
+C      CALL CONST(XCH,VCH,M,NN,ENERGY,ANG,ALAG)
+C      write(6,*) 'ECH ', ENERGY
+      
 *       Improve coordinates & velocities of c.m. body to order F3DOT.
       CALL XVPRED(ICH,-1)
 *
@@ -62,6 +50,77 @@
           J = LISTC(L)
           CALL XVPRED(J,-2)
    15 CONTINUE
+
+*
+C      if(time.gt.0) call XVPRED(IFIRST,NTOT)
+C      call adjust
+C 
+C      DO I =1,NTOT
+C         write(333,*) I,NAME(I),BODY(I),X(1:3,I),XDOT(1:3,I)
+C      END DO
+C      DO L = 1,NCH
+C         write(6,*) L, BODYC(L),
+C     &        X4(1:3,L)+X(1:3,ICH), XDOT4(1:3,L)+XDOT(1:3,ICH)
+C      END DO
+C      RI = 0
+C      RI2 = 0
+C      BCM = BODYC(IESC) + BODYC(JESC)
+C      DO K=1,3
+C         XCM(K) = (BODYC(IESC)*X4(K,IESC) + BODYC(JESC)*X4(K,JESC))/BCM
+C         RI2 = RI2 + XCM(K)**2
+C      END DO
+C      RI = SQRT(RI2)
+C      write(6,*) 'IESC',IESC,'JESC',JESC,'RI',RI,'XC',XCM+X(1:3,ICH)
+C      XCM = X4(1:3,IESC)-X4(1:3,JESC)
+C      RI2 = XCM(1)**2 + XCM(2)**2 + XCM(3)**2
+C      write(6,*) 'POIb',BODYC(IESC)*BODYC(JESC)/SQRT(RI2)
+C      EBINBK=0
+C      DO K=1,3
+C         XCM(K) =
+C     &    (BODYC(IESC)*XDOT4(K,IESC) + BODYC(JESC)*XDOT4(K,JESC))/BCM
+C         EBINBK = EBINBK + 0.5*((XDOT4(K,IESC)-XCM(K))**2*BODYC(IESC)+
+C     &    (XDOT4(K,JESC)-XCM(K))**2*BODYC(JESC))
+C      END DO
+C      write(6,*) 'Ekinb',EBINBK,'EBB',
+C     &     EBINBK-BODYC(IESC)*BODYC(JESC)/SQRT(RI2)
+C      
+C      XCM(1:3) = 0
+C      BCM = 0
+C      DO KK =1,3
+C         XCM(1:3) = XCM(1:3) + BODYC(KK)*X4(1:3,KK)
+C         BCM  = BCM + BODYC(KK)
+C      END DO
+C      XCM(1:3) = XCM(1:3)/BCM
+C      RI2 = XCM(1)**2 + XCM(2)**2 + XCM(3)**2
+C      write(6,*) 'Other RI',SQRT(RI2),'XC',XCM+X(1:3,ICH)
+C      
+CC      write(6,*) 'LISTC ',NB1, NAME(LISTC(2)), NAME(LISTC(3))
+C      CALL CONST(XCH,VCH,M,NN,ENERGY,ANG,ALAG)
+C      EKINCC = 0.5*BODY(ICH)*(XDOT(1,ICH)**2+XDOT(2,ICH)**2
+C     &     +XDOT(3,ICH)**2)
+C      write(6,*) 'ECH ', ENERGY,'EKIN',EKINCC,'ET',ENERGY+EKINCC
+C 
+C      call adjust
+*       Make new chain from remaining members.
+    2 LK = 0
+C      DPOT = 0.0
+      DO 10 L = 1,NCH
+          IF (L.EQ.IESC) GO TO 10
+          RIJ2 = 0.0
+          DO 5 K = 1,3
+              LK = LK + 1
+              XCH(LK) = X4(K,L)
+              VCH(LK) = XDOT4(K,L)
+              RIJ2 = RIJ2 + (XCH(LK) - X4(K,IESC))**2
+ 5         CONTINUE
+C          DPOT = DPOT + BODYC(L)*BODYC(IESC)/SQRT(RIJ2)
+   10 CONTINUE
+*
+*       Reduce chain membership and mass (global & local COMMON).
+      NCH = NCH - 1
+      NN = NCH
+      MASS = MASS - M(IESC)
+*
 *
 *       Set new c.m. for reduced system and save old c.m. variables.
       DO 20 K = 1,3
@@ -71,6 +130,8 @@
           VCM(K) = XDOT(K,ICH) + DVC(K)
           CM(K) = X(K,ICH)
           CM(K+3) = XDOT(K,ICH)
+C          write(6,*) 'K',K,' XCM',XCM(K),' VCM',VCM(K),
+C     &         ' XCM[old]',CM(K),' VCM[old]',CM(K+3)
    20 CONTINUE
 *
 *       Re-define new chain variables w.r. to modified c.m. (NB! retain X4).
@@ -85,6 +146,7 @@
 *
 *       Save original mass & neighbour radius of c.m. body.
       BODYCH = BODY(ICH)
+C      write(6,*) 'BODY CM', BODY(ICH)
       RS0 = RS(ICH)
 *
 *       Search for global index of escaper.
@@ -148,6 +210,7 @@ C              call exchange_tlist(I,ICH,STEP,DTK)
    55 BODY(ICH) = BODYCH - BODYC(IESC)
       CM(7) = BODY(ICH)
       T0(ICH) = TIME
+      T0R(ICH) = TIME
       DO 60 K = 1,3
           X(K,ICH) = XCM(K)
           X0(K,ICH) = XCM(K)
@@ -155,14 +218,23 @@ C              call exchange_tlist(I,ICH,STEP,DTK)
           X0DOT(K,ICH) = VCM(K)
    60 CONTINUE
 *
+      
 *       Restore the mass and transform to global coordinates & velocities.
       BODY(I) = BODYC(IESC)
       T0(I) = TIME
+      T0R(I) = TIME
+C      DKP = 0.0
+C      DECM = 0.0
+C      DKE = 0.0
       DO 65 K = 1,3
           X(K,I) = X4(K,IESC) + CM(K)
           XDOT(K,I) = XDOT4(K,IESC) + CM(K+3)
           X0(K,I) = X(K,I)
           X0DOT(K,I) = XDOT(K,I)
+*       Form kinetic energy terms (definition of DVC needs negative sign).
+C          DKP = DKP - BODYC(IESC)*DVC(K)*XDOT4(K,IESC)
+C          DECM = DECM + 0.5*BODY(ICH)*DVC(K)**2
+C          DKE = DKE + 0.5*BODYC(IESC)*XDOT4(K,IESC)**2
    65 CONTINUE
 *
 *       Remove chain (and clump) mass & reference name of escaper.
@@ -200,6 +272,11 @@ C              call exchange_tlist(I,ICH,STEP,DTK)
    75     CONTINUE
    80 CONTINUE
 *
+*       Update total energy using regular expression (checked OK).
+C      ENERGY = ENERGY + DECM - DKP + DPOT - DKE
+C      WRITE (6,81)  DECM, DKP, DPOT, DKE, EN0-ENERGY, ENERGY
+C   81 FORMAT (' CHECK!   DECM DKP DPOT DKE DE ENER  ',6F10.6)
+      
 *       Copy neighbour list of cm. body for routine NBREST.
       NNB = LIST(1,ICH)
       DO 82 L = 2,NNB+1
@@ -255,9 +332,38 @@ C              call exchange_tlist(I,ICH,STEP,DTK)
 *       Initialize KS regularization after second reduction.
           ICOMP = MIN(ICLOSE,I)
           JCOMP = MAX(ICLOSE,I)
-          CALL KSREG
+C          write(6,*) 'T', TIME
+C          DO L = 1,NCH
+C             write(6,*) L, BODYC(L),X4(1:3,L)+X(1:3,ICH),
+C     &            XDOT4(1:3,L)+XDOT(1:3,ICH)
+C          END DO
+C          write(6,*) 4, BODY(ICOMP), X(1:3,ICOMP), XDOT(1:3,ICOMP)
+C     &         , T0(ICOMP), T0R(ICOMP)
+C          write(6,*) 5, BODY(JCOMP), X(1:3,JCOMP), XDOT(1:3,JCOMP)
+C     &         , T0(JCOMP), T0R(JCOMP)
+C          write(6,*) 'LISTC ',NB1, NAME(LISTC(2)), NAME(LISTC(3))
+C          CALL CONST(XCH,VCH,M,NN,ENERGY,ANG,ALAG)
+C          write(6,*) 'ECH ', ENERGY
+         CALL KSREG
+C          CALL CONST(XCH,VCH,M,NN,ENERGY2,ANG,ALAG)
+C          EBINNEW= BODY(7755)*BODY(7756)*H(3878)/BODY(21190)
+C          EKINCC2 = 0.5*BODY(ICH)*(XDOT(1,ICH)**2+XDOT(2,ICH)**2
+C     &         +XDOT(3,ICH)**2)
+C          ICC = 21190
+C          EKINBB = 0.5*BODY(ICC)*(XDOT(1,ICC)**2+XDOT(2,ICC)**2
+C     &         +XDOT(3,ICC)**2)
+C          write(6,*) 'ECH ', ENERGY2,'EB2',EBINNEW,'EKINC',EKINCC2,
+C     &         'EKINB',EKINBB,
+C     &         'ENEW',ENERGY2+EBINNEW+EKINCC2+EKINBB,
+C     &         'DE',ENERGY2+EBINNEW+EKINCC2+EKINBB-ENERGY-EKINCC
+C            DO kk =1,NTOT
+C               write(334,*) kk,NAME(kk),BODY(kk),X(1:3,kk),XDOT(1:3,kk)
+C            END DO
+C          write(6,*) 'LISTC ',NB1, NAME(LISTC(2)), NAME(LISTC(3))
+C          call adjust
       END IF
 *
+
 *       Re-activate any dormant binary.
       IF (I.GT.N.AND.JESC.EQ.0) THEN
           CALL RENEW(I)
@@ -282,8 +388,8 @@ C              call exchange_tlist(I,ICH,STEP,DTK)
    96 CONTINUE
 *
       IF (rank.eq.0.and.KZ(30).GT.2) THEN
-          WRITE (6,97)  TIME+TOFF, (CG(K),K=1,6)
-   97     FORMAT (' REDUCE:   T CG ',F12.5,1P,6E9.1)
+          WRITE (6,97)  NCH,TIME+TOFF, (CG(K),K=1,6), XDOT(1:3,ICH)
+   97     FORMAT (' REDUCE: NCH  T CG Vcm',I4,F12.5,1P,9E9.1)
       END IF
 *
 *       Ensure current coordinates & velocities for chain components.
@@ -292,3 +398,4 @@ C              call exchange_tlist(I,ICH,STEP,DTK)
   100 RETURN
 *
       END
+

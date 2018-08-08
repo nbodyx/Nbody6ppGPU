@@ -15,7 +15,7 @@ c      For \Gamma=(H-E)/L and Y(ntime)=time
       DATA DT /NMX7*0.0D0/
 *     DATA  EP/0.4D-1,0.16D-2,0.64D-4,0.256D-5/
 *      SAVE Y,DT,X,H
-      SAVE DT
+C      SAVE DT
 *
 *     nhalf2=(n/2)*2
       jti=0

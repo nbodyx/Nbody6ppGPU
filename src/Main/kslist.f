@@ -40,7 +40,7 @@
 *
       RAP = MIN(RAP,20.0*RMIN)
       RCRIT2 = 2.0*RAP**2/BODY(I)
-      RCRIT3 = RCRIT2*RAP/GMIN
+      RCRIT3 = 10.0*RCRIT2*RAP/GMIN
 *       Base fast search on maximum binary mass (2*BODY1).
       RCRIT2 = 2.0*RCRIT2*BODY1*CMSEP2
 *
@@ -58,9 +58,11 @@
           W2 = X(2,J) - X(2,I)
           W3 = X(3,J) - X(3,I)
           RSEP2 = W1*W1 + W2*W2 + W3*W3
+C          BODYFAC = MAX(BODY(J),BODY(I))/BODY(I)
 *       Include any merged c.m. or chain c.m. bodies in the fast test.
           IF (RSEP2.LT.RCRIT2.OR.NAME(J).LE.0) THEN
-              RIJ3 = RSEP2*SQRT(RSEP2)
+              RSEP = SQRT(RSEP2)
+              RIJ3 = RSEP2*RSEP
 *       Estimate unperturbed distance from tidal limit approximation.
               IF (RIJ3.LT.BODY(J)*RCRIT3) THEN
                   NNB1 = NNB1 + 1
@@ -72,6 +74,10 @@
                       NNB1 = NNB1 + 1
                       LIST(NNB1,I1) = J
                   END IF
+*       In case of large seperation chain
+               ELSE IF (NAME(J).LE.0.AND.RSEP.LT.3.0*RMIN) THEN
+                 NNB1 = NNB1 + 1
+                 LIST(NNB1,I1) = J
               END IF
           END IF
    10 CONTINUE

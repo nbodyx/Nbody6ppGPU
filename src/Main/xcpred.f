@@ -40,7 +40,13 @@ c$$$      ICALLP = ICALLP + 1
 *       Predict coordinates of perturbers & possibly c.m. to order FDOT.
       DO 1 L = 2,NNB2
           J = LISTC(L)
-          call jpred(j,time,time)
+          TTIME = TIME
+          call jpred(j,TTIME,TTIME)
+C          if(STEP(J)+T0(J).LT.TIME)
+C     &         write(6,*) 'J',J,'T0',T0(J),'TIME',TIME,'ST',STEP(J),
+C     &         'TIME-STEP(J)-T0(J)',TIME-STEP(J)-T0(J),
+C     &         'NP',LIST(2*(J-N)-1,1)
+C          iF(J.GT.N) write(6,*) 'J',J,
 c$$$          S = TIME - T0(J)
 c$$$*       Do not allow prediction outside range (NB! No bad effects in DIFSY1).
 c$$$*         S = MIN(S,STEP(J))

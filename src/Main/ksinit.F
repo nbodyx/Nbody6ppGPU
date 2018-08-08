@@ -203,17 +203,20 @@ c$$$      end if
      &              (X(2,NTOT) - RDENS(2))**2 +
      &              (X(3,NTOT) - RDENS(3))**2)
           VII = SQRT(XDOT(1,NTOT)**2+XDOT(2,NTOT)**2+XDOT(3,NTOT)**2)
+          EKINII = 0.5*BODY(NTOT)*VII
           PD = TWOPI*SEMI*SQRT(DABS(SEMI)/BODY(NTOT))*TSTAR*365.24D6
           if(rank.eq.0)
-     &    WRITE (6,60)  TIME+TOFF,NAME(ICOMP),NAME(JCOMP),
-     &         NAME(NTOT),KSTAR(ICOMP),KSTAR(JCOMP),KSTAR(NTOT),
-     &         IPAIR,DTAU(IPAIR),BODY(ICOMP),BODY(ICOMP)*ZMBAR,
-     &         BODY(JCOMP),BODY(JCOMP)*ZMBAR,
+     &    WRITE (6,60)  TIME+TOFF,ICOMP,JCOMP,NTOT,NAME(ICOMP),
+     &         NAME(JCOMP),NAME(NTOT),KSTAR(ICOMP),KSTAR(JCOMP),
+     &         KSTAR(NTOT),IPAIR,DTAU(IPAIR),BODY(ICOMP),
+     &         BODY(ICOMP)*ZMBAR,BODY(JCOMP),BODY(JCOMP)*ZMBAR,
      &         R(IPAIR),SQRT(ECC2),SEMI,EB,PD,H(IPAIR),GAMMA(IPAIR),
      &         STEP(NTOT),LIST(1,ICOMP),LIST(1,NTOT),
-     &         RADIUS(ICOMP)*SU,RADIUS(JCOMP)*SU,R(IPAIR)*SU,RI,VII
- 60       FORMAT (/,' NEW KSREG   TIME[NB]',1P,E17.10,' NAME(I1)',I10,
-     &         ' NAME(I2)',I10,' NAME(ICM)',I10,
+     &         RADIUS(ICOMP)*SU,RADIUS(JCOMP)*SU,R(IPAIR)*SU,RI,VII,
+     &         EKINII
+ 60       FORMAT (/,' NEW KSREG   TIME[NB]',1P,E17.10, 
+     &         ' I1',I10,' I2',I10,' ICM',I10,
+     &         ' NAME(I1)',I10,' NAME(I2)',I10,' NAME(ICM)',I10,
      &         ' K*(I1)',I4,' K*(I2)',I4,' K*(ICM)',I4,' IPAIR',I9,
      &         ' DTAU',E10.2,' M(I1)[NB,M*]',E10.2,0P,F10.3,
      &         ' M(I2)[NB,M*]',1P,E10.2,0P,F10.3,' R12[NB]',1P,E10.2,
@@ -221,7 +224,8 @@ c$$$      end if
      &         ' P[DAY]=',E10.2,' H',E10.2,
      &         ' GAMMA',1P,E10.2,' STEP(ICM)',E10.2,' NP',I5,
      &         ' NB(ICM)',I5,' RS(I1)[R*]',E10.2,' RS(I2)[R*]',E10.2,
-     &         ' R12[R*]',E10.2,' RI[NB]',E10.2,' VI[NB]',E10.2
+     &         ' R12[R*]',E10.2,' RI[NB]',E10.2,' VI[NB]',E10.2,
+     &         ' EKIN(Icm)[NB]',E14.4
      &         )
           call flush(6)
 *     --03/15/14 13:20-lwang-debug--------------------------------------*

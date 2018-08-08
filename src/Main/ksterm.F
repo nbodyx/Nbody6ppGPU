@@ -158,16 +158,18 @@ c$$$      END IF
           ECC2 = (1.0-R(IPAIR)/SEMI)**2+TDOT2(IPAIR)**2/(BODY(ICM)*SEMI)
           EB = -0.5*BODY(I1)*BODY(I2)/SEMI
           PD = TWOPI*SEMI*SQRT(DABS(SEMI)/BODY(ICM))*TSTAR*365.24D6
+          EKINI = 0.5*BODY(NTOT)*VI
           if(rank.eq.0)
-     &    WRITE (6,15)  TIME+TOFF,NAME(I1),NAME(I2),
+     &    WRITE (6,15)  TIME+TOFF,I1,I2,ICM,NAME(I1),NAME(I2),
      &         NAME(ICM),KSTAR(I1),KSTAR(I2),KSTAR(ICM),
      &         IPAIR,DTAU(IPAIR),BODY(I1),BODY(I1)*ZMBAR,
      &         BODY(I2),BODY(I2)*ZMBAR,
      &         R(IPAIR),SQRT(ECC2),SEMI,EB,PD,H(IPAIR),GAMMA(IPAIR),
      &         STEP(ICM),LIST(1,I1),LIST(1,ICM),
-     &         RADIUS(I1)*SU,RADIUS(I2)*SU,R(IPAIR)*SU,RI,VI
-  15      FORMAT (/,' END KSREG   TIME[NB]',1P,E17.10,' NAME(I1)',I10,
-     &         ' NAME(I2)',I10,' NAME(ICM)',I10,
+     &         RADIUS(I1)*SU,RADIUS(I2)*SU,R(IPAIR)*SU,RI,VI,EKINI
+  15      FORMAT (/,' END KSREG   TIME[NB]',1P,E17.10,
+     &         ' I1',I10,' I2',I10,' ICM',I10,
+     &         ' NAME(I1)',I10,' NAME(I2)',I10,' NAME(ICM)',I10,
      &         ' K*(I1)',I4,' K*(I2)',I4,' K*(ICM)',I4,' IPAIR',I9,
      &         ' DTAU',E10.2,' M(I1)[NB,M*]',E10.2,0P,F10.3
      &         ' M(I2)[NB,M*]',1P,E10.2,0P,F10.3,' R12[NB]',1P,E10.2,
@@ -175,7 +177,8 @@ c$$$      END IF
      &         ' P[DAY]=',E10.2,' H',E10.2,
      &         ' GAMMA',1P,E10.2,' STEP(ICM)',E10.2,' NP',I5,
      &         ' NB(ICM)',I5,' RS(I1)[R*]',E10.2,' RS(I2)[R*]',E10.2,
-     &         ' R12[R*]',E10.2,' RI[NB]',E10.2,' VI[NB]',E10.2
+     &         ' R12[R*]',E10.2,' RI[NB]',E10.2,' VI[NB]',E10.2,
+     &         ' EKIN(Icm)[NB]',E14.4
      &         )
 *     --04/15/14 21:40-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**

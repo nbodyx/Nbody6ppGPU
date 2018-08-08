@@ -53,6 +53,10 @@
 #ifdef SIMD
          FLAG_SEND = .false.
 #endif
+C         IF(NAME(J).EQ.14945) write(6,*) 'NNB',LIST(1,J),
+C     &        'L',LIST(2,J),NAME(LIST(2,J)),LIST(3,J),NAME(LIST(3,J)),
+C     &        LIST(35,J),NAME(LIST(35,J)),
+C     &        'ICOMP',ICOMP,'JCOMP',JCOMP,'ILIST',ILIST(1:8)
 *       Skip modification if first neighbour comes after second component.
           IF (LIST(2,J).GT.JCOMP) GO TO 39
 *       No special precaution needed for case of no neighbours.
@@ -167,7 +171,9 @@ c$$$            end if
             CALL IRR_SIMD_SET_LIST(J,LIST(1,J))
          END IF
 #endif
-         
+C         IF(NAME(J).EQ.14945) write(6,*) 'NNB',LIST(1,J),
+C     &        'L',LIST(2,J),NAME(LIST(2,J)),LIST(35,J),NAME(LIST(35,J)),
+C     &        'ICOMP',ICOMP,'JCOMP',JCOMP
    40 CONTINUE
 *
 *       Update the list of recently regularized particles.

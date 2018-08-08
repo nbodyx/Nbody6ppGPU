@@ -32,6 +32,7 @@ c$$$      if(x0(1,I).ge.1000.and.body(i).gt.0) call abort()
 *     --03/15/14 20:05-lwang-end----------------------------------------*
       IF (TPRED(I).EQ.TIME) THEN
          IF (TPRED(I).EQ.T0(I).and.X(1,I).NE.X0(1,I)) THEN
+C            write(6,*) 'I',I,NAME(I),'X inconsistence'
             X(1:3,I) = X0(1:3,I)
             XDOT(1:3,I) = X0DOT(1:3,I)
 *     Resolve the components of any perturbed pair.
@@ -63,6 +64,7 @@ c$$$      if(x0(1,I).ge.1000.and.body(i).gt.0) call abort()
          XDOT(3,I) = (FDOT(3,I)*S1 + F(3,I))*S2 + X0DOT(3,I)
 *     
 *     Resolve the components of any perturbed pair.
+         TTRES = TTIME
          IF (I.GT.N) THEN
             JPAIR = I - N
             IF (LIST(1,2*JPAIR-1).GT.0) THEN
@@ -70,7 +72,7 @@ c$$$      if(x0(1,I).ge.1000.and.body(i).gt.0) call abort()
                ZZ = 1.0
 *     Distinguish between low and high-order prediction of U & UDOT.
                IF (GAMMA(JPAIR).GT.1.0D-04) ZZ = 0.0
-               CALL KSRES2(JPAIR,J1,J2,ZZ,TTIME)
+               CALL KSRES2(JPAIR,J1,J2,ZZ,TTRES)
 *!$omp end critical
             END IF
          END IF

@@ -273,13 +273,14 @@ C     New (Aug.1998) by P.Kroupa: (time also in Myr)
 c$$$         WRITE(6,50) rank, TTOT, ttot*tscale, Q, DE, DELTA1, BE(3)-EBIN,
 c$$$     &        EBIN,EMERGE
          WRITE(6,50) TTOT, ttot*tscale, Q, DE, DELTA1,DETOT, E(3),
-     &        ZKIN, POT, ETIDE,
-     &        BE(3),EBIN,EMERGE,ESUB,ECOLL,EMDOT,ECDOT
+     &        ZKIN, POT, EPL, ETIDE,
+     &        BE(3),EBIN,EMERGE,ESUB,ECH,ECOLL,EMDOT,ECDOT
  50      FORMAT (/,' ADJUST:  TIME',1P,D15.5,0P,'  T[Myr]',
      &        F8.2,'  Q',F5.2,'  DE',1P,E12.3,' DELTA',E12.3,
-     &        ' DETOT',E12.3,' E',E12.3,' EKIN',E12.3,' POT',E12.3,
-     &        ' ETIDE',E12.3,' ETOT', E12.3,
-     &        ' EBIN',E12.3,' EMERGE',E12.3,' ESUB',E12.3, 
+     &        ' DETOT',E12.3,' E',E12.3,' EKIN',E16.7,' POT',E16.7,
+     &        ' EPL', E16.7,
+     &        ' ETIDE',E12.3,' ETOT', E16.7, ' EBIN',E16.7,
+     &        ' EMERGE',E16.7,' ESUB',E16.7, ' ECH',E16.7,
      &        ' ECOLL',E12.3,' EMDOT',E12.3,' ECDOT',E12.3)
 *     
          write(6,51) RMIN, DTMIN, RHOM, RSCALE, RSMIN, ECLOSE, ICR

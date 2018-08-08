@@ -853,8 +853,9 @@ c$$$            end if
          CALL hrdiag(M0,AGE,M1,TM,TN,TSCLS,LUMS,GB,ZPARS,
      &               RM,LUM,KW,MC,RCC,ME,RE,K2)
 *
-         IF(rank.eq.0.and.KW.EQ.14)PRINT*,' MDOT: T,M0,MC,AGE=',
-     &                TTOT,M0,MC,AGE
+         IF(rank.eq.0.and.KW.EQ.14)
+     &        write(6,*) ' MDOT BH form: TIME[NB],M0[M*],MC[M*],AGE=',
+     &        TTOT,M0,MC,AGE
 *
 *       Check for change of CO WD to ONe on rapid accretion (21/11/08).
          IF(DMR.GT.TINY.AND.KW.EQ.11)THEN
@@ -1151,11 +1152,11 @@ c$$$      end if
 *       Ensure all NS/BH are assigned a kick (might depend on DM).
             IF (KW.EQ.13.OR.KW.EQ.14) IKICK = .TRUE.
 *
-c$$$       IF(rank.eq.0.and.KW.GE.13.AND.KW.LE.15) then
-c$$$          write(6,*), 'MDOT K*',KW,' K*0',KSTAR(I),' NAME',NAME(I),
-c$$$     &         ' IKICK',IKICK,' M0',M0,' MC',MC,' AGE',AGE,' TN',TN,
-c$$$     &         ' DM',DM,' DMSUN',DMSUN,' TIME',TIME
-c$$$       end if
+C            IF(rank.eq.0.and.KW.GE.13.AND.KW.LE.15) then
+C               write(6,*), 'MDOT K*',KW,' K*0',KSTAR(I),' NAME',NAME(I),
+C     &              ' IKICK',IKICK,' M0',M0,' MC',MC,' AGE',AGE,
+C     &              ' TN',TN,' DM',DM,' DMSUN',DMSUN,' TIME',TIME
+C            end if
 
 *     --09/27/13 10:39-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**

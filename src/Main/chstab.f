@@ -75,8 +75,10 @@
 *
 *       Evaluate the general stability function (Mardling, Cambody 2008).
       IF (ECC1.LT.1.0.AND.ECC.LT.1.0) THEN
-          NST = NSTAB(SEMI,SEMI1,ECC,ECC1,ALPHA,M(I1),M(I2),M(I3))
-          IF (NST.EQ.0) THEN
+          ZM1 = M(I1)
+          ZM2 = M(I2)
+          QST = QSTAB(ECC,ECC1,ALPHA,ZM1,ZM2,M(I3))
+          IF (QST*SEMI.LT.PMIN) THEN
               PCRIT = 0.99*PMIN
           ELSE
               PCRIT = 1.01*PMIN

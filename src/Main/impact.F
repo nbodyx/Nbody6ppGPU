@@ -48,14 +48,16 @@
       J1 = I1
       IF (LIST(1,J1).LE.2) J1 = I
       NNB2 = LIST(1,J1) + 1
-*
+
+*     
 *       Find the dominant body (JCOMP) and nearest perturber (JMAX).
-      DO 10 L = 2,NNB2
+      RPCRIT2 = 1.0D+04*RMIN2
+ 5    DO 10 L = 2,NNB2
           J = LIST(L,J1)
           call jpred(J,TIME,TIME)
           RIJ2 = (X(1,I) - X(1,J))**2 + (X(2,I) - X(2,J))**2 +
      &                                  (X(3,I) - X(3,J))**2
-          IF (J1.EQ.I.AND.RIJ2.GT.1.0D+04*RMIN2) GO TO 10
+          IF (J1.EQ.I.AND.RIJ2.GT.RPCRIT2) GO TO 10
           NP = NP + 1
           JLIST(NP) = J
           PERT = BODY(J)/(RIJ2*SQRT(RIJ2))
@@ -75,20 +77,19 @@
    10 CONTINUE
 *
 *       Include safety check on rare case of no perturbers inside 100*RMIN.
-      IF (NP.EQ.0) THEN
-          JCOMP = LIST(2,I)
-          JMAX = LIST(3,I)
-          RJMIN2 = 1.0
-      ELSE IF (NP.EQ.1) THEN
-          JMAX = N
+      IF (NP.LT.2.AND.NNB2.GE.3) THEN
+         RPCRIT2 = 100*RPCRIT2
+         GO TO 5
       END IF
+      IF (NP.EQ.0) GO TO 100
 *
 #ifdef DECISION_CHECK
       write(6,*) 'IMPACT: I=',I, ' N=',N,' NAME=',NAME(I),
      &     ' NP=',NP,' JCOMP=',JCOMP,' NAME(JCOMP)=',NAME(JCOMP),
      &     ' JMAX=',JMAX,' NAME(JMAX)=',NAME(JMAX),
-     &     ' NCH=',NCH,' Time=',TIME
+     &     ' NCH=',NCH,' Time=',TIME,' NNB=',NNB2
 #endif
+
       CALL JPRED(JCOMP,TIME,TIME)
       RDOT = (X(1,I) - X(1,JCOMP))*(XDOT(1,I) - XDOT(1,JCOMP)) +
      &       (X(2,I) - X(2,JCOMP))*(XDOT(2,I) - XDOT(2,JCOMP)) +
@@ -213,6 +214,22 @@ c$$$      end if
       PERT4 = 2.0*RJMIN2*RIJ*PERT2/(BODY(I) + BODY(JCOMP))
       PERTM = MAX(PERT4,PERT)
 *
+*       Estimate relative perturbation at apocentre from actual value.
+      RA = SEMI1*(1.0 + ECC1)
+      IF (SEMI1.LT.0.0) RA = RIJ
+      GI = PERT*(RA/RIJ)**3
+*       Copy coordinates and velocities to local variables.
+      DO 42 K = 1,3
+          XX(K,1) = X(K,I1)
+          XX(K,2) = X(K,I2)
+          XX(K,3) = X(K,JCOMP)
+          VV(K,1) = XDOT(K,I1)
+          VV(K,2) = XDOT(K,I2)
+          VV(K,3) = XDOT(K,JCOMP)
+  42  CONTINUE
+*
+*       Determine the inclination (in radians).
+      CALL INCLIN(XX,VV,X(1,I),XDOT(1,I),ANGLE)
       
 *       Use combined semi-major axis for binary-binary collision.
       IF (JCOMP.GT.N) THEN
@@ -230,9 +247,6 @@ c$$$      end if
           ECCX = MAX(ECC,ECC_2)
           APO = APO + MAX(ABS(SEMI2),R(JPAIR))
           SEMIS = SEMI + SEMI2
-          RA = SEMI1*(1.0 + ECC1)
-          IF (SEMI1.LT.0.0) RA = RIJ
-          GI = PERT*(RA/RIJ)**3
 *       Do not allow negative or soft cross section
 #ifdef DECISION_CHECK
           IF (SEMIS.GT.2.0*RMIN)
@@ -242,11 +256,11 @@ c$$$      end if
           IF (SEMIS.GT.2.0*RMIN) GO TO 100
 *       Delay for large distance ratio outside RMIN with strong perturbation.
 #ifdef DECISION_CHECK
-          IF (RIJ.GT.RMIN.AND.PERT.GT.GMAX)
+          IF ((RIJ.GT.RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*RMIN)
      &         write(6,*) 'IMPACT: RIJ(',RIJ,')>RMIN(',RMIN,') &&',
-     &         'PERT(',PERT,')>GMAX(',GMAX,') L.247'
+     &         'PERT(',PERT,')>GMAX(',GMAX,') || RIJ>5 RMIN L.247'
 #endif
-          IF (RIJ.GT.RMIN.AND.PERT.GT.GMAX)
+          IF ((RIJ.GT.RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*RMIN)
      &         GO TO 100
 *       Consider merger for PMIN > SEMI and large semi-major axis ratio.
 #ifdef DECISION_CHECK
@@ -258,7 +272,7 @@ c$$$      end if
 *      END IF
 
 *     try stability check with maximum ecc and semi of inners
-          QST = QSTAB(ECCX,ECC1,0.0D0,BODY(I1),BODY(I2),BODY(JCOMP))
+          QST = QSTAB(ECCX,ECC1,ANGLE,BODY(I1),BODY(I2),BODY(JCOMP))
           RP = PMIN/SEMIX
 #ifdef DECISION_CHECK
           IF (QST.LT.RP) write(6,*) 'IMPACT: B-B QST(',QST,')<RP(',RP,
@@ -314,7 +328,7 @@ c$$$      end if
 *     2*RMIN, switch on Chain
 *         IF ((RIJ.GT.MAX(3.0*RGRAV,RMIN).OR.RSUM.GT.2.0*RMIN).AND.
 *      &         PMIN.GT.2.0*RMIN) GO TO 30
-          GI = 2.0*BODY(JCOMP)*(RI/RIJ)**3/BODY(I)
+C          GI = 2.0*BODY(JCOMP)*(RI/RIJ)**3/BODY(I)
 #ifdef DECISION_CHECK
           IF (RIJ.GT.MAX(3.0*RGRAV,RMIN).OR.RSUM.GT.2.0*RMIN)
      &         write(6,*) 'IMPACT: RIJ(',RIJ,')>MAX(3.0*RGRAV(',RGRAV,
@@ -327,7 +341,9 @@ c$$$      end if
 #ifdef DECISION_CHECK
           IF (ECC1.GT.0.99.AND.PMIN.GT.10.0*RI.AND.
      &        PERTM.LT.GMAX)
-     &         write(6,*) 'IMPACT: L 295'
+     &         write(6,*) 'IMPACT: ECC1(',ECC1,')>0.99 && PMIN(',
+     &         PMIN,')>10 RI(',RI,') && PERTM(',PERTM,')>GMAX(',
+     &         GMAX,') L 295'
 #endif
           IF ((ECC1.GT.0.99.AND.PMIN.GT.10.0*RI.AND.
      &        PERTM.LT.GMAX).AND..not.MCF) GO TO 40
@@ -370,13 +386,13 @@ C      IF ((APO.GT.0.01*RMIN.OR.JCOMP.GT.N).AND.PMIN.GT.1.5*APO) GO TO 30
 
 *     Remove case with large RIJ
 #ifdef DECISION_CHECK
-      IF (((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2.0*RMIN)
+      IF (((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2*RMIN)
      &     .AND.PERT.GT.GMAX)
-     &     write(6,*) 'IMPACT: RIJ(',RIJ,')>RMIN(',RMIN,
+     &     write(6,*) 'IMPACT: RIJ(',RIJ,')> RMIN(',RMIN,
      &     ') && SEMI1(',SEMI1,')>0 || RIJ>2.0 * RMIN && PERT(',
      &     PERT,')>GMAX(',GMAX,') L.303 quit'
 #endif
-      IF (((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2.0*RMIN)
+      IF (((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2*RMIN)
      &     .AND.PERT.GT.GMAX)
      &     GO TO 100
 
@@ -389,11 +405,11 @@ C      IF ((APO.GT.0.01*RMIN.OR.JCOMP.GT.N).AND.PMIN.GT.1.5*APO) GO TO 30
 *       Check almost stable triples (factor 1.2 is experimental).
  17   IF (JCOMP.LE.N.AND.PMIN.GT.2.5*SEMI) THEN
           CALL HISTAB(IPAIR,JCOMP,PMIN,RSTAB)
-          RA = SEMI1*(1.0 + ECC1)
-          IF (SEMI1.LT.0.0) RA = RIJ
-          GI = PERT*(RA/RIJ)**3
+C          RA = SEMI1*(1.0 + ECC1)
+C          IF (SEMI1.LT.0.0) RA = RIJ
+C          GI = PERT*(RA/RIJ)**3
 *     using stablility criterion
-          QST = QSTAB(ECC,ECC1,0.0D0,BODY(I1),BODY(I2),BODY(JCOMP))
+          QST = QSTAB(ECC,ECC1,ANGLE,BODY(I1),BODY(I2),BODY(JCOMP))
           RP = PMIN/SEMI
 #ifdef DECISION_CHECK
           IF (QST.LT.RP) write(6,*) 'IMPACT: QST(',QST,')<RP(',RP,
@@ -438,7 +454,7 @@ C
 #ifdef DECISION_CHECK
           IF (RIJ.GT.MAX(10.0*APO,0.5*RMIN).AND.PERT.GT.GMAX)
      &         write(6,*) 'IMPACT: RIJ(',RIJ,')>MAX(10 APO(',
-     &         APO,'), 0.5 RMIN(',RMIN,')) && PERT(',PERT,
+     &         APO,'), 2.0 RMIN(',RMIN,')) && PERT(',PERT,
      &         ')> GMAX(',GMAX,') L.348 quit'
 #endif
           IF (RIJ.GT.MAX(10.0*APO,0.5*RMIN).AND.PERT.GT.GMAX)
@@ -557,9 +573,9 @@ C      IF (KZ(30).EQ.-2.AND.KCHAIN.EQ.0) GO TO 100
      &         ' M(I3)[NB,M*]',1P,E10.2,0P,F10.3,
      &         ' M(Icm)[NB,M*]',1P,E10.2,0P,F10.3,
      &         ' R12[NB,R*]',1P,2E10.2,' H[NB]',E10.2,
-     &         ' SEMI0[NB]',E12.4,' ECC0',F9.5,' EB0[NB]',E10.2,
+     &         ' SEMI0[NB]',E12.4,' ECC0',0P,F9.5,1P,' EB0[NB]',E10.2,
      &         ' P0[DAY]',E10.2,
-     &         ' SEMI1[NB]',E12.4,' ECC1',F9.5,' EB1[NB]',E10.2,
+     &         ' SEMI1[NB]',E12.4,' ECC1',0P,F9.5,1P,' EB1[NB]',E10.2,
      &         ' P1[DAY]',E10.2,
      &         ' GAMMA4',E10.3,'  RIN3[NB,R*]',2E10.2,
      &         ' PERIM[NB]',E8.1,'  EB1/EB0',
@@ -732,7 +748,7 @@ c$$$      END IF
               QCHECK = TIME + MIN(0.5*TWOPI*TK,0.1*TCR)
               TK = DAYS*TK
 *       Check the stability criterion.
-              QST = QSTAB(ECC,ECC1,0.0D0,BODY(I1),BODY(I2),BODY(JCOMP))
+              QST = QSTAB(ECC,ECC1,ANGLE,BODY(I1),BODY(I2),BODY(JCOMP))
               PCR = QST*SEMIX
 C              PCR = stability(BODY(I1),BODY(I2),BODY(JCOMP),ECC,ECC1,
 C     &                                                  0.0D0)*SEMIX
@@ -780,22 +796,25 @@ C     &                                                  0.0D0)*SEMIX
       IF (MIN(BODY(I1),BODY(I2)).LT.0.05*BODYM) THEN
 *       Use orbital velocity condition instead of binding energy for planets.
 #ifdef DECISION_CHECK
-          IF (SEMI1.GT.2.0*RMIN) write(6,*) 'IMPACT: L769'
+          IF (SEMI1.GT.2.0*RMIN)
+     &        write(6,*) 'IMPACT: L769'
 #endif
           IF (SEMI1.GT.2.0*RMIN) GO TO 16
-      ELSE IF (EB.GT.EBH.OR.EB1.GT.EBS.OR.RA.GT.RFAC) THEN
-*         quit for hyperbolic case if perturber is merger or chain
-#ifdef DECISION_CHECK
-         IF(EB1.GT.0.0.AND.NAME(JCOMP).LE.0)
-     &        write(6,*) 'IMPACT: EB1(',EB1,')>0 L773'
-#endif
-         IF(EB1.GT.0.0.AND.NAME(JCOMP).LE.0) GO TO 100
+      ELSE IF (EB.GT.EBH.OR.EB1.GT.EBS.OR.
+     &         (RA.GT.RFAC.AND.GI.GT.0.1)) THEN
+C*         quit for hyperbolic case if perturber is merger or chain
+C#ifdef DECISION_CHECK
+C         IF(EB1.GT.0.0.AND.NAME(JCOMP).LE.0)
+C     &        write(6,*) 'IMPACT: EB1(',EB1,')>0 && NAME(JCOMP)<0 L773'
+C#endif
+C         IF(EB1.GT.0.0.AND.NAME(JCOMP).LE.0) GO TO 16
 #ifdef DECISION_CHECK
           write(6,*) 'IMPACT: EB(',EB,')>EBH(',EBH,')||EB1(',EB1,
-     &     ')>EBS(',EBS,')||RA(',RA,')>RFAC(',RFAC,') L774'
+     &     ')>EBS(',EBS,')||(RA(',RA,')>RFAC(',RFAC,') && ',
+     &        'GI (',GI,')>0.1 L774'
 #endif
           GO TO 16
-      END IF
+       END IF
 *
 C*       Estimate the relative apocentre perturbations on body #I & JCOMP.
 C      IF (ECC1.LT.0.95) THEN
@@ -900,9 +919,6 @@ C
           END IF
        END IF
 *
-*     already checked (suppress)
-*       Estimate relative perturbation at apocentre from actual value.
-      GI = PERT*(SEMI1*(1.0 + ECC1)/RIJ)**3
 #ifdef DECISION_CHECK
       IF (PERT.GT.GMAX.OR.GI.GT.0.02) 
      &     write(6,*) 'IMPACT: PERT(',PERT,') > GMAX(',GMAX,
@@ -911,6 +927,25 @@ C
 #endif
       IF (PERT.GT.GMAX.OR.GI.GT.0.02) GO TO 16
 
+#ifdef DECISION_CHECK
+      IF (GI.GT.0.1.AND.RIJ.GT.RMIN)
+     &     write(6,*) 'IMPACT: GI(',GI,')>0.1 && RIJ(',RIJ,')>RMIN(',
+     &     RMIN,') L934'
+#endif
+      IF (GI.GT.0.1.AND.RIJ.GT.RMIN) GO TO 16
+
+#ifdef DECISION_CHECK
+      IF (GI.GT.0.01.AND.RIJ.GT.5.0*RMIN)
+     &     write(6,*) 'IMPACT: GI(',GI,')>0.01 && RIJ(',RIJ,')>5RMIN(',
+     &     RMIN,') L942'
+#endif
+      IF (GI.GT.0.01.AND.RIJ.GT.5.0*RMIN) GO TO 16
+
+#ifdef DECISION_CHECK
+      IF (GI.GT.0.25) write(6,*) 'IMPACT: GI(',GI,')>0.25 L947'
+#endif
+      IF (GI.GT.0.25) GO TO 16
+      
 *       Switch to direct integration for planetary systems if GI > 1D-04.
       IF (MIN(BODY(I1),BODY(I2)).LT.0.05*BODYM) THEN
 #ifdef DECISION_CHECK
@@ -1008,19 +1043,6 @@ C
       IF (ECC1.LT.1.0) THEN
           CALL RESOLV(IPAIR,1)
       END IF
-*
-*       Copy coordinates and velocities to local variables.
-      DO 42 K = 1,3
-          XX(K,1) = X(K,I1)
-          XX(K,2) = X(K,I2)
-          XX(K,3) = X(K,JCOMP)
-          VV(K,1) = XDOT(K,I1)
-          VV(K,2) = XDOT(K,I2)
-          VV(K,3) = XDOT(K,JCOMP)
-  42  CONTINUE
-*
-*       Determine the inclination (in radians).
-      CALL INCLIN(XX,VV,X(1,I),XDOT(1,I),ANGLE)
 *
 *       Employ the basic stability criterion for fast check (ECC1 < 1).
 *     IF (ECC1.LT.1.0) THEN

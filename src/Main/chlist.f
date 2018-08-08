@@ -27,7 +27,7 @@
 *       Restrict effective size to RMIN (energy may be near zero).
       RPERT = MIN(RPERT,RMIN)
       RCRIT2 = 2.0*RPERT**2/BODY(I)
-      RCRIT3 = RCRIT2*RPERT/GMIN
+      RCRIT3 = 10.0*RCRIT2*RPERT/GMIN
 *       Base fast search on maximum binary mass (2*BODY1).
       RCRIT2 = 2.0*RCRIT2*BODY1*CMSEP2
       PMAX = 0.0
@@ -42,6 +42,7 @@
           W2 = X(2,J) - X(2,I)
           W3 = X(3,J) - X(3,I)
           RSEP2 = W1*W1 + W2*W2 + W3*W3
+C          BODYFAC = MAX(BODY(J),BODY(I))/BODY(I)
 *       Include any merged c.m. bodies in the fast test.
           IF (RSEP2.LT.RCRIT2.OR.NAME(J).LT.0) THEN
               RIJ3 = RSEP2*SQRT(RSEP2)

@@ -79,7 +79,7 @@
 *       -------------------------------------------------------------------
 *
 *
-*       Save termination indicator and check for restart.
+*     Save termination indicator and check for restart.
       ITERM = ISUB
       IF (ISUB.GT.0) THEN
 *       Choose small step for termination (routine PERMIT & INTGRT).
@@ -319,6 +319,10 @@
       END IF
 *
 *       Advance the solution one step.
+C      IF (NSTEP1.GE.1024.AND.NSTEP1.LE.1200) THEN
+C         NPERT = 0
+C         GPERT = 0
+C      END IF 
       CALL DIFSY1(NEQ,EPS,STEP,STIME,Y)
 *
 *       Copy current physical time and save COMMON variables.
@@ -326,6 +330,10 @@
       TIMEC = CHTIME
       CALL YSAVE(Y)
       CALL TRANSX
+C      IF(NSTEP1.GT.962) THEN
+C      CALL CONST(X,V,M,N,ENERGY1,G0,ALAG)
+C      write(6,*) 'ist EE ENE ',ENERGY1,'DE',ENERGY1-ENERGY
+C      END IF
       NSTEP1 = NSTEP1 + 1
 
 *     Predict and determine the new perturber list
@@ -398,20 +406,6 @@
           if(rank.eq.0) WRITE (6,*) ' Stepsize = 0!', char(7)
           STOP
       END IF
-* Temporary Output RSP Sep 2017
-*     IF (rank.eq.0.and.KZ30.GE.2) THEN
-*     IF (rank.eq.0.and.KZ30.GT.2) THEN
-*         CALL TRANSX
-*         KK = 0
-*         DO 302 K = 1,N
-*         RI(K) = SQRT(X(KK+1)**2 + X(KK+2)**2 + X(KK+3)**2)
-*         VI(K) = SQRT(V(KK+1)**2 + V(KK+2)**2 + V(KK+3)**2)
-* 302     KK = KK + 3
-*         WRITE (6,30)  STEP, TMAX-CHTIME, GPERT, (1.0/RINV(K),K=1,N-1)
-*  30     FORMAT (' CHAIN:   STEP TM-CHT G R  ',1P,8E9.1)
-*         WRITE (6,301) CHTIME,(M(K),SIZE(K),RI(K),VI(K),K=1,N)
-* 301     FORMAT (' CHAIN CHTIME M,R,RI,VI=',1P,(4E12.5,/))
-*     END IF
 *
 *       Determine two-body distances for stability test and collision search.
       IF (CHTIME.GT.TIME0.AND.JC.EQ.0) THEN
@@ -651,9 +645,13 @@
 *
 *       Check termination or strong perturbation (T > TMAX or GPERT > 0.01).
       IF (CHTIME.GT.TMAX.OR.GPERT.GT.0.01) THEN
+C     &     (NSTEP1.GT.962.AND.NSTEP1.LT.1035)) THEN
           CALL YSAVE(Y)
           CALL TRANSX
           ECH = ENERGY
+C          CALL CONST(X,V,M,N,ENERGY1,G0,ALAG)
+C          write(6,*) 'ENE ',ENERGY1,'DE',ENERGY1-ENERGY,'GPERT',GPERT
+C          write(6,*) 'TIMEC',TIMEC,'TSMIN',TSMIN,'NP',NPERT
           TIMEC = CHTIME
 *     Temporary Output RSP Sep 2017
           IF (rank.eq.0.and.KZ30.GT.2) THEN
@@ -664,10 +662,12 @@
  305            KK = KK + 3
                 WRITE (6,55)  NSTEP1, T0S(ISUB)+TIMEC, TMAX-TIMEC,
      &               (1.0/RINV(K),K=1,N-1)
-                WRITE (6,302) TIMEC,(K,M(K),SIZE(K),RI(K),VI(K),K=1,N)
- 55             FORMAT (' CHAIN:  NSTEP T DTR R ',I5,F10.4,1P,6E9.1)
- 302            FORMAT (' CHAIN T[NB] M,R[*],R,V[NB-CH]=',
-     &               1P,E12.5,10(I4,4E12.5))
+                WRITE (6,302) TIMEC,ECH,(K,M(K),SIZE(K),RI(K),VI(K),
+     &               K=1,N)
+ 55             FORMAT (' CHAIN:  NSTEP T DTR R',I5,F10.4,1P,6E9.1)
+ 302            FORMAT (' CHAIN T[NB] ECH[NB] M[NB],RS[R*],',
+     &               'R[NB],V[NB-CH]=',
+     &               1P,E12.5,E17.6,10(I4,4E12.5))
            END IF
 *       Avoid checking after switch (just in case).
           IF (ISW.LE.1) THEN
@@ -684,6 +684,8 @@
                   IF (ITERM.LT.0) GO TO 70
               END IF
           END IF
+C          write(6,*) 'CHTIME',CHTIME,'TMAX',TMAX,'STEPS(ISUB)',
+C     &         STEPS(ISUB)
           IF (CHTIME.LT.TMAX.AND.STEPS(ISUB).GT.0.0D0) GO TO 21
           GO TO 60
       ELSE
@@ -735,6 +737,7 @@
 *       See whether temporary or actual termination (continue if N > 5).
       IF (N.GT.5.OR.(KCASE.EQ.0.AND.STEPS(ISUB).GT.0.0D0)) GO TO 100
       IF (KCASE.LT.0) GO TO 70
+C      write(6,*) 'TIMEC',TIMEC,'TMAX',TMAX,'RSUM',RSUM,'RMAXC',RMAXC
       IF (TIMEC.GT.TMAX.AND.RSUM.LT.RMAXC) THEN
          IF (STEPS(ISUB).GT.0.0D0.OR.N.GT.4) GO TO 100
       END IF
@@ -781,6 +784,7 @@
   100 IF (ITERM.GE.0) TS(ISUB) = T0S(ISUB) + TIMEC
       ISUB = ITERM
 *
+
       RETURN
 *
       END

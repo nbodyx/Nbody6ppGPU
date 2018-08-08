@@ -30,6 +30,10 @@
           A3 = X(3,ICH) - X(3,J)
           RIJ2 = A1*A1 + A2*A2 + A3*A3
           DP = DP - BODY(ICH)*BODY(J)/SQRT(RIJ2)
+C          write(6,*) 'JM-CH ICH',ICH,NAME(ICH),'J',J,'NAME(J)',NAME(J),
+C     &         'DP',-BODY(ICH)*BODY(J)/SQRT(RIJ2),'RIJ2',RIJ2,
+C     &         'XCH',X(1:3,ICH),'XJ',X(1:3,J),'DP=',DP
+          
 *
 *       Add individual interactions to obtain differential correction.
           DO 5 K = 1,NCH
@@ -38,6 +42,10 @@
               A3 = XC(3,K) - X(3,J)
               RIJ2 = A1*A1 + A2*A2 + A3*A3
               DP = DP + BODYC(K)*BODY(J)/SQRT(RIJ2)
+C              write(6,*) 'JM+CHM K',K,'J',J,'NAME(J)',NAME(J),
+C     &             'MI',BODYC(K),'MJ',BODY(J),
+C     &             'DP', + BODYC(K)*BODY(J)/SQRT(RIJ2),'XC',XC(1:3,K),
+C     &             'XJ',X(1:3,J),'RIJ2',RIJ2,'CDP=',DP
     5     CONTINUE
 *
 *       Check for possible second KS component and restore dummy index.

@@ -38,7 +38,7 @@ c$$$          end if
           A3 = X(3,K) - X(3,L)
           RIJ2 = A1**2 + A2**2 + A3**2
 *       Restrict evaluation to 100*RMIN (neighbour list may be used).
-          IF (L.EQ.I.AND.RIJ2.GT.1.0D+04*RMIN2) GO TO 10
+C          IF (L.EQ.I.AND.RIJ2.GT.1.0D+04*RMIN2) GO TO 10
           A4 = BODY(K)/(RIJ2*SQRT(RIJ2))
           IF (L.EQ.J) A4 = -A4
           FP(1) = FP(1) + A1*A4

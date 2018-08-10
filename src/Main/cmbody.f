@@ -692,8 +692,21 @@ C     STEP(I2) = DTMAX
      &                 '  NB =',I4,'  N0 =',I6,//)
 *
           WRITE (26,84)
-   84     FORMAT ('    TIME  NAME  NAME  K1  K2  IQ  M1   M2',
-     &            '   DM    R1     R2    r/Rc   R     ECC      P',/)
+   84     FORMAT ('          TIME[NB]        ',
+     &         '   NAME(I1) ',
+     &         '   NAME(I2) ',
+     &         '    K*(I1)  ',
+     &         '    K*(I2)  ',
+     &         '   IQCOLL   ',
+     &         '          M(I1)[M*]       ',
+     &         '          M(I2)[M*]       ',
+     &           '          DM[M*]          ',
+     &           '          RS(I1)[R*]      ',
+     &           '          RS(I2)[R*]      ',
+     &           '           RI/RC          ',
+     &           '           R12[R*]        ',
+     &           '           ECC            ',
+     &           '           P[days]        ')
           end if
       END IF
 *
@@ -707,10 +720,11 @@ C     STEP(I2) = DTMAX
      &             '  M =',F6.2,'  RCOLL =',1P,E8.1,' EB =',E9.1,
      &             '  DP =',E9.1,'  E =',0P,F8.4)
 *
-          WRITE (26,86)  TTOT, NAME1, NAME2, KSTAR(I1), KSTAR(I2),
+          WRITE (26,*)  TTOT, NAME1, NAME2, KSTAR(I1), KSTAR(I2),
      &                   IQCOLL, ZM1, ZM2, DM*ZMBAR, R1, R2, RI/RC,
      &                   RCOLL*SU, ECC, TK
-   86     FORMAT (1X,F7.1,2I6,3I4,3F5.1,2F7.2,F6.2,F7.2,F9.5,1P,E9.1)
+C   86     FORMAT (1X,1P,E17.10,2I8,3I4,3F5.1,2F7.2,F6.2,F7.2,F9.5,
+C     &         1P,E9.1)
           CALL FLUSH(26)
           end if
           GO TO 95

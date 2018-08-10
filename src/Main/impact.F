@@ -48,16 +48,30 @@
       J1 = I1
       IF (LIST(1,J1).LE.2) J1 = I
       NNB2 = LIST(1,J1) + 1
-
 *     
-*       Find the dominant body (JCOMP) and nearest perturber (JMAX).
-      RPCRIT2 = 1.0D+04*RMIN2
+*       Set semi-major axis, eccentricity & apocentre of inner binary.
+      SEMI = -0.5D0*BODY(I)/H(IPAIR)
+      A0 = SEMI
+      ECC2 = (1.0D0 - R(IPAIR)/SEMI)**2 + TDOT2(IPAIR)**2/(BODY(I)*SEMI)
+      ECC = SQRT(ECC2)
+      APO = ABS(SEMI)*(1.0 + ECC)
+
+*     Find the dominant body (JCOMP) and nearest perturber (JMAX).
+      RCRIT3 = 10.0*APO**3/BODY(I)/GMIN
  5    DO 10 L = 2,NNB2
           J = LIST(L,J1)
           call jpred(J,TIME,TIME)
           RIJ2 = (X(1,I) - X(1,J))**2 + (X(2,I) - X(2,J))**2 +
      &                                  (X(3,I) - X(3,J))**2
-          IF (J1.EQ.I.AND.RIJ2.GT.RPCRIT2) GO TO 10
+          RIJ = SQRT(RIJ2)
+          RIJ3 = RIJ2*RIJ
+          IF(J.GT.N.OR.NAME(J).LE.0) THEN
+             JPAIR = J-N
+             RIJ = MAX(0.0,RIJ-R(JPAIR))
+             RIJ3 = RIJ*RIJ*RIJ
+          END IF 
+*     J1 = I is neighbor list
+          IF (J1.EQ.I.AND.RIJ3.GT.BODY(J)*RCRIT3) GO TO 10
           NP = NP + 1
           JLIST(NP) = J
           PERT = BODY(J)/(RIJ2*SQRT(RIJ2))
@@ -77,10 +91,10 @@
    10 CONTINUE
 *
 *       Include safety check on rare case of no perturbers inside 100*RMIN.
-      IF (NP.LT.2.AND.NNB2.GE.3) THEN
-         RPCRIT2 = 100*RPCRIT2
-         GO TO 5
-      END IF
+C      IF (NP.LT.2.AND.NNB2.GE.3) THEN
+C         RPCRIT2 = 100*RPCRIT2
+C         GO TO 5
+C      END IF
       IF (NP.EQ.0) GO TO 100
 *
 #ifdef DECISION_CHECK
@@ -136,12 +150,6 @@ c$$$      end if
       ECC1 = SQRT((1.0D0 - RIJ/SEMI1)**2 + A4)
       PMIN = SEMI1*(1.0D0 - ECC1)
 *
-*       Set semi-major axis, eccentricity & apocentre of inner binary.
-      SEMI = -0.5D0*BODY(I)/H(IPAIR)
-      A0 = SEMI
-      ECC2 = (1.0D0 - R(IPAIR)/SEMI)**2 + TDOT2(IPAIR)**2/(BODY(I)*SEMI)
-      ECC = SQRT(ECC2)
-      APO = ABS(SEMI)*(1.0 + ECC)
 *
 *       Quit on hyperbolic orbit with large impact parameter.
 #ifdef DECISION_CHECK

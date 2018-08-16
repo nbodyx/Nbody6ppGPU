@@ -18,6 +18,7 @@
 *     6. ch: NAME(I)==0 || NAME(JCOMP)==0
 *
       RJMIN2 = RMIN2 + RMIN2
+      DTS = MAX(SMIN,32.0*STEP(I))
 *
 *       Increase counter for regularization attempts.
       NKSTRY = NKSTRY + 1
@@ -46,7 +47,8 @@ c$$$      end if
 *
       J = LIST(L,I)
 *      IF (STEP(J).GT.SMIN) GO TO 2
-       IF (STEP(J).GT.4*STEP(I).AND.BODY(J).LT.10*BODY(I)) GO TO 2
+C       IF (STEP(J).GT.4*STEP(I).AND.BODY(J).LT.10*BODY(I)) GO TO 2
+       IF (STEP(J).GT.DTS) GO TO 2
 *       Prediction body #J to order FDOT for parallel prediction (not active RSp).
        call jpred(j,time,time)
 c$$$      if(TPRED(J).ne.TIME) then
@@ -62,18 +64,20 @@ c$$$       end if
       A2 = X(2,J) - X(2,I)
       A3 = X(3,J) - X(3,I)
       RIJ2 = A1*A1 + A2*A2 + A3*A3
-      IF (RIJ2.GT.2*RMIN22) GO TO 2
+      IF (RIJ2.GT.4.0*RMIN22) GO TO 2
 *
-      FIJ = BODY(J)/RIJ2
+      FIJ = (BODY(I)+BODY(J))/RIJ2
       IF (FMAX.LT.FIJ) FMAX = FIJ
 *       Abandon further search if c.m. force exceeds half the total force.
-      IF (FMAX**2.LT.F(1,I)**2 + F(2,I)**2 + F(3,I)**2) THEN
+      IF (FMAX.LE.FIJ) THEN
+C      IF (FMAX**2.LT.F(1,I)**2 + F(2,I)**2 + F(3,I)**2) THEN
           NCLOSE = NCLOSE + 1
           JLIST(NCLOSE) = J
-          GO TO 2
-      ELSE
-          GO TO 10
+C          GO TO 2
+C      ELSE
+C          GO TO 10
       END IF
+      GO TO 2
 *
 *       Continue searching single particles with current value of FMAX.
     4 JCOMP = 0
@@ -97,7 +101,7 @@ c$$$          end if
           A2 = X(2,J) - X(2,I)
           A3 = X(3,J) - X(3,I)
           RIJ2 = A1*A1 + A2*A2 + A3*A3
-          IF (RIJ2.LT.2*RMIN22) THEN
+          IF (RIJ2.LT.10*RMIN22) THEN
               NCLOSE = NCLOSE + 1
               JLIST(NCLOSE) = J
 *       Remember index of every single body with small step inside 2*RMIN.
@@ -162,7 +166,7 @@ c$$$          end if
 *
 *       Accept #I & JCOMP if the relative motion is dominant (GI < 0.25).
       GI = PERT*RJMIN2/BCM
-      IF (GI.GT.0.25) THEN
+      IF (GI.GT.0.01) THEN
 *         IF (KZ(4).GT.0.AND.TIME-TLASTT.GT.4.44*TCR/FLOAT(N))
 *    &                                             CALL EVOLVE(JCOMP,0)
           TRACE_FLAG=4

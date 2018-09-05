@@ -11,6 +11,7 @@
       INCLUDE 'common2.h'
       INCLUDE 'mpi_base.h'
       REAL*8   G0(3),Y(NMX8),R2(NMX,NMX),KSCH
+      REAL*8   YBK(NMX8)
       REAL*8   RI(NMX),VI(NMX)
       INTEGER  IJ(NMX),IOLD(NMX)
       LOGICAL  CHECK,KSLOW,KCOLL,stopB,ICASE
@@ -319,10 +320,22 @@
       END IF
 *
 *       Advance the solution one step.
+C debug----------------------------      
 C      IF (NSTEP1.GE.1024.AND.NSTEP1.LE.1200) THEN
 C         NPERT = 0
 C         GPERT = 0
-C      END IF 
+C      END IF
+C      DO K=1,N
+C         write(333,*) M(K),X(3*K-2:3*K),V(3*K-2:3*K)
+C      END DO
+C      call flush(333)
+C      CALL TRANSQ
+C      call YCOPY(Y)
+C      YBK(1:NEQ) = Y(1:NEQ)
+C      CALL CONST(X,V,M,N,ENERGY1,G0,ALAG)
+C      write(6,*) 'TB',TIMEC,'ST',STEPBK,'DE',ENERGY1-ENERGY
+C 222  STEPBK = STEP
+C debug----------------------------            
       CALL DIFSY1(NEQ,EPS,STEP,STIME,Y)
 *
 *       Copy current physical time and save COMMON variables.
@@ -330,10 +343,51 @@ C      END IF
       TIMEC = CHTIME
       CALL YSAVE(Y)
       CALL TRANSX
-C      IF(NSTEP1.GT.962) THEN
+C debug----------------------------            
 C      CALL CONST(X,V,M,N,ENERGY1,G0,ALAG)
-C      write(6,*) 'ist EE ENE ',ENERGY1,'DE',ENERGY1-ENERGY
+C      write(6,*) 'T',TIMEC,'ST',STEP,'DE',ENERGY1-ENERGY,
+C     &     'INTFAC', LX,LE,LP,LV,LT,J10,NHALF2,
+C     &     'BSSAVE', EP,DSC,FACM,TFAC,ITFAC,JC,
+C     &     'IMCIRC', IMCIRC,'IPERT',IPERT,'ICALL',ICALL,'JC',JC,
+C     &     'STIME',STIME
+C      IF(ABS(ENERGY1-ENERGY).GT.1E-9) THEN
+C         CALL SWITCH(Y)
+C         STEP = STEPBK
+C         GO TO 222
 C      END IF
+C         CALL YSAVE(YBK)
+C         write(332,*) 'Q', Q(1:4*NC)
+C         write(332,*) 'CMX', CMX(1:3)
+C         write(332,*) 'ENERGY', ENERGY,ENERGY1
+C         write(332,*) 'P',P(1:4*NC)
+C         write(332,*) 'CMV',CMV(1:3)
+C         call flush(332)
+C         DO K=1,N
+C            write(334,*) M(K),X(3*K-2:3*K),V(3*K-2:3*K)
+C         END DO
+C         call flush(334)
+C         write(6,*) 'T',TIMEC,'ST',STEPBK,'DE',ENERGY1-ENERGY
+C         write(6,*) 'dT',Y(NEQ)-YBK(NEQ)
+C         write(6,*) 'YBK',YBK(1:NEQ)
+C         write(6,*) 'Y',Y(1:NEQ),'N',N,'G0',G0,'ALAG',ALAG
+C         STOP
+C      END IF
+C         STEP = 0.5D0*STEPBK
+C         write(6,*) 'STEP Reduce',STEP
+C         Y(1:NEQ) = YBK(1:NEQ)
+C         GO to 222
+C      END IF
+C      write(333,*) TIMEC,(M(K),X(3*K-2:3*K),V(3*K-2:3*K),K=1,N)
+C      call flush(333)
+C      DO  I = 1,N-1
+C          KS1 = 4*(I - 1) + 1
+C          RK = Q(KS1)**2 + Q(KS1+1)**2 + Q(KS1+2)**2 + Q(KS1+3)**2
+C          RINV(I) = 1.0/RK
+C      END DO
+C      write(6,*) 'NS',NSTEP1,'DS',STEP,'NEQ',NEQ,
+C     &        ' ENE ',ENERGY1,'DE',ENERGY1-ENERGY,'R',1.0/RINV(1:N-1)
+C      END IF
+C debug----------------------------            
       NSTEP1 = NSTEP1 + 1
 
 *     Predict and determine the new perturber list
@@ -626,11 +680,17 @@ C      END IF
 *       Check switching condition (Note: RINV now updated after switch).
    50 ISW = 0
       CALL SWCOND(CHECK)
-      IF (CHECK) THEN
+*     only check is not enough, the switch should be called with enough interval to avoid large energy error
+      IF (CHECK.OR.CHTIME.GT.TMAX) THEN
           DO 52 I = 1,N
               IOLD(I) = INAME(I)
    52     CONTINUE
           CALL SWITCH(Y)
+*     Write diagnostic
+          IF(rank.eq.0.and.KZ30.GT.2) THEN
+             write(6,*) 'SWITCH NCALL ',NCALL,' TIME ',CHTIME,
+     &            ' NEW INDEX',INAME(1:N)
+          END IF
           ISW = 1
 *       See whether the chain name list is unchanged (even if CHECK =.TRUE.).
           DO 54 I = 1,N
@@ -645,11 +705,11 @@ C      END IF
 *
 *       Check termination or strong perturbation (T > TMAX or GPERT > 0.01).
       IF (CHTIME.GT.TMAX.OR.GPERT.GT.0.01) THEN
-C     &     (NSTEP1.GT.962.AND.NSTEP1.LT.1035)) THEN
+C     &     (NSTEP1.GT.4270.AND.NSTEP1.LT.4323)) THEN
           CALL YSAVE(Y)
           CALL TRANSX
           ECH = ENERGY
-C          CALL CONST(X,V,M,N,ENERGY1,G0,ALAG)
+          CALL CONST(X,V,M,N,ENERGY1,G0,ALAG)
 C          write(6,*) 'ENE ',ENERGY1,'DE',ENERGY1-ENERGY,'GPERT',GPERT
 C          write(6,*) 'TIMEC',TIMEC,'TSMIN',TSMIN,'NP',NPERT
           TIMEC = CHTIME
@@ -662,12 +722,14 @@ C          write(6,*) 'TIMEC',TIMEC,'TSMIN',TSMIN,'NP',NPERT
  305            KK = KK + 3
                 WRITE (6,55)  NSTEP1, T0S(ISUB)+TIMEC, TMAX-TIMEC,
      &               (1.0/RINV(K),K=1,N-1)
-                WRITE (6,302) TIMEC,ECH,(K,M(K),SIZE(K),RI(K),VI(K),
-     &               K=1,N)
- 55             FORMAT (' CHAIN:  NSTEP T DTR R',I5,F10.4,1P,6E9.1)
- 302            FORMAT (' CHAIN T[NB] ECH[NB] M[NB],RS[R*],',
+                WRITE (6,302) TIMEC,ECH,ENERGY1-ECH,
+     &               (K,M(K),SIZE(K),RI(K),VI(K),K=1,N)
+ 55             FORMAT (' CHAIN:  NSTEP TIME DTR R[1:N-1]',
+     &               I5,F10.4,1P,7E9.1)
+ 302            FORMAT (' CHAIN CHTIME[NB] ECH[NB] DECH[NB]',
+     &               ' M[NB],RS[R*],',
      &               'R[NB],V[NB-CH]=',
-     &               1P,E12.5,E17.6,10(I4,4E12.5))
+     &               1P,3E17.6,10(I4,4E12.5))
            END IF
 *       Avoid checking after switch (just in case).
           IF (ISW.LE.1) THEN

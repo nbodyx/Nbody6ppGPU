@@ -22,7 +22,6 @@
       TIME0 = TIME
       ISUB = ISYS(5)
       TIME = CHTIME + T0S(ISUB)
-      CALL XCPRED(1)
 *
 *       Initialize the external perturbations.
       NK = 3*NN
@@ -32,6 +31,7 @@
 *
 *       Consider each perturber in turn.
       NPC = LISTC(1) + 1
+      IF(NPC.GT.1) CALL XCPRED(1)
       DO 20 L = 2,NPC
           J = LISTC(L)
 *       Sum perturber contributions over each chain component.

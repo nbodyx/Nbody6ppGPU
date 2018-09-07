@@ -109,6 +109,9 @@ C      END IF
      &       (X(2,I) - X(2,JCOMP))*(XDOT(2,I) - XDOT(2,JCOMP)) +
      &       (X(3,I) - X(3,JCOMP))*(XDOT(3,I) - XDOT(3,JCOMP))
 *
+*     Mass ratio factor
+      MFAC = MAX(BODY(JCOMP)/BODY(I),1.0)
+      
 *       Specify larger perturbation for optional chain regularization.
       IF ((KZ(30).GT.0.OR.KZ(30).EQ.-1).AND.NCH.EQ.0) THEN
           GSTAR = 100.0*GMIN
@@ -264,11 +267,12 @@ c$$$      end if
           IF (SEMIS.GT.2.0*RMIN) GO TO 100
 *       Delay for large distance ratio outside RMIN with strong perturbation.
 #ifdef DECISION_CHECK
-          IF ((RIJ.GT.RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*RMIN)
-     &         write(6,*) 'IMPACT: RIJ(',RIJ,')>RMIN(',RMIN,') &&',
+          IF ((RIJ.GT.MFAC*RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*MFAC*RMIN)
+     &         write(6,*) 'IMPACT: RIJ(',RIJ,')>MFAC(',MFAC,
+     &         ')*RMIN(',RMIN,') &&',
      &         'PERT(',PERT,')>GMAX(',GMAX,') || RIJ>5 RMIN L.247'
 #endif
-          IF ((RIJ.GT.RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*RMIN)
+          IF ((RIJ.GT.MFAC*RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*MFAC*RMIN)
      &         GO TO 100
 *       Consider merger for PMIN > SEMI and large semi-major axis ratio.
 #ifdef DECISION_CHECK
@@ -394,21 +398,23 @@ C      IF ((APO.GT.0.01*RMIN.OR.JCOMP.GT.N).AND.PMIN.GT.1.5*APO) GO TO 30
 
 *     Remove case with large RIJ
 #ifdef DECISION_CHECK
-      IF (((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2*RMIN)
+      IF (((RIJ.GT.MFAC*RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2*MFAC*RMIN)
      &     .AND.PERT.GT.GMAX)
-     &     write(6,*) 'IMPACT: RIJ(',RIJ,')> RMIN(',RMIN,
-     &     ') && SEMI1(',SEMI1,')>0 || RIJ>2.0 * RMIN && PERT(',
-     &     PERT,')>GMAX(',GMAX,') L.303 quit'
+     &     write(6,*) 'IMPACT: RIJ(',RIJ,')> MFAC(',MFAC,
+     &     ')*RMIN(',RMIN,') && SEMI1(',SEMI1,
+     &     ')>0 || RIJ>2.0 MFAC(',MFAC,')* RMIN && PERT(',PERT,
+     &     ')>GMAX(',GMAX,') L.303 quit'
 #endif
-      IF (((RIJ.GT.RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2*RMIN)
+      IF (((RIJ.GT.MFAC*RMIN.AND.SEMI1.GT.0.0).OR.RIJ.GT.2*MFAC*RMIN)
      &     .AND.PERT.GT.GMAX)
      &     GO TO 100
 
-#ifdef DECISION_CHECK
-      IF (PERTM.GT.100.0*GSTAR)
-     &     write(6,*) 'IMPACT: L334'
-#endif
-      IF ((PERTM.GT.100.0*GSTAR).AND..not.MCF) GO TO 30
+C#ifdef DECISION_CHECK
+C      IF (PERTM.GT.100.0*GSTAR)
+C     &     write(6,*) 'IMPACT: PERTM(',PERTM,')>100*GSTAR(',GSTAR,
+C     & ') L334'
+C#endif
+C      IF ((PERTM.GT.100.0*GSTAR).AND..not.MCF) GO TO 30
 *
 *       Check almost stable triples (factor 1.2 is experimental).
  17   IF (JCOMP.LE.N.AND.PMIN.GT.2.5*SEMI) THEN
@@ -460,12 +466,13 @@ C          IF (PMIN.GT.0.6*RSTAB.AND.PMIN.LT.0.9*RSTAB) GO TO 100
 C 
 *     Delay for large distance ratio outside 0.5*RMIN.
 #ifdef DECISION_CHECK
-          IF (RIJ.GT.MAX(10.0*APO,0.5*RMIN).AND.PERT.GT.GMAX)
+          IF (RIJ.GT.MAX(10.0*APO,0.5*MFAC*RMIN).AND.PERT.GT.GMAX)
      &         write(6,*) 'IMPACT: RIJ(',RIJ,')>MAX(10 APO(',
-     &         APO,'), 2.0 RMIN(',RMIN,')) && PERT(',PERT,
+     &         APO,'), 2.0 MFAC(',MFAC,
+     &         ')*RMIN(',RMIN,')) && PERT(',PERT,
      &         ')> GMAX(',GMAX,') L.348 quit'
 #endif
-          IF (RIJ.GT.MAX(10.0*APO,0.5*RMIN).AND.PERT.GT.GMAX)
+          IF (RIJ.GT.MAX(10.0*APO,0.5*MFAC*RMIN).AND.PERT.GT.GMAX)
      &         GO TO 100
 C#ifdef DECISION_CHECK
 C          IF (RIJ.GT.10.0*APO)
@@ -498,21 +505,23 @@ C          IF (RIJ.GT.10.0*APO) GO TO 100
 C      END IF
 *       Skip chain if merged binary or chain c.m. (denoted by NAME <= 0).
 #ifdef DECISION_CHECK
-      IF (NAME(I).LT.0.OR.NAME(JCOMP).LT.0)
+      IF (NAME(I).LT.0)
      &     write(6,*) 'IMPACT: NAME(I)(',NAME(I),
-     &     ')<0 || NAME(JCOMP)(',NAME(JCOMP),')<0',
-     &     'L.373 term merger quit'
+     &     ')<0 quit'
 #endif
-      IF (NAME(I).LT.0.OR.NAME(JCOMP).LT.0) then
+      IF (NAME(I).LT.0) GO TO 100
+
 *     Terminate merger if exist
-         if (NAME(I).LT.0) THEN
-            KSPAIR = IPAIR
-         else if(NAME(JCOMP).LT.0) THEN
-            JPAIR = JCOMP - N
-            J1 = 2*JPAIR - 1
-            JCOMP = I
-            KSPAIR = JPAIR
-         END IF
+#ifdef DECISION_CHECK
+      IF (NAME(JCOMP).LT.0)
+     &     write(6,*) 'IMPACT: NAME(JCOMP)(',NAME(JCOMP),
+     &     ')<0 term merge quit'
+#endif
+      IF (NAME(JCOMP).LT.0) then
+         JPAIR = JCOMP - N
+         J1 = 2*JPAIR - 1
+         JCOMP = I
+         KSPAIR = JPAIR
          IPHASE= 9
          call DELAY(0,0)
          call ksparmpi(K_store,K_int,K_DELAY,0,0,0.0)
@@ -1163,7 +1172,7 @@ C          PCRIT = PMIN
       IF (ITERM.GT.0) 
      &     write(6,*) 'IMPACT: ITERM(',ITERM,')>0 L1026'
 #endif
-      IF (ITERM.GT.0) GO TO 16
+      IF (ITERM.GT.0) GO TO 100
 *
 *       Check perturbed stability condition.
 #ifdef DECISION_CHECK

@@ -33,8 +33,12 @@ c$$$      if(x0(1,I).ge.1000.and.body(i).gt.0) call abort()
       IF (TPRED(I).EQ.TIME) THEN
          IF (TPRED(I).EQ.T0(I).and.X(1,I).NE.X0(1,I)) THEN
 C            write(6,*) 'I',I,NAME(I),'X inconsistence'
+C            write(6,*) 'Warning!: TPRED=T0 but X!=X0',rank,'rank',
+C     &           'I',I,'NAME',NAME(I),'T0',T0(I),'X',X(1,I),'X0',X0(1,I)
+C            call flush(6)
             X(1:3,I) = X0(1:3,I)
             XDOT(1:3,I) = X0DOT(1:3,I)
+C            call abort
 *     Resolve the components of any perturbed pair.
             IF (I.GT.N) THEN
                JPAIR = I - N
@@ -48,7 +52,6 @@ C            write(6,*) 'I',I,NAME(I),'X inconsistence'
                END IF
             END IF
          END IF
-         
          RETURN
       ELSE
 *     Adopt low order prediction for standard single particle.

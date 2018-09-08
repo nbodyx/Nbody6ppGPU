@@ -9,7 +9,11 @@
       logical iscale
 *
 *
-*       Sum the total energy of regularized pairs.
+C      DO I =1,NTOT
+C         write(335,*) I,NAME(I),BODY(I),X(1:3,I),XDOT(1:3,I)
+C      END DO
+
+*     Sum the total energy of regularized pairs.
       if(.not.iscale) then
          EBIN = 0.0D0
          DO 10 IPAIR = 1,NPAIRS

@@ -6,7 +6,7 @@
 *
       INCLUDE 'common6.h'
       COMMON/XPRED/ TPRED(NMAX),TRES(KMAX),ipredall
-      REAL*8 TPRED,TRES,DSAVE(17)
+      REAL*8 TPRED,TRES,DSAVE(20)
       LOGICAL ipredall
 *      EXTERNAL RENAME
 *
@@ -15,7 +15,12 @@
       NNB = LIST(1,ICOMP)
 *     --03/05/14 16:21-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-c$$$      print*,rank,'KSREG ICOMP',ICOMP,'JCOMP',JCOMP,'NB',NNB,'t',time
+C      call xbpredall
+C      CALL XVPRED(IFIRST,NTOT)
+C      DO I =1,NTOT
+C         write(333,*) I,NAME(I),BODY(I),X(1:3,I),XDOT(1:3,I)
+C      END DO
+C$$$      print*,rank,'KSREG ICOMP',ICOMP,'JCOMP',JCOMP,'NB',NNB,'t',time
 c$$$      call flush(6)
 *     --03/05/14 16:21-lwang-end----------------------------------------*
       IF (NNB.EQ.1.AND.LIST(2,ICOMP).EQ.JCOMP) THEN
@@ -53,10 +58,13 @@ c$$$      call flush(6)
              IF(TIME+TOFF.NE.0.D0) call exchange_tlist(I,J,STEP,DTK)
           END IF
 *
-          call jpred(I,TIME,TIME)
+*          call jpred(I,TIME,TIME)
+*     make high order prediction to keep accuracy
+          call xvpred(I,0)
           DO 2 K = 1,3
               DSAVE(K) = X(K,I)
-              DSAVE(K+3) = X0DOT(K,I)
+*     original dsave is x0dot, but then position and velocity is inconsistent, which cause big error in ekin and ebin 
+              DSAVE(K+3) = XDOT(K,I)
     2     CONTINUE
           DSAVE(7) = BODY(I)
           DSAVE(8) = RS(I)
@@ -69,6 +77,9 @@ c$$$      call flush(6)
           DSAVE(15) = ZLMSTY(I)
           DSAVE(16) = TPRED(I)
           DSAVE(17) = STEP(I)
+          DSAVE(18) = STEPR(I)
+          DSAVE(19) = T0(I)
+          DSAVE(20) = T0R(I)
           NAMEI = NAME(I)
           KSI = KSTAR(I)
 *
@@ -130,6 +141,9 @@ c$$$      call flush(6)
           NAME(J) = NAMEI
           KSTAR(J) = KSI
           STEP(J) = DSAVE(17)
+          STEPR(J) = DSAVE(18)
+          T0(J) = DSAVE(19)
+          T0R(J) = DSAVE(20)
 
 #ifdef SIMD
 *     Update Particle data in AVX/SSE library
@@ -185,6 +199,10 @@ C      END IF
           CALL CHFIND
       END IF
 *
+C      DO I =1,NTOT
+C         write(334,*) I,NAME(I),BODY(I),X(1:3,I),XDOT(1:3,I)
+C      END DO
+C      call adjust
       RETURN
 *
       END

@@ -110,7 +110,7 @@ C      END IF
      &       (X(3,I) - X(3,JCOMP))*(XDOT(3,I) - XDOT(3,JCOMP))
 *
 *     Mass ratio factor
-      MFAC = MAX(BODY(JCOMP)/BODY(I),1.0)
+      MFAC = MAX(sqrt(BODY(JCOMP)/BODY(I)),1.0)
       
 *       Specify larger perturbation for optional chain regularization.
       IF ((KZ(30).GT.0.OR.KZ(30).EQ.-1).AND.NCH.EQ.0) THEN

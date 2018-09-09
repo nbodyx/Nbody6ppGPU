@@ -239,7 +239,17 @@ c$$$      end if
           VV(K,3) = XDOT(K,JCOMP)
   42  CONTINUE
 *
-*       Determine the inclination (in radians).
+*     Delay for large distance ratio outside RMIN with strong perturbation.
+#ifdef DECISION_CHECK
+      IF ((RIJ.GT.MFAC*RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*MFAC*RMIN)
+     &     write(6,*) 'IMPACT: RIJ(',RIJ,')>MFAC(',MFAC,
+     &     ')*RMIN(',RMIN,') &&',
+     &     'PERT(',PERT,')>GMAX(',GMAX,') || RIJ>5 RMIN L.247'
+#endif
+      IF ((RIJ.GT.MFAC*RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*MFAC*RMIN)
+     &     GO TO 100
+
+*     Determine the inclination (in radians).
       CALL INCLIN(XX,VV,X(1,I),XDOT(1,I),ANGLE)
       
 *       Use combined semi-major axis for binary-binary collision.
@@ -265,15 +275,6 @@ c$$$      end if
      &         RMIN,') L.233 quit'
 #endif
           IF (SEMIS.GT.2.0*RMIN) GO TO 100
-*       Delay for large distance ratio outside RMIN with strong perturbation.
-#ifdef DECISION_CHECK
-          IF ((RIJ.GT.MFAC*RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*MFAC*RMIN)
-     &         write(6,*) 'IMPACT: RIJ(',RIJ,')>MFAC(',MFAC,
-     &         ')*RMIN(',RMIN,') &&',
-     &         'PERT(',PERT,')>GMAX(',GMAX,') || RIJ>5 RMIN L.247'
-#endif
-          IF ((RIJ.GT.MFAC*RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*MFAC*RMIN)
-     &         GO TO 100
 *       Consider merger for PMIN > SEMI and large semi-major axis ratio.
 #ifdef DECISION_CHECK
           IF (PMIN.GT.SEMIS.AND.SEMI2.GT.20.0*SEMI0)
@@ -314,10 +315,10 @@ c$$$      end if
           END IF
       END IF
 
-*     Check separation in case of chain regularization.
- 16   IF (KCHAIN.GT.0) THEN
+C*     Check separation in case of chain regularization.
+C 16   IF (KCHAIN.GT.0) THEN
 *       Form effective gravitational radius (combine triple & quad).
-          EBT = EB + EB1
+ 16      EBT = EB + EB1
           ZMM = BODY(I1)*BODY(I2) + BODY(I)*BODY(JCOMP)
 *       Set length of chain for decision-making (also used at termination).
           RSUM = R(IPAIR) + RIJ
@@ -379,7 +380,15 @@ C          GI = 2.0*BODY(JCOMP)*(RI/RIJ)**3/BODY(I)
      &                .AND..not.MCF) GO TO 30                 
               END IF
           END IF
+C      END IF
+          
+*     Avoid perturbed case when chain cannot be used
+#ifdef DECISION_CHECK
+      IF (KCHAIN.EQ.0.AND.GI.GT.1e-6) THEN
+         write(6,*) 'KCHAIN.EQ.0.AND.GI(',GI,').GT.1e-6 L387 quit'
       END IF
+#endif
+      IF (KCHAIN.EQ.0.AND.GI.GT.1e-6) GO TO 100
 *
 *       Include special case of strong interraction and large ECC1.
       IF (ECC1.GT.0.9.AND.GAMMA(IPAIR).GT.0.01) THEN

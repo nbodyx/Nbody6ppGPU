@@ -741,7 +741,7 @@ C          write(6,*) 'TIMEC',TIMEC,'TSMIN',TSMIN,'NP',NPERT
               IF (KCASE.LT.0) GO TO 60
           END IF
           IF (ISW.EQ.0.AND.N.EQ.3) THEN
-              IF (RSUM.GT.4.0*RM) THEN
+              IF (RSUM.GT.4.0*RM.AND.GPERT.LT.0.02) THEN
                   CALL CHSTAB(ITERM)
                   IF (ITERM.LT.0) GO TO 70
               END IF
@@ -765,7 +765,9 @@ C     &         STEPS(ISUB)
       END IF
 *
 *       Check hierarchical stability condition for triple or quad.
-   60 IF (N.EQ.3) THEN
+*     Make sure not strongly perturbed chain do the stability check
+ 60   IF(GPERT.LT.0.02) THEN
+      IF (N.EQ.3) THEN
           IF (RSUM.GT.4.0*RM) THEN
               CALL CHSTAB(ITERM)
               IF (ITERM.LT.0) GO TO 70
@@ -794,6 +796,7 @@ C     &         STEPS(ISUB)
       ELSE IF (N.GE.5) THEN
           CALL CSTAB5(ITERM)
           IF (ITERM.LT.0) GO TO 70
+      END IF
       END IF
 *
 *       See whether temporary or actual termination (continue if N > 5).

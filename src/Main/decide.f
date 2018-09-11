@@ -48,7 +48,7 @@
       END IF
 *
 *       Obtain eccentricity derivative due to #JCOMP (KS resolved in INDUCE).
-      CALL EDOT(IPAIR,JCOMP,SEMI,ECC,ECCDOT)
+      CALL EDOT(I1,I2,JCOMP,SEMI,ECC,ECCDOT)
 *
 *       Define c.m. index and set maximum stellar radius and peri.
       I = N + IPAIR

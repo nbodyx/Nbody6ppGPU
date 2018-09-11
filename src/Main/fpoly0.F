@@ -329,7 +329,7 @@ c$$$     &     ' size',icnt,' isend',isend,' irecv',irecv
      *         rank,RS(istrec),icnt2,MPI_REAL8,irecv,irecv,
      *         MPI_COMM_WORLD,status,ierr)
       CALL MPI_SENDRECV(LIST(1,istsen),LMAX*icnt,MPI_INTEGER,isend,
-     *         rank,LIST(1,istrec),LMAX*icnt2,MPI_REAL8,irecv,irecv,
+     *         rank,LIST(1,istrec),LMAX*icnt2,MPI_INTEGER,irecv,irecv,
      *         MPI_COMM_WORLD,status,ierr)
       call cputim(ttb)
       call mpi_barrier(MPI_COMM_WORLD,ierr)

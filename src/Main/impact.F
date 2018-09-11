@@ -14,7 +14,7 @@
       COMMON/CLUMP/   BODYS(NCMAX,5),T0S(5),TS(5),STEPS(5),RMAXS(5),
      &                NAMES(NCMAX,5),ISYS(5)
       CHARACTER*8  WHICH1
-      REAL*8  XX(3,3),VV(3,3)
+      REAL*8  XX(3,3),VV(3,3),MFAC
       INTEGER LISTQ(100)
       LOGICAL flag_delay,MCF
 *     For diagnostic, safe for parallel
@@ -58,20 +58,22 @@
 
 *     Find the dominant body (JCOMP) and nearest perturber (JMAX).
       RCRIT3 = 10.0*APO**3/BODY(I)/GMIN
- 5    DO 10 L = 2,NNB2
+      RCRIT2 = 10.0D4*RMIN*RMIN
+      DO 10 L = 2,NNB2
           J = LIST(L,J1)
           call jpred(J,TIME,TIME)
           RIJ2 = (X(1,I) - X(1,J))**2 + (X(2,I) - X(2,J))**2 +
      &                                  (X(3,I) - X(3,J))**2
           RIJ = SQRT(RIJ2)
           RIJ3 = RIJ2*RIJ
-          IF(J.GT.N.OR.NAME(J).LE.0) THEN
+          IF(J.GT.N) THEN
              JPAIR = J-N
              RIJ = MAX(0.0,RIJ-R(JPAIR))
              RIJ3 = RIJ*RIJ*RIJ
-          END IF 
+          END IF
 *     J1 = I is neighbor list
-          IF (J1.EQ.I.AND.RIJ3.GT.BODY(J)*RCRIT3) GO TO 10
+          IF (J1.EQ.I.AND.
+     &         (RIJ3.GT.BODY(J)*RCRIT3.AND.RIJ2.GT.RCRIT2)) GO TO 10
           NP = NP + 1
           JLIST(NP) = J
           PERT = BODY(J)/(RIJ2*SQRT(RIJ2))
@@ -244,7 +246,7 @@ c$$$      end if
       IF ((RIJ.GT.MFAC*RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*MFAC*RMIN)
      &     write(6,*) 'IMPACT: RIJ(',RIJ,')>MFAC(',MFAC,
      &     ')*RMIN(',RMIN,') &&',
-     &     'PERT(',PERT,')>GMAX(',GMAX,') || RIJ>5 RMIN L.247'
+     &     'PERT(',PERT,')>GMAX(',GMAX,') || RIJ>5 RMIN L.247 quit'
 #endif
       IF ((RIJ.GT.MFAC*RMIN.AND.PERT.GT.GMAX).OR.RIJ.GT.5*MFAC*RMIN)
      &     GO TO 100
@@ -599,9 +601,9 @@ C      IF (KZ(30).EQ.-2.AND.KCHAIN.EQ.0) GO TO 100
      &         ' M(I3)[NB,M*]',1P,E10.2,0P,F10.3,
      &         ' M(Icm)[NB,M*]',1P,E10.2,0P,F10.3,
      &         ' R12[NB,R*]',1P,2E10.2,' H[NB]',E10.2,
-     &         ' SEMI0[NB]',E12.4,' ECC0',0P,F9.5,1P,' EB0[NB]',E10.2,
+     &         ' SEMI0[NB]',E12.4,' ECC0',0P,F12.5,1P,' EB0[NB]',E10.2,
      &         ' P0[DAY]',E10.2,
-     &         ' SEMI1[NB]',E12.4,' ECC1',0P,F9.5,1P,' EB1[NB]',E10.2,
+     &         ' SEMI1[NB]',E12.4,' ECC1',0P,F12.5,1P,' EB1[NB]',E10.2,
      &         ' P1[DAY]',E10.2,
      &         ' GAMMA4',E10.3,'  RIN3[NB,R*]',2E10.2,
      &         ' PERIM[NB]',E8.1,'  EB1/EB0',
@@ -999,9 +1001,10 @@ C
 *       Note: moved down from label 30 with 0.1*SEMI1 replacing 2*PMIN.
           IF (ECC1.GT.0.95.AND.RIJ.LT.0.1*SEMI1) THEN
 #ifdef DECISION_CHECK
-             write(6,*) 'IMPACT: L856'
+             write(6,*) 'IMPACT: ECC1 (',ECC1,')>0.95 && RIJ(',
+     &            RIJ,')<0.1*SEMI1(',SEMI1,') L856 quit'
 #endif
-              GO TO 16
+              GO TO 100
           END IF
       END IF
 *

@@ -1,4 +1,4 @@
-      SUBROUTINE EDOT(IPAIR,J,SEMI,ECC,ECCDOT)
+      SUBROUTINE EDOT(I1,I2,J,SEMI,ECC,ECCDOT)
 *
 *
 *       Eccentricity derivative due to perturber.
@@ -9,12 +9,12 @@
 *
 *
 *       Set relative coordinates & velocities and initialize perturbation.
-      I1 = 2*IPAIR - 1
-      I2 = I1 + 1
+      RI2 = 0.0
       DO 1 K = 1,3
           XREL(K) = X(K,I1) - X(K,I2)
           VREL(K) = XDOT(K,I1) - XDOT(K,I2)
           FP(K) = 0.0D0
+          RI2 = RI2 + XREL(K)**2
     1 CONTINUE
 *
 *       Obtain perturbation on KS components due to body #J.
@@ -45,7 +45,7 @@
    10 CONTINUE
 *
 *       Evaluate time derivative of eccentricity (Douglas Heggie 30/8/96).
-      ECCDOT = (SEMI**2*(1.0 - ECC**2) - R(IPAIR)**2)*VF + RV*RF
+      ECCDOT = (SEMI**2*(1.0 - ECC**2) - RI2)*VF + RV*RF
       ECCDOT = ECCDOT/((BODY(I1) + BODY(I2))*SEMI*ECC)
 *
 *     WRITE (6,15)  IPAIR, KSTAR(N+IPAIR), ECC, ECCDOT, RV, RF, VF

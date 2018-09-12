@@ -8,6 +8,7 @@
       REAL*8  A(9),F1(3),F1DOT(3)
 *
 *
+      
       IF (TTOT+TOFF.GT.0.D0) call xbpredall
 *       Standard case, new c.m. or KS termination (KCASE = 0, 1, 2).
       JLAST = NTOT
@@ -17,6 +18,13 @@
 *       Loop over all bodies, pair #ICOMP & JCOMP or one single body.
       DO 40 I = I1,I2
 *
+*     Safety check
+      IF (BODY(I).EQ.0) THEN
+         write(6,*) 'Warning! Ghost particle use fpoly i=',i,
+     &        ' NAME ',NAME(I),' X ',X(1:3,I),' Time ',TIME
+         call abort
+      END IF
+      
 *       Initialize forces & first differences for body #I.
       DO 10 K = 1,3
           FI(K,I) = 0.0D0

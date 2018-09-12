@@ -543,12 +543,16 @@ C     STEP(I2) = DTMAX
                       X0DOT(K,J) = XDOT(K,J)
                       X0(K,J) = X(K,J)
    25             CONTINUE
+*       The ghost particles are not removed completely after cmbody (only perturber list is checked)
+*       To avoid ghost particle get new step
+                  IF(BODY(J).GT.0) THEN
 *     Remove J particle first from NXTLST
-                  call delay_remove_tlist(J,STEP,DTK)
-                  CALL FPOLY1(J,J,0)
-                  CALL FPOLY2(J,J,0)
+                     call delay_remove_tlist(J,STEP,DTK)
+                     CALL FPOLY1(J,J,0)
+                     CALL FPOLY2(J,J,0)
 *     Add J particle into NLSTDELAY
-                  call delay_store_tlist(J)
+                     call delay_store_tlist(J)
+                  END IF
    30         CONTINUE
           END IF
           TPREV = TIME - STEPX

@@ -274,7 +274,8 @@ C          IF(NCOLL.EQ.0)THEN
      &         '               M(INEW)[M*]                    DM[M*]',
      &         '                RS(I1)[R*]                RS(I2)[R*]',
      &         '                    RI[RC]                   R12[R*]',
-     &         '                       ECC                   P[days]',/)
+     &         '                       ECC                  SEMI[R*]',
+     &         '                   P[days]'/)
       ENDIF
 *
 *       Form central distance (scaled by RC) and period in days.
@@ -296,7 +297,7 @@ C          IF(NCOLL.EQ.0)THEN
 *       Accumulate collision diagnostics on unit #13 (filename COLL).
       IF (rank.eq.0.and.IQCOLL.NE.3) THEN
           WRITE (13,*)  TTOT, (ITYPE(K),K=1,5), M1, M2, M3,
-     &                   DM*ZMBAR, RS1, RS2, RI/RC, RIJ*SU, ECC, TK
+     &        DM*ZMBAR, RS1, RS2, RI/RC, RIJ*SU, ECC, SEMI*SU,TK
 C   35     FORMAT (1X,F7.1,2I6,3I4,4F5.1,2F7.2,F6.2,F7.2,F9.5,1P,E9.1)
           CALL FLUSH(13)
       END IF

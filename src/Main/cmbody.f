@@ -684,11 +684,12 @@ C     STEP(I2) = DTMAX
 *
 *       Open the second coalescence unit #26 first time.
       IF (FIRST.AND.(IQCOLL.EQ.3.OR.KSTARI.GE.10)) THEN
-          OPEN (UNIT=26,STATUS='UNKNOWN',FORM='FORMATTED',FILE='COAL2')
+          OPEN (UNIT=26,STATUS='UNKNOWN',FORM='FORMATTED',
+     &        FILE='coal.26',ACCESS='APPEND')
           FIRST = .FALSE.
 *
 *       Print cluster scaling parameters at start of the run.
-          if(rank.eq.0)then
+          if(rank.eq.0.and.TTOT.eq.0)then
           WRITE (26,82)  RBAR, BODYM*ZMBAR, BODY1*ZMBAR, TSCALE,
      &                   NBIN0, NZERO
    82     FORMAT (/,4X,'MODEL:    RBAR =',F5.1,'  <M> =',F6.2,
@@ -710,6 +711,7 @@ C     STEP(I2) = DTMAX
      &           '           RI/RC          ',
      &           '           R12[R*]        ',
      &           '           ECC            ',
+     &           '          SEMI[R*]        ',
      &           '           P[days]        ')
           end if
       END IF
@@ -726,7 +728,7 @@ C     STEP(I2) = DTMAX
 *
           WRITE (26,*)  TTOT, NAME1, NAME2, KSTAR(I1), KSTAR(I2),
      &                   IQCOLL, ZM1, ZM2, DM*ZMBAR, R1, R2, RI/RC,
-     &                   RCOLL*SU, ECC, TK
+     &                   RCOLL*SU, ECC, SEMI*SU, TK
 C   86     FORMAT (1X,1P,E17.10,2I8,3I4,3F5.1,2F7.2,F6.2,F7.2,F9.5,
 C     &         1P,E9.1)
           CALL FLUSH(26)

@@ -74,7 +74,7 @@
 
 #ifdef TRACE_STAR
 *     Initial star trace
-      IF (KZ(49).EQ.1.and.rank.eq.0) then
+      IF (KZ(48).EQ.1.and.rank.eq.0) then
          read (5,*) NAMEST,NAMEED
          write(6,*) 'STAR TRACE: NAME start: ',NAMEST,
      &        ' NAME end: ',NAMEED

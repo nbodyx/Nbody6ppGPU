@@ -140,7 +140,7 @@
                CALL custom_output(NXTLEN,NXTLST,
      &              NXTLIMIT,NGHOSTS)
 #ifdef TRACE_STAR
-               IF (KZ(49).EQ.1.and.rank.eq.0) then
+               IF (KZ(48).EQ.1.and.rank.eq.0) then
                   call star_trace(NXTLEN,NXTLST)
                END IF 
 #endif
@@ -1274,7 +1274,7 @@ c$$$         ttmov = ttmov +(tt334-tt333)*60
          call custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS,IMINR)
       END IF
 #ifdef TRACE_STAR
-      IF (KZ(49).EQ.1.and.rank.eq.0) then
+      IF (KZ(48).EQ.1.and.rank.eq.0) then
          call star_trace(NXTLEN,NXTLST)
       END IF 
 #endif

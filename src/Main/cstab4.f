@@ -76,39 +76,52 @@
       SEMI2 = 2.0/RB2 - VREL34/MB2
       SEMI2 = 1.0/SEMI2
 *
-*       Skip if innermost triple is not stable (including ECC > 1).
+*       Obtain the inclination.
+      CALL INCLIN(XX,VV,XCM,VCM,ALPHA)
+
+*     Skip if innermost triple is not stable (including ECC > 1).
       IF (SEMI.LT.0.0.OR.ECC.GT.1.0) THEN
           ITERM = 1
           GO TO 40
       END IF
-      PCRIT0 = stability(M(I1),M(I2),M(I3),ECC,ECC1,0.0D0)*SEMI
-      PMIN0 = SEMI*(1.0 - ECC)
-      IF (PMIN0.LT.PCRIT0) THEN
+*       Evaluate the Valtonen stability criterion.
+      QST = QSTAB(ECC,ECC1,ALPHA,M(I1),M(I2),M(I3))
+      PMIN = SEMI1*(1.0D0 - ECC1)
+      IF (QST*SEMI.LT.PMIN) THEN
+*       Allow for small theoretical correction factor.
+          ZF = ABS(SEMI2)/SEMI
+          ZF = MIN(ZF,0.2)
+          PCRIT = QST*SEMI*(1.0 + 0.1*ZF)
+      ELSE
           ITERM = 1
           GO TO 40
       END IF
+      
+*      PCRIT0 = stability(M(I1),M(I2),M(I3),ECC,ECC1,0.0D0)*SEMI
+*      PMIN0 = SEMI*(1.0 - ECC)
+*      IF (PMIN0.LT.PCRIT0) THEN
+*          ITERM = 1
+*          GO TO 40
+*      END IF
 *
-*       Obtain the inclination.
-      CALL INCLIN(XX,VV,XCM,VCM,ALPHA)
 *
-*       Use the general stability formula for the widest binary.
-      IF (SEMI.GT.SEMI2) THEN
-          PCRIT = stability(M(I1),M(I2),MB2,ECC,ECC1,ALPHA)
-          AIN = SEMI
-      ELSE IF (SEMI2.GT.0.0) THEN
-          PCRIT = stability(M(I3),M(I4),MB,0.0D0,ECC1,ALPHA)
-          AIN = SEMI2
-      ELSE
-          AIN = 0.0
-          PCRIT = 0.0
-      END IF
-      PCRIT = PCRIT*(1.0 + 0.1*ABS(SEMI/SEMI2))*AIN
+C*       Use the general stability formula for the widest binary.
+C      IF (SEMI.GT.SEMI2) THEN
+C          PCRIT = stability(M(I1),M(I2),MB2,ECC,ECC1,ALPHA)
+C          AIN = SEMI
+C      ELSE IF (SEMI2.GT.0.0) THEN
+C          PCRIT = stability(M(I3),M(I4),MB,0.0D0,ECC1,ALPHA)
+C          AIN = SEMI2
+C      ELSE
+C          AIN = 0.0
+C          PCRIT = 0.0
+C      END IF
+C      PCRIT = PCRIT*(1.0 + 0.1*ABS(SEMI/SEMI2))*AIN
 *
 *       Check hierarchical stability condition for bound close pair.
       ITERM = 0
-      PMIN = SEMI1*(1.0D0 - ECC1)
-      IF (PMIN.GT.PCRIT.AND.AIN.GT.0.0.AND.SEMI1.GT.0.0.AND.
-     &    RB.GT.SEMI) THEN
+      IF (PMIN.GT.PCRIT.AND.RB.GT.SEMI.AND.RDOT3.GT.0.0.AND.
+     &    R3.GT.4.0*SEMI) THEN
           ITERM = -1
           ALPHA = 180.0*ALPHA/3.14
           if(rank.eq.0)
@@ -117,13 +130,12 @@
      &                     '  A =',1P,E8.1,'  A1 =',E8.1,'  PM =',E9.2,
      &                     '  PC =',E9.2,'  IN =',0P,F6.1)
           RI = SQRT(CM(1)**2 + CM(2)**2 + CM(3)**2)
-          EMAX = 0.0
           if(rank.eq.0)
-     &    WRITE (81,30)  TIMEC, RI, NAMEC(I3), ECC, ECC1, EMAX, SEMI,
+     &    WRITE (81,30)  TIMEC, RI, NAMEC(I3), ECC, ECC1, SEMI,
      &         SEMI1, PCRIT/PMIN, ALPHA 
    30     FORMAT ('CSTAB4:  TIMEC[NB] RI[NB] NAME(I3) ECC0 ',
-     &         'ECC1 ECCMAX SEMI0[NB] SEMI1[NB] PCR/PERIM INA[deg] ',
-     &         1P,2E15.6,0P,I12,3F6.2,1P,2E12.4,0P,F12.5,F6.3)
+     &         'ECC1 SEMI0[NB] SEMI1[NB] PCR/PERIM INA[deg] ',
+     &         1P,2E15.6,0P,I12,2F6.2,1P,2E12.4,0P,F12.5,F6.3)
           CALL FLUSH(81)
       END IF
 *

@@ -715,21 +715,25 @@ C          write(6,*) 'TIMEC',TIMEC,'TSMIN',TSMIN,'NP',NPERT
           TIMEC = CHTIME
 *     Temporary Output RSP Sep 2017
           IF (rank.eq.0.and.KZ30.GT.2) THEN
-             KK = 0
-             DO 305 K = 1,N
-                RI(K) = SQRT(X(KK+1)**2 + X(KK+2)**2 + X(KK+3)**2)
-                VI(K) = SQRT(V(KK+1)**2 + V(KK+2)**2 + V(KK+3)**2)
- 305            KK = KK + 3
-                WRITE (6,55)  NSTEP1, T0S(ISUB)+TIMEC, TMAX-TIMEC,
-     &               (1.0/RINV(K),K=1,N-1)
-                WRITE (6,302) TIMEC,ECH,ENERGY1-ECH,
-     &               (K,M(K),SIZE(K),RI(K),VI(K),K=1,N)
- 55             FORMAT (' CHAIN:  NSTEP TIME DTR R[1:N-1]',
-     &               I5,F10.4,1P,7E9.1)
- 302            FORMAT (' CHAIN CHTIME[NB] ECH[NB] DECH[NB]',
-     &               ' M[NB],RS[R*],',
-     &               'R[NB],V[NB-CH]=',
-     &               1P,3E17.6,10(I4,4E12.5))
+C             KK = 0
+C             DO K = 1,N
+C                RI(K) = SQRT(X(KK+1)**2 + X(KK+2)**2 + X(KK+3)**2)
+C                VI(K) = SQRT(V(KK+1)**2 + V(KK+2)**2 + V(KK+3)**2)
+C                KK = KK + 3
+C             END DO
+             WRITE (6,55)  NSTEP1, T0S(ISUB)+TIMEC, TMAX-TIMEC,
+     &            ECh,ENERGY1-ECH,NPERT,GPERT,
+     &            (1.0/RINV(K),K=1,N-1)
+ 55          FORMAT (' CHAIN:  NSTEP ',I8,' TIME ',1P,E25.14,
+     &            ' DTR ',E25.15,' ECH ',E12.5,' DECH ',E12.5,
+     &            ' NP ',0P,I5,' GPERT ',1P,E12.5,
+     &            ' R[1:N-1]',5E9.1)
+C                WRITE (6,302) TIMEC,ECH,ENERGY1-ECH,
+C     &               (K,M(K),SIZE(K),RI(K),VI(K),K=1,N)
+C 302            FORMAT (' CHAIN CHTIME[NB] ECH[NB] DECH[NB]',
+C     &               ' M[NB],RS[R*],',
+C     &               'R[NB],V[NB-CH]=',
+C     &               1P,3E17.6,10(I4,4E12.5))
            END IF
 *       Avoid checking after switch (just in case).
           IF (ISW.LE.1) THEN

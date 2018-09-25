@@ -8,7 +8,7 @@
 *
 *
 *       Check for unreasonable input parameters (initial & restart).
-      IF (N.GE.NMAX - 2.OR.NNBMAX.GT.LMAX - 3.OR.NNBOPT.GT.NNBMAX) THEN
+      IF (N.GE.NMAX - 2.OR.NNBMAX.GT.LMAX - 50.OR.NNBOPT.GT.NNBMAX) THEN
           if(rank.eq.0)
      &    WRITE (6,10)  N, NNBMAX, NNBOPT
    10     FORMAT (/,5X,'FATAL ERROR!   BAD INPUT   N =',I6,

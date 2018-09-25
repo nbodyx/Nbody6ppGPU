@@ -340,7 +340,7 @@
       IF (NSUB.EQ.0.AND.KZ(2).GE.1) THEN
           IF (TIME - TDUMP.LT.TIME4) THEN
               TDUMP = TIME
-              CALL MYDUMP(1,2)
+              CALL MYDUMP(1,203)
           END IF
       END IF
 *

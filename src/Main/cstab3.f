@@ -78,27 +78,45 @@ C      Q13 = Q1**0.33333
 C      AR = 1.0 + 3.7/Q3 - 2.2/(1.0 + Q3) + 1.4/Q13*(Q3 - 1.0)/(Q3 + 1.0)
 *
 C      EK = AR*SEMI*(1.0D0 + ECC)
-      PMIN = SEMI1*(1.0D0 - ECC1)
-*
-*       Replace the EK criterion by the MA analytical stability formula.
-      Q0 = M(I3)/MB
-      IF (ECC1.LT.1.0) THEN
-          XFAC = (1.0 + Q0)*(1.0 + ECC1)/SQRT(1.0 - ECC1)
-      ELSE
-          XFAC = 40.0*(1.0 + Q0)
-      END IF
-      FE = 1.0
-      PCRIT = 2.8*FE*XFAC**0.4*SEMI
-*
+C      PMIN = SEMI1*(1.0D0 - ECC1)
+C*
+C*       Replace the EK criterion by the MA analytical stability formula.
+C      Q0 = M(I3)/MB
+C      IF (ECC1.LT.1.0) THEN
+C          XFAC = (1.0 + Q0)*(1.0 + ECC1)/SQRT(1.0 - ECC1)
+C      ELSE
+C          XFAC = 40.0*(1.0 + Q0)
+C      END IF
+C      FE = 1.0
+C      PCRIT = 2.8*FE*XFAC**0.4*SEMI
+C*
 *       Obtain the inclination.
       CALL INCLIN(XX,VV,XCM,VCM,ALPHA)
-*
-*       Include fudge factor for inclination effect.
-      YFAC = 1.0 - 0.3*ALPHA/3.14
-      PCRIT = YFAC*PCRIT
+C*
+C*       Include fudge factor for inclination effect.
+C      YFAC = 1.0 - 0.3*ALPHA/3.14
+C      PCRIT = YFAC*PCRIT
 *
 *       Check hierarchical stability condition for 3 + 1 configuration.
       ITERM = 0
+*       Skip if innermost triple is not bound (including ECC & ECC1 > 1).
+      IF (SEMI.LT.0.0.OR.ECC.GT.1.0.OR.ECC1.GT.1.0) THEN
+          ITERM = 1
+          GO TO 40
+      END IF
+*       Evaluate the Valtonen stability criterion.
+      QST = QSTAB(ECC,ECC1,ALPHA,M(I3),M(I4),MB)
+      PMIN = SEMI1*(1.0D0 - ECC1)
+      IF (QST*SEMI.LT.PMIN) THEN
+*       Allow for small theoretical correction factor.
+          ZF = ABS(SEMI)/SEMI1
+          ZF = MIN(ZF,0.2)
+          PCRIT = QST*SEMI*(1.0 + 0.1*ZF)
+      ELSE
+          ITERM = 1
+          GO TO 40
+      END IF
+      
       IF (PMIN.GT.PCRIT.AND.SEMI1.GT.0.0.AND.SEMI4.GT.0.0.AND.
      &    RB.GT.SEMI) THEN
           G4 = 2.0*M(I4)/MB4*(R3/R4)**3
@@ -120,8 +138,8 @@ C      EK = AR*SEMI*(1.0D0 + ECC)
               GO TO 40
           END IF
 *
-*       Continue chain integration if outer orbit unstable or large pert.
-          IF (PMIN4.LT.ZCRIT.OR.G4.GT.0.2) GO TO 40
+C*       Continue chain integration if outer orbit unstable or large pert.
+C          IF (PMIN4.LT.ZCRIT.OR.G4.GT.0.2) GO TO 40
 *
           ITERM = -1
           if(rank.eq.0)
@@ -130,13 +148,12 @@ C      EK = AR*SEMI*(1.0D0 + ECC)
      &                     '  A1 =',E8.1,'  PM =',E9.2,'  PC =',E9.2,
      &                     '  P/Z =',0P,F5.2)
           RI = SQRT(CM(1)**2 + CM(2)**2 + CM(3)**2)
-          EMAX = 0.0
           if(rank.eq.0)
-     &    WRITE (81,30)  TIMEC, RI, NAMEC(I3), ECC, ECC1, EMAX,
+     &    WRITE (81,30)  TIMEC, RI, NAMEC(I3), ECC, ECC1, 
      &                   SEMI, SEMI1, PCRIT/PMIN, 180.*ALPHA/3.14
    30     FORMAT ('CSTAB3:  TIMEC[NB] RI[NB] NAME(I3) ECC0 ',
-     &         'ECC1 ECCMAX SEMI0[NB] SEMI1[NB] PCR/PERIM INA[deg] ',
-     &         1P,2E15.6,0P,I12,3F6.2,1P,2E12.4,0P,F12.5,F6.3)
+     &         'ECC1 SEMI0[NB] SEMI1[NB] PCR/PERIM INA[deg] ',
+     &         1P,2E15.6,0P,I12,2F6.2,1P,2E12.4,0P,F12.5,F6.3)
           CALL FLUSH(81)
       END IF
 *

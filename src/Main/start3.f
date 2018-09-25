@@ -64,9 +64,25 @@
     7     CONTINUE
     8 CONTINUE
 *
+C      call adjust
+CC      call xbpredall
+C      DO I =1,NTOT
+C         write(333,*) I,NAME(I),BODY(I),X(1:3,I),XDOT(1:3,I)
+C      END DO
 *       Calculate internal energy and include in total subsystem energy.
       CALL TRANS3(0)
       ESUB = ESUB + 0.5D0*ENERGY
+
+C      EKINMM = 0
+C      DO K =1,3
+C         J = NAME3(K)
+C         write(6,*) J,NAME(J),BODY(J),X(1:3,J), XDOT(1:3,J)
+C         EKINMM = EKINMM + 0.5*BODY(J)*(XDOT(1,J)**2+XDOT(2,J)**2
+C     &        +XDOT(3,J)**2)
+C      END DO
+C      write(6,*) 'CM:',CM(7),CM(1:6)
+C      write(6,*) 'EKINCM', 0.5*CM(7)*(CM(4)**2+CM(5)**2+CM(6)**2),
+C     &     'EKINMM',EKINMM
 *
 *       Save global indices & particle attributes of subsystem.
       DO 10 L = 1,3
@@ -329,13 +345,17 @@
       IF (NSUB.EQ.0.AND.KZ(2).GE.1) THEN
           IF (TIME - TDUMP.LT.TIME3) THEN
               TDUMP = TIME
-              CALL MYDUMP(1,2)
+              CALL MYDUMP(1,203)
           END IF
       END IF
 *
 *       Set phase indicator = -1 to ensure new time-step list in INTGRT.
   180 IPHASE = -1
 *
+C      DO I =1,NTOT
+C         write(334,*) I,NAME(I),BODY(I),X(1:3,I),XDOT(1:3,I)
+C      END DO
+C      call adjust 
       RETURN
 *
 *       Form the current perturber list.

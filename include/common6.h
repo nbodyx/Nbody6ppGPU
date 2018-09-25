@@ -77,5 +77,5 @@
      &               KSLOW(KMAX),TBLIST
 
 *     Not dump common variables
-      COMMON/LISTS/  ILIST(NMAX),JLIST(NMAX),JPERT(5*LMAX)
+      COMMON/LISTS/  ILIST(NMAX),JLIST(NMAX),JPERT(NMAX)
 *

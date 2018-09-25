@@ -75,10 +75,12 @@
       SEMI0 = 1.0/SEMI0
       IF (SEMI0.LT.0.0.OR.ECC.GT.1.0) GO TO 40
       ECC0 = SQRT((1.0 - RB0/SEMI0)**2 + RDOT**2/(SEMI0*MB))
-      PCRIT0 = stability(M(I1),M(I2),M(I3),ECC0,ECC,0.0D0)*SEMI0
-*       Allow 10% extra with MA 1999 (proper test done for outer triple).
-      PMIN0 = 1.1*SEMI*(1.0 - ECC)
-      IF (PMIN0.LT.PCRIT0) GO TO 40
+*       Obtain the inclination (in radians).
+      CALL INCLIN(XX,VV,XCM3,VCM3,ALPHA)
+*       Evaluate the Valtonen stability criterion.
+      QST = QSTAB(ECC0,ECC,ALPHA,M(I1),M(I2),M(I3))
+      PCRIT0 = QST*SEMI0
+      IF (SEMI*(1.0 - ECC).LT.QST*SEMI0) GO TO 40
 *
 *       Form hierarchical stability ratio (Eggleton & Kiseleva 1995).
 *     QL = MB1/M(I4)
@@ -88,48 +90,49 @@
 *     AR = 1.0 + 3.7/Q3 - 2.2/(1.0 + Q3) + 1.4/Q13*(Q3 - 1.0)/(Q3 + 1.0)
 *
 *     EK = AR*SEMI*(1.0D0 + ECC)
-      PMIN = SEMI1*(1.0D0 - ECC1)
+C      PMIN = SEMI1*(1.0D0 - ECC1)
 *
 *       Obtain the inclination (in radians).
-      CALL INCLIN(XX,VV,XCM3,VCM3,ALPHA)
+C      CALL INCLIN(XX,VV,XCM3,VCM3,ALPHA)
 *
 *       Replace the EK criterion by the MA 1999 stability formula.
-      PC99 = stability(MB,M(I3),M(I4),ECC,ECC1,ALPHA)*SEMI
+C      PC99 = stability(MB,M(I3),M(I4),ECC,ECC1,ALPHA)*SEMI
 *
 *       Evaluate the general stability function.
-      IF (ECC1.LT.1.0) THEN
-          NST = NSTAB(SEMI,SEMI1,ECC,ECC1,ALPHA,MB,M(I3),M(I4))
-          IF (NST.EQ.0) THEN
-              PCRIT = 0.99*PMIN
-          ELSE
-              PCRIT = 1.01*PMIN
-          END IF
-      ELSE
-          PCRIT = 1.01*PMIN
-      END IF
+C      IF (ECC1.LT.1.0) THEN
+C          NST = NSTAB(SEMI,SEMI1,ECC,ECC1,ALPHA,MB,M(I3),M(I4))
+C          IF (NST.EQ.0) THEN
+C              PCRIT = 0.99*PMIN
+C          ELSE
+C              PCRIT = 1.01*PMIN
+C          END IF
+C      ELSE
+C          PCRIT = 1.01*PMIN
+C      END IF
 *
 *       Check hierarchical stability condition (SEMI1 > 0 => ECC1 < 1).
-      ITERM = 0
-      IF (PMIN.GT.PCRIT.AND.SEMI.GT.0.0.AND.SEMI1.GT.0.0) THEN
+C      ITERM = 0
+      PMIN0 = SEMI*(1.0 - ECC)
+      PMIN = SEMI1*(1.0D0 - ECC1)
+      IF (PMIN.GT.QST*SEMI.AND.SEMI.GT.0.0.AND.SEMI1.GT.0.0) THEN
           ITERM = -1
           if(rank.eq.0)then
-          WRITE (6,20)  ECC, ECC1, SEMI, SEMI1, PMIN, PCRIT, PC99
+          WRITE (6,20)  ECC, ECC1, SEMI, SEMI1, PMIN, QST*SEMI
    20     FORMAT (' CSTAB2    ECC0 =',F6.3,'  ECC1 =',F6.3,
      &         '  SEMI0[NB] =',1P,E8.1,
-     &         '  SEMI1 =',E8.1,'  PERIM =',E9.2,'  PCR =',E9.2,
-     &         '  PC99 =',E9.2)
-          WRITE (6,25)  NAMEC(I1), NAMEC(I2), ECC0, SEMI0, PMIN0, PCRIT0
-   25     FORMAT (' INNER TRIPLE    NAM E0 A0 PM0 PC0 ',
-     &                              2I6,F7.3,1P,3E10.2)
+     &         '  SEMI1 =',E8.1,'  PERIM =',E9.2,'  QST =',E9.2)
+          WRITE (6,25)  NAMEC(I1), NAMEC(I2), ECC0, SEMI0, PMIN0,
+     &         PCRIT0, QST
+   25     FORMAT (' INNER TRIPLE    NAM E0 A0 PM0 PC0 QST',
+     &                              2I6,F7.3,1P,4E10.2)
           end if
           RI = SQRT(CM(1)**2 + CM(2)**2 + CM(3)**2)
-          EMAX = 0.0
           if(rank.eq.0)
-     &    WRITE (81,30)  TIMEC, RI, NAMEC(I3), ECC, ECC1, EMAX
-     &                   SEMI, SEMI1, PCRIT/PMIN, 180.*ALPHA/3.14 
+     &    WRITE (81,30)  TIMEC, RI, NAMEC(I3), ECC, ECC1, 
+     &                   SEMI, SEMI1, PCRIT/PMIN, 180.*ALPHA/3.1415 
    30     FORMAT ('CSTAB2:  TIMEC[NB] RI[NB] NAME(I3) ECC0 ',
-     &         'ECC1 ECCMAX SEMI0[NB] SEMI1[NB] PCR/PERIM INA[deg] ',
-     &         1P,2E15.6,0P,I12,3F6.2,1P,2E12.4,0P,F12.5,F6.3)
+     &         'ECC1 SEMI0[NB] SEMI1[NB] PCR/PERIM INA[deg] ',
+     &         1P,2E15.6,0P,I12,2F6.2,1P,2E12.4,0P,F12.5,F6.3)
           CALL FLUSH(81)
       END IF
 *

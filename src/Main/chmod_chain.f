@@ -275,6 +275,7 @@ c$$$          END IF
 *
 *       Determine index of escaper candidate (single star or binary).
       KCASE = 0
+      IESC = 0
       JESC = 0
 *       Distinguish two cases of each type (beginning & end of chain).
       IF (ISORT(1).EQ.1) THEN
@@ -330,11 +331,6 @@ c$$$          END IF
 *       Include safety test for abnormal configuration.
       IF (KCASE.EQ.0) GO TO 60
 *
-      IF (rank.eq.0.and.KZ(30).GT.2) THEN
-          WRITE (6,12)  IESC, JESC, NSTEP1, ISORT(1),
-     &                  (1.0/RINV(K),K=1,NN-1)
-   12     FORMAT (' CHMOD:    IESC JESC # ISORT1 R ',2I3,I6,I3,1P,5E9.1)
-      END IF
 *
 *       Copy chain variables to standard form.
       LK = 0
@@ -404,15 +400,17 @@ c$$$          END IF
 *       Decide between weakly bound and escape orbit (RMAXS may be large).
           IF (RDOT**2.LT.2.0*BODY(ICH)/RI) THEN
 *       Define effective perturbation using remaining size.
-              GB = 2.0*BCM/(BODY(ICH) - BCM)*((RSUM - RJB - RB)/RI)**3
+              GB1 = 2.0*BCM/(BODY(ICH) - BCM)*((RSUM - RJB - RB)/RJB)**3
+              GB2 = 2.0*(BODY(ICH) - BCM)/BCM*(RB/RJB)**3
 *       Split into two KS solutions if binaries are well separated.
-              IF (NCH.EQ.4.AND.GB.LT.0.001) THEN
+              IF (NCH.EQ.4.AND.MAX(GB1,GB2).LT.0.001) THEN
+                 write(6,*) 'GB',GB1,GB2,'RSUM RJB RB',RSUM,RJB,RB
                   KCASE = -1
                   GO TO 50
               END IF
 *       Enforce termination if RI > MIN(RMAXS/2,RMIN) and NCH <= 4.
-              IF (RI.GT.MIN(0.5*RMAXS(ISUB),RMIN).AND.NCH.LE.4) THEN
-                  KCASE = -1
+              IF (RI.GT.0.5*RMAXS(ISUB).AND.NCH.LE.4) THEN
+                  KCASE = -2
                   GO TO 50
 *       Accept binary escape for small perturbation & V**2 > M/R (NCH > 4).
               ELSE IF (GB.LT.0.01.AND.NCH.GT.4.AND.
@@ -430,7 +428,7 @@ c$$$          END IF
 *       Ensure RSUM > 0.1*RMIN for reducing differential force corrections.
                       IF (R13.LT.0.2/RINV(2).AND.VC2.GT.1.0.AND.
      &                    RSUM.GT.0.1*RMIN) THEN
-                          KCASE = -1
+                          KCASE = -3
                           GO TO 50
                       END IF
                   END IF
@@ -454,7 +452,7 @@ c$$$          END IF
               END IF
 *       Enforce termination (KCASE < 0) if NCH <= 4 (final membership <= 2).
               IF (NCH.LE.4) THEN
-                  KCASE = -1
+                  KCASE = -4
                   GO TO 50
               END IF
               CM(9) = CM(9) - EB
@@ -499,7 +497,7 @@ C*              FAC2 = 2.0*BODY(IESC)/(BODY(ICH) - BODYC(IESC))
                   IB = ISORT(NN-1)
 *       Prevent NN = 4 termination near small pericentre (subject to safety).
                   IF (1.0/RINV(IB).GT.0.1*RGRAV.OR.RSUM.GT.RMIN) THEN
-                      KCASE = -1
+                      KCASE = -5
                       GO TO 50
                   ELSE
                       KCASE = 0
@@ -537,7 +535,7 @@ C*     &            (NN.EQ.3.AND.GI.GT.0.1)) THEN
                           KCASE = 0
                           GO TO 60
                       END IF
-                      KCASE = -1
+                      KCASE = -6
                       GO TO 60
                   ELSE
                       KCASE = 1
@@ -561,7 +559,7 @@ C*     &            (NN.EQ.3.AND.GI.GT.0.1)) THEN
      &            RSUM.GT.0.5*RMIN) THEN
                   CALL CHSTAB(ITERM)
                   IF (ITERM.LT.0) THEN
-                      KCASE = -1
+                      KCASE = -7
                       GO TO 60
                   END IF
               END IF
@@ -630,12 +628,19 @@ C*     &            (NN.EQ.3.AND.GI.GT.0.1)) THEN
           RSUM = RSUM - 1.0/RINV(IM) - RB
           CALL REDUCE(IESC,JESC,ISUB)
       ELSE
-          KCASE = -1
+          KCASE = -8
       END IF
 *
 *       Set phase indicator < 0 to ensure new time-step list in INTGRT.
    50 IPHASE = -1
 *
-   60 RETURN
+   60 IF (KCASE.NE.0.and.rank.eq.0.and.KZ(30).GT.2) THEN
+          WRITE (6,12)  IESC, JESC, KCASE, NSTEP1, ISORT(1), GPERT,
+     &                  (1.0/RINV(K),K=1,NN-1)
+   12     FORMAT (' CHMOD:    IESC JESC KCASE # ISORT1 GPERT R ',
+     &         3I3,I6,I3,1P,5E9.1)
+      END IF
+
+      RETURN
 *
       END

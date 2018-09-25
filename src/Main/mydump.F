@@ -76,9 +76,14 @@
                print*,' MYDUMP ',TTOT,TCHAR,J,FILE(J)
                OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',
      &              FILE=FILE(J))
-            else 
-               OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',
-     &              FILE=FILECOMM(J))
+            else
+               if(J.LE.2) then
+                  OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',
+     &                 FILE=FILECOMM(J))
+               ELSE
+                  OPEN (UNIT=J,STATUS='UNKNOWN',FORM='UNFORMATTED',
+     &                 FILE='comm.203')
+               end if 
             end if
 *
 *     Also write params.h to help data transfer
@@ -215,10 +220,10 @@
            
            READ (J) ntot,npairs,nttot,ia,b,c,d,e,g,l,m,o,p,q,s
 
-            PRINT*,' R MYDUMP J,II,NPARTMP=',J,II,NPARTMP,
-     *             ' ntot,npairs,nttot=',ntot,npairs,nttot,
-     *      ' sum na+...+ns=',NA+NB+NC+ND+NE+NG+NL+NM+NO+NP+NQ+NS
-            PRINT*,' NA-NS=',NA,NB,NC,ND,NE,NG,NL,NM,NO,NP,NQ,NS
+C            PRINT*,' R MYDUMP J,II,NPARTMP=',J,II,NPARTMP,
+C     *             ' ntot,npairs,nttot=',ntot,npairs,nttot,
+C     *      ' sum na+...+ns=',NA+NB+NC+ND+NE+NG+NL+NM+NO+NP+NQ+NS
+C            PRINT*,' NA-NS=',NA,NB,NC,ND,NE,NG,NL,NM,NO,NP,NQ,NS
 
         end if
 *

@@ -237,12 +237,10 @@ C      TIME = MIN(TBLOCK,TIME)
                   DO 44 K = 1,NCH
                       IF (J.EQ.JLIST(K)) GO TO 50
    44             CONTINUE
-*       Copy all relevant indices to JPERT (note limit of 5*LMAX).
-                  IF (NNB1.LT.5*LMAX) THEN
-                      NNB1 = NNB1 + 1
-                      JPERT(NNB1) = J
-                      CALL JPRED(J,TIME,TIME)
-                  END IF
+*       Copy all relevant indices to JNBC
+                  NNB1 = NNB1 + 1
+                  JPERT(NNB1) = J
+                  CALL JPRED(J,TIME,TIME)
               END IF
    45     CONTINUE
    50 CONTINUE
@@ -573,7 +571,7 @@ C      TIME = MIN(TBLOCK,TIME)
       IF (NSUB.EQ.0.AND.KZ(2).GT.1) THEN
           IF (TIME - TDUMP.LT.TIMEC) THEN
               TDUMP = TIME
-              CALL MYDUMP(1,2)
+              CALL MYDUMP(1,203)
           END IF
       END IF
 *
@@ -585,7 +583,7 @@ C      TIME = MIN(TBLOCK,TIME)
 *     --03/07/14 23:16-lwang-end----------------------------------------*
 *     --03/03/14 19:59-lwang-debug--------------------------------------*
 ***** Note:------------------------------------------------------------**
-c$$$      call adjust
+CC      call adjust
 c$$$      print*,rank,'nstepi',nstepi,'t',time
 c$$$      call flush(6)
 c$$$      stop

@@ -147,7 +147,7 @@ C$$$      END IF
 *       Include optional stabilization to increase neighbour number.
 *       Take input parameter NNBOPT as optimal neighbour number (R.Sp.)
 *       Note that it substitutes input parameter NNBMAX, which
-*       is now a parameter NNBMAX=LMAX-3
+*       is now a parameter NNBMAX=LMAX-50
 *
 *      FAC = 1.D0
 *      IF (KZ(40).GT.0) THEN

@@ -26,6 +26,7 @@
 
 *
 *
+*      call adjust
 *       Main variables for AZ regularization
 *       ************************************
 *
@@ -174,6 +175,11 @@
 *       Advance the equations of motion by Bulirsch-Stoer integrator.
    30 CALL DIFSY3(NEQ,TOL,DTAU3,TAU3,Y)
 *
+*     Output
+C      IF (rank.eq.0) THEN
+C         write (6,*) 'TRIPLE: TIME[NB] ',TIME3,' NSTEP ',NSTEP,
+C     &        ' DERR ',CM(10),' ENERGY ',ENERGY
+C      END IF
 *       Copy regularized coordinates, momenta & time to COMMON variables.
       DO 40 K = 1,8
           Q(K) = Y(K)
@@ -319,6 +325,7 @@
       IP(3) = IP(IMIN)
       IP(IMIN) = I3
 *
+         
 *       Transform back to regularized variables and initialize input array.
       CALL TRANS3(4)
       DO 60 K = 1,8
@@ -498,6 +505,7 @@
   100 IF (ITERM.GE.0) TS(ISUB) = T0S(ISUB) + TIME3
       ISUB = ITERM
 *
+*      call adjust
       RETURN
 *
       END

@@ -118,7 +118,7 @@ C New: (Aug.1998, P.Kroupa)
 *       Define total particle number & neighbour membership range.
       NTOT = N
       NZERO = N
-      NNBMAX = MIN(N/2,LMAX - 3)
+      NNBMAX = MIN(N/2,LMAX - 50)
       ZNBMIN = MAX(0.01*FLOAT(NNBMAX),1.0)
       ZNBMAX = 0.9*FLOAT(NNBMAX)
 *       Save initial ETAI.

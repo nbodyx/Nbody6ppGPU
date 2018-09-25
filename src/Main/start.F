@@ -273,14 +273,9 @@ c$$$      call abort()
           END IF
       END IF
 *
-*       Adjust NNBMAX (R.Sp.)
- 80   NNBMAX = MIN(N/2,LMAX - 3)
-      ZNBMIN = MAX(0.01*FLOAT(NNBMAX),1.0)
-      ZNBMAX = 0.9*FLOAT(NNBMAX)
-*
 *
 *       Check the average neighbour number.
-      NNB0 = 0
+ 80   NNB0 = 0
       DO 86 I = IFIRST,NTOT
           NNB0 = NNB0 + LIST(1,I)
  86    CONTINUE

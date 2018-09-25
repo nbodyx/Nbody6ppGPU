@@ -127,6 +127,12 @@
 *** FRenaud
 #endif
 
+*     Be safety
+      IF (KZ(39).GT.0) THEN
+         NNBMAX = MIN(N/2,LMAX - 50)
+         ZNBMIN = MAX(0.01*FLOAT(NNBMAX),1.0)
+         ZNBMAX = 0.9*FLOAT(NNBMAX)
+      END IF
 *
 *       Perform a simple validation check on main input parameters.
       CALL VERIFY

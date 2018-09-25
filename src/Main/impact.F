@@ -828,8 +828,8 @@ C     &                                                  0.0D0)*SEMIX
      &        write(6,*) 'IMPACT: L769'
 #endif
           IF (SEMI1.GT.2.0*RMIN) GO TO 16
-      ELSE IF (EB.GT.EBH.OR.EB1.GT.EBS.OR.
-     &         (RA.GT.RFAC.AND.GI.GT.0.1)) THEN
+      ELSE IF ((EB.GT.EBH.OR.EB1.GT.EBS.OR.
+     &         RA.GT.RFAC).AND.GI.GT.0.1) THEN
 C*         quit for hyperbolic case if perturber is merger or chain
 C#ifdef DECISION_CHECK
 C         IF(EB1.GT.0.0.AND.NAME(JCOMP).LE.0)
@@ -837,8 +837,8 @@ C     &        write(6,*) 'IMPACT: EB1(',EB1,')>0 && NAME(JCOMP)<0 L773'
 C#endif
 C         IF(EB1.GT.0.0.AND.NAME(JCOMP).LE.0) GO TO 16
 #ifdef DECISION_CHECK
-          write(6,*) 'IMPACT: EB(',EB,')>EBH(',EBH,')||EB1(',EB1,
-     &     ')>EBS(',EBS,')||(RA(',RA,')>RFAC(',RFAC,') && ',
+          write(6,*) 'IMPACT: (EB(',EB,')>EBH(',EBH,')||EB1(',EB1,
+     &     ')>EBS(',EBS,')||RA(',RA,')>RFAC(',RFAC,') )&& ',
      &        'GI (',GI,')>0.1 L774'
 #endif
           GO TO 16

@@ -21,6 +21,7 @@
      &                ECOLL1,RCOLL,QPERI,ISTAR(NMX),ICOLL,ISYNC,NDISS1
       COMMON/INCOND/  X4(3,NMX),XDOT4(3,NMX)
       REAL*8  FIRR(3),FD(3)
+      INTEGER JNEW(NMX)
 *
 *
 *       Define discrete time for new polynomials (DT2 < 0 is OK).
@@ -193,8 +194,13 @@ C              call exchange_tlist(I,ICH,STEP,DTK)
    52 CONTINUE
 *
 *       Restore ghost to lists of neighbours (body #I will be skipped).
+C      JLIST(1) = ICH
+      JLIST(1) = I
+      JNEW(1) = I
+      JNEW(2) = ICH
+C      CALL NBREST(I,1,NNB)
+      CALL NBCHANGE(JLIST,1,JNEW,2,LIST,1,NTOT)
       JLIST(1) = ICH
-      CALL NBREST(I,1,NNB)
 *
       IF (rank.eq.0.and.KZ(30).GT.1) THEN
           WRITE (6,53)  NAME0, NAME(ICH), ICH
@@ -284,8 +290,13 @@ C   81 FORMAT (' CHECK!   DECM DKP DPOT DKE DE ENER  ',6F10.6)
    82 CONTINUE
 *
 *       Restore ghost to lists of neighbours (body #ICH will be skipped).
+C      JLIST(1) = I
+C      CALL NBREST(ICH,1,NNB)
+      JLIST(1) = ICH
+      JNEW(1) = ICH
+      JNEW(2) = I
+      CALL NBCHANGE(JLIST,1,JNEW,2,LIST,1,NTOT)
       JLIST(1) = I
-      CALL NBREST(ICH,1,NNB)
 *
 *       Make new neighbour list.
       CALL NBLIST(I,RS0)

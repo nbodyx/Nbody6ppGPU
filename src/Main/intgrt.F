@@ -1400,7 +1400,7 @@ c$$$*     --10/27/13 10:33-lwang-end----------------------------------------*
 *       Check optional mass loss time.
       IF (KZ(19).GT.0) THEN
 *       Delay until time commensurate with 1000-year step (new polynomials).
-          IF (NREG.NE.0.AND.TIME.GT.TMDOT
+          IF ((NREG.NE.0.OR.isize.le.1).AND.TIME.GT.TMDOT
      *        .AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
 c$$$          IF (TIME.GT.TMDOT.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
              call cputim(tttmdota)

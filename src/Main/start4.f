@@ -14,6 +14,7 @@
       COMMON/CCOLL/  QK(12),PK(12),ICALL,ICOLL,NDISS4
       COMMON/CLUMP/   BODYS(NCMAX,5),T0S(5),TS(5),STEPS(5),RMAXS(5),
      &                NAMES(NCMAX,5),ISYS(5)
+      INTEGER JOLD(4)
 *
 *
 *       Decide between new run, termination or collision (= 0, > 0, < 0).
@@ -95,7 +96,9 @@
    30 CONTINUE
 *
 *       Remove ghosts from perturber neighbour lists.
-      CALL NBREM(ICM,4,NP)
+      JOLD(1) = ICM
+      CALL NBCHANGE(JLIST,4,JOLD,1,LIST,1,NTOT)
+C      CALL NBREM(ICM,4,NP)
 *
 *       Set maximum integration interval equal to c.m. step.
       TMAX = STEP(ICOMP)
@@ -269,7 +272,9 @@
   160 CONTINUE
 *
 *       Replace ICM in perturber neighbour lists by all subsystem members.
-      CALL NBREST(ICM,4,NP)
+      JOLD(1) = ICM
+      CALL NBCHANGE(JOLD,1,JLIST,4,LIST,1,NTOT)
+C      CALL NBREST(ICM,4,NP)
 *
 *       Check for stellar collision (only needs coordinates & velocities).
       IF (ITERM.LT.0) THEN

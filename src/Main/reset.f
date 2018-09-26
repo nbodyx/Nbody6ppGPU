@@ -14,7 +14,7 @@
       COMMON/BINARY/  CM(4,MMAX),XREL(3,MMAX),VREL(3,MMAX),
      &                HM(MMAX),UM(4,MMAX),UMDOT(4,MMAX),TMDIS(MMAX),
      &                NAMEM(MMAX),NAMEG(MMAX),KSTARM(MMAX),IFLAG(MMAX)
-      INTEGER  JSAVE(LMAX)
+      INTEGER  JSAVE(LMAX),JNEW(MMAX)
 *
 *
       call xbpredall
@@ -144,26 +144,31 @@ C      END DO
    20 CONTINUE
 *
 *       Add #JCOMP to neighbour lists containing ICOMP (KSREG sets c.m.).
-      JLIST(1) = JCOMP
-      CALL NBREST(ICOMP,1,NNB)
-*
-*       Ensure that any rare case of missing second component is included.
-      DO 30 I = 1,NTOT
-          NNB1 = LIST(1,I) + 1
-          DO 25 L = 2,NNB1
-              IF (LIST(L,I).GT.ICOMP) GO TO 30
-*
-*       Now see whether #JCOMP has already been added.
-              DO 22 K = L,NNB1
-                  IF (LIST(K,I).EQ.JCOMP) GO TO 30
-   22         CONTINUE
-*
-*       Specify index #I and add body #JCOMP as above.
-              JPERT(1) = I
-              CALL NBREST(ICOMP,1,1)
-   25     CONTINUE
-   30 CONTINUE
-*
+C      JLIST(1) = JCOMP
+C      CALL NBREST(ICOMP,1,NNB)
+C*
+C*       Ensure that any rare case of missing second component is included.
+C      DO 30 I = 1,NTOT
+C          NNB1 = LIST(1,I) + 1
+C          DO 25 L = 2,NNB1
+C              IF (LIST(L,I).GT.ICOMP) GO TO 30
+C*
+C*       Now see whether #JCOMP has already been added.
+C              DO 22 K = L,NNB1
+C                  IF (LIST(K,I).EQ.JCOMP) GO TO 30
+C   22         CONTINUE
+C*
+C*       Specify index #I and add body #JCOMP as above.
+C              JPERT(1) = I
+C              CALL NBREST(ICOMP,1,1)
+C   25     CONTINUE
+C   30 CONTINUE
+C*
+      JLIST(1) = ICOMP
+      JNEW(1) = ICOMP
+      JNEW(2) = JCOMP
+      CALL NBCHANGE(JLIST,1,JNEW,2,LIST,1,NTOT)
+      
 *       Set dominant F & FDOT on inner components including main intruder.
       JLIST(1) = ICOMP
       JLIST(2) = JCOMP

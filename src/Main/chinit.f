@@ -22,6 +22,7 @@
       COMMON/INCOND/  X4(3,NMX),XDOT4(3,NMX)
       COMMON/ECHAIN/  ECH
       COMMON/SLOW3/   GCRIT,KZ26
+      INTEGER JSAVE(NMX)
 *
 *
 *       Define chain membership.
@@ -130,24 +131,29 @@ c$$$      call flush(6)
 c$$$      call mpi_barrier(MPI_COMM_WORLD,ierr)
 *     --01/03/14 13:06-lwang-end----------------------------------------*
 *
-*       Copy neighbour list for ghost removal.
-      NNB = LIST(1,ICH)
-      DO 20 L = 2,NNB+1
-          JPERT(L-1) = LIST(L,ICH)
-   20 CONTINUE
-*
-*       Check possible switch of reference body on second call from CHAIN.
-      IF (TIMEC.GT.0.0D0.AND.ICH.NE.ICH0) THEN
-*       Add #ICH to neighbour & perturber lists before removing all ghosts.
-          CALL NBREST(ICH0,1,NNB)  
-      END IF
-*
-*       Remove ghosts (saved in JLIST) from neighbour lists of #ICH.
-      CALL NBREM(ICH,NCH,NNB)
-*
-*       Remove ghosts from list of ICOMP (use NTOT as dummy here).
-      JPERT(1) = ICOMP
-      CALL NBREM(NTOT,NCH,1)
+*     Save new ICH
+      JSAVE(1) = ICH
+
+*     Remove ghost and add ich into neighbor list
+      CALL NBCHANGE(JLIST,NCH,JSAVE,1,LIST,1,NTOT)
+      
+C*       Copy neighbour list for ghost removal.
+C      NNB = LIST(1,ICH)
+C      DO 20 L = 2,NNB+1
+C          JPERT(L-1) = LIST(L,ICH)
+C   20 CONTINUE
+C*       Check possible switch of reference body on second call from CHAIN.
+C      IF (TIMEC.GT.0.0D0.AND.ICH.NE.ICH0) THEN
+C*       Add #ICH to neighbour & perturber lists before removing all ghosts.
+C          CALL NBREST(ICH0,1,NNB)  
+C      END IF
+C      
+C*       Remove ghosts (saved in JLIST) from neighbour lists of #ICH.
+C      CALL NBREM(ICH,NCH,NNB)
+C
+C*       Remove ghosts from list of ICOMP (use NTOT as dummy here).
+C      JPERT(1) = ICOMP
+C      CALL NBREM(NTOT,NCH,1)
 *
 *       Initialize perturber list for integration of chain c.m.
       CALL CHLIST(ICH)

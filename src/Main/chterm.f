@@ -237,7 +237,7 @@ C      TIME = MIN(TBLOCK,TIME)
                   DO 44 K = 1,NCH
                       IF (J.EQ.JLIST(K)) GO TO 50
    44             CONTINUE
-*       Copy all relevant indices to JNBC
+*       Copy all relevant indices to JPERT (Used for several places)
                   NNB1 = NNB1 + 1
                   JPERT(NNB1) = J
                   CALL JPRED(J,TIME,TIME)

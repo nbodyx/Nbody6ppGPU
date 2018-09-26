@@ -10,6 +10,7 @@
      &                NAMEM(MMAX),NAMEG(MMAX),KSTARM(MMAX),IFLAG(MMAX)
       CHARACTER*11  WHICH1
       REAL*8  XX(3,3),VV(3,3)
+      INTEGER JNEW(MMAX)
       SAVE ISTAB
       DATA ISTAB /0/
 *
@@ -216,13 +217,18 @@
    30 CONTINUE
 *
 *       Add #JCOMP1 to all neighbour lists containing ICM.
-      JLIST(1) = JCOMP1
-      CALL NBREST(ICM,1,NNB)
-*
-*       Add #ICM to neighbour list of #JCOMP1.
-      JLIST(1) = JCOMP1
+C      JLIST(1) = JCOMP1
+C      CALL NBREST(ICM,1,NNB)
       JPERT(1) = ICM
-      CALL NBREST(ICM,1,1)
+      JNEW(1) = ICM
+      JNEW(2) = JCOMP1
+      CALL NBCHANGE(JPERT,1,JNEW,2,LIST,1,NTOT)
+*
+C*       Add #ICM to neighbour list of #JCOMP1. (useless...)
+C      JLIST(1) = JCOMP1
+C      JPERT(1) = ICM
+C      CALL NBREST(ICM,1,1)
+
 *
 *       Form new neighbour list for #ICM (NB! NBREST(JCOMP1,1,1) skips).
       RS0 = RS(ICM)

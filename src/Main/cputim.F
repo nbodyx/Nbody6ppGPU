@@ -24,9 +24,13 @@
 #endif
 
 #if MPIINIT
-          TCOMP = MPI_WTIME()/60.
+          TCOMP = MPI_WTIME()/60.0
+#else
+#ifdef OMP
+          TCOMP = OMP_GET_WTIME()/60.0
 #else
           TCOMP = ETIME(TARRAY)/60.0
+#endif
 #endif
 *         TCOMP = MCLOCK()/6000.
 *       Elapsed CPU time in minutes on VAX, SUN or MIPS & IBM RS/6000.

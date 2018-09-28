@@ -41,6 +41,7 @@
       SAVE IQ,ICALL,LSTEPM,STEPM,IPSTART,TMIN
 
       REAL*8 DTOUT
+      REAL*8 tttbegin,tttiend
       SAVE DTOUT
 
 
@@ -236,6 +237,7 @@
 #ifdef DEBUG
 *     --07/07/14 23:44-lwang-debug--------------------------------------*
 ***** Note: Check time step--------------------------------------------**
+      call check_tlist
       DO L = 1, NXTLEN
          J=NXTLST(L)
          IF(T0(J)+STEP(J).NE.TMIN) then

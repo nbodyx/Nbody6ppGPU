@@ -61,7 +61,13 @@ c$$$     &           'B_LFAG',B_FLAG
             NDTK(K) = NDTK(K) - 1
             DO LK = K-1,NDTMIN,-1
 *     Shift last index position to beginning of level L
-               NXTLST(NDTK(LK+1)+1) = NXTLST(NDTK(LK))
+               IF(NDTK(LK+1)+1.NE.LK) THEN
+                  NXTLST(NDTK(LK+1)+1) = NXTLST(NDTK(LK))
+*     Avoid the missing -1 if the removed one is the ending of level
+                  IF(L.EQ.NDTK(LK+1)+1.AND.NXTLST(L).GT.I) THEN
+                     NXTLST(L) = NXTLST(L)-1
+                  END IF
+               END IF 
 *     Reduce step level L position by one
                NDTK(LK) = NDTK(LK) - 1
             END DO

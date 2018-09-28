@@ -11,6 +11,10 @@
 *
 *     Remove from NXTLST
       IF(KCASE.EQ.1.AND.TIME+TOFF.NE.0.D0) THEN
+#ifdef DEBUG
+C         write(6,*) 'RM I KCASE',I,KCASE
+         call check_tlist
+#endif
          IF(I.GT.N+1) THEN
             call rmesc_tlist(I,.true.)
          ELSE

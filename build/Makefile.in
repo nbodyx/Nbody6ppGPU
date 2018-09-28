@@ -104,7 +104,7 @@ reduce.f reinit.f renew.f setsys.f tchain.f xcpred.f xtpert.f \
 xbpredall.f jpred.f jpred_int.f fpoly1_ks.f fpoly2_ks.f cmfirr_cor.f cmfirr_ucor.f \
 kcpert_cor.f ksparmpi.f remove_ks.f nbint_cor.f string_left.f \
 sort_tlist.f next_tlist.f shrink_tlist.f repair_tlist.f remove_tlist.f \
-add_tlist.f exchange_tlist.f replace_tlist.f delay_store_tlist.f \
+add_tlist.f exchange_tlist.f replace_tlist.f delay_store_tlist.f check_tlist.f \
 delay_add_tlist.f delay_remove_tlist.f rmesc_tlist.f shift_tlist.f k_step.f \
 imbhinit.f bhplot.f energy.f kspinit.f kspreg.f counter_reset.f util_gpu.f \
 regcor_gpu.f fpoly0.f tail0.f ntint.f xtrnlt.f fbulge.f steps2.f tstep2.f \

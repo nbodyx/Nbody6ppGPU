@@ -198,7 +198,7 @@
       RSI = RS(I)
 *
 *       Accumulate escaper names and save current name in case I > N.
-            PRINT*,' ESCAPE Check POTI PHIDBL=',POTI,PHIDBL(I)
+C            PRINT*,' ESCAPE Check POTI PHIDBL=',POTI,PHIDBL(I)
       NCORR = NCORR + 1
       JLIST(NCORR) = NAME(I)
       NAMEI = NAME(I)
@@ -520,6 +520,12 @@
           NTOT = NTOT - 1
 *       Reduce NTOT by 3 and N by 2 when KS pair escapes.
           CALL REMOVE(I,3)
+#ifdef DEBUG          
+          IF(KCASE.EQ.3) then
+C             write(6,*) 'RM I',I
+             call check_tlist
+          END IF
+#endif
           GO TO 60
       END IF
 *

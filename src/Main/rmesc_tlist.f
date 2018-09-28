@@ -54,9 +54,9 @@ c$$$     &           'B_LFAG',B_FLAG
             IF(L.NE.NDTK(K)) THEN
                NXTLST(L) = NXTLST(NDTK(K))
                IF(NXTLST(L).GT.I) NXTLST(L) = NXTLST(L) - 1
-*     Avoid reduce index in position NXTLIMIT
-            ELSE IF(K.GT.NDTMIN.AND.NXTLST(NDTK(K-1)).GT.I) THEN
-               NXTLST(NDTK(K-1)) = NXTLST(NDTK(K-1)) - 1
+C*     Avoid reduce index in position NXTLIMIT (Wrong)
+C            ELSE IF(K.GT.NDTMIN.AND.NXTLST(NDTK(K-1)).GT.I) THEN
+C               NXTLST(NDTK(K-1)) = NXTLST(NDTK(K-1)) - 1
             END IF
             NDTK(K) = NDTK(K) - 1
             DO LK = K-1,NDTMIN,-1

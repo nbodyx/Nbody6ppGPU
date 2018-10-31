@@ -25,9 +25,10 @@ SIMD_FLAGS = -D SIMD
 HDF5_FLAGS = -D H5OUTPUT
 DEBUG_FLAGS= -D DEBUG -D DECISION_CHECK
 TT_FLAGS= -D TT
+EC_FLAGS= -D ENCOUNTER_RECORD
 INTEL_FLAGS= -D __USE_INTEL -no-wrap-margin
 
-FFLAGS = @FCFLAGS@
+FFLAGS = @FCFLAGS@ ${EC_FLAGS}
 CXXFLAGS = @CXXFLAGS@
 CUFLAGS = @CUFLAGS@
 LDFLAGS = -o $(RESULT)
@@ -36,6 +37,7 @@ MPI_FSOURCES= energy_mpi.f fpoly1_mpi.f fpoly2_mpi.f
 GPU_FSOURCES= phicor.f
 HDF5_FSOURCES= 
 TT_FSOURCES= ttforce.f ttgalaxy.f ttinit.f ttcal.f jacobi_transform.f 
+EC_FSOURCES= encounter_record.f
 
 IRRAVX_OBJECTS=irr.avx.o
 IRRSSE_OBJECTS=irr.sse.o
@@ -48,7 +50,7 @@ CUDA_OBJECTS_SINGLE = gpunb.gpu.o gpupot.gpu.o
 #CUDAOBJECTS = gpunb.gpu.o gpupot.gpu.o
 EXTRATOOLS=nb6++dumpb2a libinitial.so libnb6out3.so nb6++snapshot
 
-EXTRASRC=@EXTRASRC@
+EXTRASRC=@EXTRASRC@ $(EC_FSOURCES)
 EXTRAOBJ=@EXTRAOBJ@
 
 #VISITFLAGS = -DVISIT

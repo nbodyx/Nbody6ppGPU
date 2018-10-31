@@ -827,6 +827,13 @@ c$$$      ttbarnb = ttbarnb + (tt999-tt998)*60
 #endif
 *
 
+#ifdef ENCOUNTER_RECORD
+*     measure encounter rate
+        IF (KZ(45).EQ.1) THEN
+           call encounter_record(NXTLEN,NXTLST)
+        END IF
+#endif
+
 c$$$        call cputim(ttt32)
 c$$$**!$omp parallel do if(NXTLEN.GE.ithread)
 c$$$**!$omp& default(shared) private(L,I,DTR,K)

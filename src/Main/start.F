@@ -44,6 +44,12 @@
 *       Introduce scaling factors DAYS, YRS, SU, RAU, SMU, TSTAR & VSTAR.
       CALL UNITS
 *
+#ifdef ENCOUNTER_RECORD
+      IF (KZ(45).EQ.1) THEN
+         CALL ENCOUNTER_INIT
+      END IF 
+#endif
+
 *       Check option for external force.
       IF (KZ(14).GT.0) THEN
 #ifdef TT
@@ -86,6 +92,20 @@
 
 #endif
 *
+*     Pre collision 
+      IF(KZ(19).GT.0.AND.EPOCH0.eq.0) THEN
+         DO I = I, NBIN0
+            I1 = 2*I - 1
+            I2 = 2*I
+            RIJ2 = 0.0
+*     Include standard distance criterion.
+            DO K = 1,3
+               RIJ2 = RIJ2 + (X(K,I1) - X(K,I2))**2
+            END DO
+            
+         END DO
+      END IF 
+
 *       Set sequential name, maximum mass & primary velocity, initial single/binary total mass
       BODY1 = 0.0
       ZSMASS0 = 0.0

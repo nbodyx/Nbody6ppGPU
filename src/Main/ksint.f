@@ -573,10 +573,10 @@ c$$$          END IF
                       end if
                       CALL FLUSH(55)
                       IF (QPERI.LT.RCOLL) THEN
-c$$$*       Obtain KS variables at pericentre before merging into one body.
-c$$$                          CALL KSPERI(IPAIR)
-c$$$                          KSPAIR = IPAIR
-c$$$                          IQCOLL = -2
+*       Obtain KS variables at pericentre before merging into one body.
+                          CALL KSPERI(IPAIR)
+                          KSPAIR = IPAIR
+                          IQCOLL = -2
 c$$$                          CALL CMBODY(2)
                          IPHASE = -1
                       ELSE IF (KSTAR(I).GE.0.AND.KZ(27).GT.0) THEN
@@ -665,10 +665,10 @@ c$$$                          CALL CMBODY(2)
                       RCOLL = 6.0*BODY(I)/CLIGHT**2
                   END IF
                   IF (QPERI.LT.RCOLL) THEN
-c$$$*       Obtain KS variables at pericentre before merging into one body.
-c$$$                      CALL KSPERI(IPAIR)
-c$$$                      KSPAIR = IPAIR
-c$$$                      IQCOLL = -2
+*       Obtain KS variables at pericentre before merging into one body.
+                     CALL KSPERI(IPAIR)
+                     KSPAIR = IPAIR
+                     IQCOLL = -2
 c$$$                      CALL CMBODY(2)
                      IPHASE = -1
                   ELSE IF (KSTAR(I).GE.0) THEN

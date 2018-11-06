@@ -434,6 +434,8 @@ C     STEP(I2) = DTMAX
       VI = SQRT(XDOT(1,I2)**2 + XDOT(2,I2)**2 + XDOT(3,I2)**2)
       NAME1 = NAME(I1)
       NAME2 = NAME(I2)
+      R1 = RADIUS(I1)*SU
+      R2 = RADIUS(I2)*SU
 *
       DO 20 K = 1,3
           X(K,I1) = CM(K)

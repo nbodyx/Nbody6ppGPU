@@ -4,6 +4,7 @@
 #include <cassert>
 #include <unistd.h>
 #include <omp.h>
+#include <limits>
 #include "vector3.h"
 #include "simd_define.h"
 
@@ -242,8 +243,8 @@ struct Force{
 		const v8sf zero = REP8(0.0f);
 		ax = ay = az = zero;
 		jx = jy = jz = zero;
-
-		v4df tmp = {HUGE, HUGE, HUGE, HUGE};
+        const double DHUGE = std::numeric_limits<double>::max();
+		v4df tmp = {DHUGE, DHUGE, DHUGE, DHUGE};
 		vnnb = (v8sf)tmp;
 	}
 	static double reduce(const v8sf v){

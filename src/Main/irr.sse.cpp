@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
+#include <limits>
 #include <unistd.h>
 #include <omp.h>
 #include "vector3.h"
@@ -227,8 +228,8 @@ struct Force{
 		const v4sf zero = REP4(0.0f);
 		ax = ay = az = zero;
 		jx = jy = jz = zero;
-
-        v2df tmp = {HUGE,HUGE};
+        const double DHUGE = std::numeric_limits<double>::max();
+        v2df tmp = {DHUGE,DHUGE};
         vnnb = (v4sf)tmp;
 	}
  

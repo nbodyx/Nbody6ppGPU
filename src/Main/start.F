@@ -163,26 +163,30 @@
               ICOMP = 2*IPAIR - 1
               JCOMP = 2*IPAIR
               RIJ2 = 0.0
+              VIJ2 = 0.d0
 *       Include standard distance criterion.
               DO 45 K = 1,3
                   RIJ2 = RIJ2 + (X(K,ICOMP) - X(K,JCOMP))**2
+                  VIJ2 = VIJ2 + (XDOT(K,I1) - XDOT(K,I2))**2
    45         CONTINUE
-              IF(RIJ2.LT.SMMIN) SMMIN=RIJ2
-              IF(RIJ2.GT.SMMAX) SMMAX=RIJ2
+              RIJ = SQRT(RIJ2)
+              IF(RIJ.LT.SMMIN) SMMIN=RIJ
+              IF(RIJ.GT.SMMAX) SMMAX=RIJ
               XMBIN = BODY(ICOMP) + BODY(JCOMP)
-              PERIOD = RIJ2**0.75/DSQRT(XMBIN)
+              SEMI = 1.d0/(2.d0/RIJ - VIJ2/XMBIN)
+              PERIOD = TWOPI*SEMI*SQRT(DABS(SEMI)/XMBIN)
               IF(XMBIN.LT.XMMIN) XMMIN=XMBIN
               IF(XMBIN.GT.XMMAX) XMMAX=XMBIN
               IF(PERIOD.LT.TMMIN) TMMIN=PERIOD
               IF(PERIOD.GT.TMMAX) TMMAX=PERIOD
-              IF (RIJ2.LT.RMIN**2) THEN
+              IF (RIJ.LT.RMIN) THEN
                  CALL KSPREG
               END IF
    50     CONTINUE
 *     recover kstart
           KSTART = KSDUM
 *     Diagnostic
-      if(rank.eq.0) write(6,51) SQRT(SMMIN)*RAU, SQRT(SMMAX)*RAU,
+      if(rank.eq.0) write(6,51) SMMIN*RAU, SMMAX*RAU,
      &      XMMIN*ZMBAR, XMMAX*ZMBAR, TMMIN*DAYS, TMMAX*DAYS
  51   format(/,' Binary parameters: R12(min)[AU]',F15.6,
      &     ' R12(max)[AU]',F15.6,' MCM(min)[M*]',F15.6,

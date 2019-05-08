@@ -167,7 +167,7 @@
 *       Include standard distance criterion.
               DO 45 K = 1,3
                   RIJ2 = RIJ2 + (X(K,ICOMP) - X(K,JCOMP))**2
-                  VIJ2 = VIJ2 + (XDOT(K,I1) - XDOT(K,I2))**2
+                  VIJ2 = VIJ2 + (XDOT(K,ICOMP) - XDOT(K,JCOMP))**2
    45         CONTINUE
               RIJ = SQRT(RIJ2)
               IF(RIJ.LT.SMMIN) SMMIN=RIJ

@@ -3,18 +3,58 @@
 *
 *       Velocity kick for WD, neutron stars or black holes.
 *       ---------------------------------------------------
+* There are various choices that can be made for kicks. 
+* Make sure you are comfortable with the choices set (see below) 
+* as this will critically affect retention statistics. 
+*
+* For regular NSs the kick choice is controlled by the value of 
+* DISP (sigma in BSE). Choices are: 
+*    DISP < 0.0 - kick drawn randomly between 0 - ABS(DISP) km/s
+*    DISP = 0.0 - no kick
+*    DISP > 0.0 - kick drawn from a Maxwellian with dispersion DISP. 
+* You may also choose to have the kick velocity distribution scaled 
+* by VSTAR (i.e. scaled by the initial escape velocity). 
+* To do this set VFAC to a non-zero value and VFAC*VSTAR will be 
+* either the maximum of the flat distribution (DISP < 0) or 
+* the dispersion of the Maxwellian (DISP > 0). 
+*
+* Then for an electron capture supernova or an accretion-induced 
+* collapse the choice is determined by the value of ECSIG set 
+* internally here. Choices are: 
+*    ECSIG = 0.0 - no kick
+*    ECSIG > 0.0 - kick drawn from a Maxwellian, dispersion ECSIG 
+*    ECSIG < 0.0 - same as for the regular NSs but scaled by ABS(ECSIG).
+* These supernova are identified by their mass of 1.26 Msun. 
+*
+* For BHs the kick choice is controlled by the value of BHFLAG.  
+* Choices are: 
+*    BHFLAG = 0 - no kick
+*    BHFLAG = 1 - same as for the regular NSs
+*    BHFLAG = 2 - same as for the regular NSs but scaled by fallback. 
+*
+* Small kicks for WDs can also be set if KZ(25) > 0 in the input file. 
+* In this case you can distinguish: 
+*   WDSIG1 - He and COWDs
+*   WDSIG2 - ONeWDs 
+* as the dispersion in a Maxwellian for the different WD types. 
+* A limit of WDKMAX is set. 
+* See Fellhauer et al. 2003, ApJ, 595, L53 for more on WD kicks. 
 *
       Include 'kspars.h'
       INCLUDE 'common6.h'
+      INTEGER BHFLAG
       REAL*8  RAN2,VK(4)
 *     Unsafe for parallel
       SAVE  IPAIR, KC, VDIS, RI
       DATA  IPAIR,KC /0,0/
-*       Reinstall the traditional kicks (March 2012)
-      PARAMETER (VFAC=-1.0D0)
-*       Get fallback from hrdiag.f
+      REAL*8 DISP, VFAC, ECSIG, WDSIG1, WDSIG2, WDKMAX
+      REAL*8 DISP0, VK2
+      LOGICAL IFLAT      
+**     Get fallback from hrdiag.f
 *     Safe for parallel
-      common /fall/fallback
+      real*8 FBFAC,FBTOT,MCO
+      integer ECS
+      COMMON /FBACK/ fallback,FBTOT,MCO,ECS
 *
 *     --03/07/14 11:30-lwang-ks-parallel--------------------------------*
 ***** Note: Here when icase eq. -147 means for ks communication
@@ -29,7 +69,36 @@
          RETURN
       END IF
 *     --03/07/14 11:30-lwang-end-ks-parallel----------------------------*
-      
+
+*     Choose the kick settings.
+*       Some suggested combinations are included: 
+*
+*       Adopt the Maxwellian of Hansen & Phinney (MN 291, 569, 1997) 
+*     VFAC = 0.D0
+*     DISP = 190.D0
+*       Adopt the Maxwellian of Hobbs (MNRAS 360, 974, 2005)      
+*     DISP = 265.D0
+*       Take a flat distribution between 0-100 km/s for regular NSs, 
+*     DISP = -100.0
+*       for regular NSs, with EC kicks from a Maxwellian with a lower peak 
+*     ECSIG = 20.D0
+*       WD kicks depend on #25.       
+*     WDSIG1 = 2.D0
+*     WDSIG2 = 2.D0
+*     WDKMAX = 6.D0
+*       BH kicks scaled by fallback. 
+*     BHFLAG = 2
+*      
+*     Current setting:
+      VFAC = 0.D0        ! Use DISP 
+      DISP = 265.D0      ! Adopt the Maxwellian of Hobbs (MNRAS 360, 974, 2005)
+      ECSIG = -0.25D0    ! Scale EC kicks down by a factor of 4
+      BHFLAG = 2         ! BH kicks are same as for the regular NSs but scaled by fallback. 
+*     WD kicks depend on #25. 
+      WDSIG1 = 2.D0      
+      WDSIG2 = 2.D0
+      WDKMAX = 6.D0
+
 *       Save orbital parameters in case of KS binary (called from KSAPO).
       IF (ICASE.EQ.0) THEN
           IPAIR = I
@@ -73,11 +142,12 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
           call ksparmpi(K_store,K_real8,K_EKICK,0,0,EB)
           I2 = I1 + 1
           if(rank.eq.0)
-     &    WRITE (6,1)  NAME(I1), NAME(I2), KSTAR(I1), KSTAR(I2), ZM1,
-     &                 ZM2, VESC, VDIS, R(IPAIR)/SEMI, EB, R(IPAIR)
-    1     FORMAT (' BINARY KICK:    NAME(I1) NAME(I2) K*(I1) K*(I2) ',
-     &         'M(I1)[M*] M(I2)[M*] VESC[km/s] VDIS[km/s] R12/SEMI ',
-     &         'EB R12[NB] ',2I10,2I4,4F7.1,F6.2,F9.4,1P,E10.2)
+     &    WRITE (6,1)  TTOT*TSTAR, NAME(I1), NAME(I2), KSTAR(I1), 
+     &         KSTAR(I2),ZM1,ZM2,VESC, VDIS, R(IPAIR)/SEMI, EB, R(IPAIR)
+    1     FORMAT (' BINARY KICK:  TIME[Myr] NAME(I1) NAME(I2) K*(I1) ',
+     &         'K*(I2) M(I1)[M*] M(I2)[M*] VESC[km/s] VDIS[km/s] ',
+     &         'R12/SEMI EB R12[NB] ',1P,E14.3,0P,2I10,2I4,2F9.3,
+     &         1P,5E14.3)
           NBKICK = NBKICK + 1
 *       Remove any circularized KS binary from the CHAOS/SYNCH table.
           IF (KSTAR(N+IPAIR).GE.10.AND.NCHAOS.GT.0) THEN
@@ -102,41 +172,86 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
 *     IF (FAC.LT.RAN2(IDUM1).AND.IT.LT.10) GO TO 2
 *     VKICK = V0*VT
 *
-C*       Adopt the Maxwellian of Hansen & Phinney (MNRAS 291, 569, 1997).
-C      DISP = 190.0
+      ZM = BODY(I)*ZMBAR
+      VKICK = 0.D0
 *
-*       Adopt the Maxwellian of Hobbs (MNRAS 360, 974, 2005)
-      DISP = 265.0
+      IFLAT = .FALSE.
+      IF(DISP.LT.-0.01)THEN
+         IF(KW.EQ.13.AND.ZM.GE.1.28) IFLAT = .TRUE.
+         IF(KW.EQ.13.AND.ZM.LT.1.28.AND.ECSIG.LT.-0.01) IFLAT = .TRUE.
+         IF(KW.EQ.14.AND.BHFLAG.GT.0) IFLAT = .TRUE.
+      ENDIF
 *
-*       Include velocity dispersion in terms of VSTAR (Parameter statement!).
-      IF (VFAC.GT.0.0D0) THEN
-          DISP = VFAC*VSTAR
-      END IF
+      IF(IFLAT)THEN
 *
-*       Allow for optional type-dependent WD kick.
-      IF (KW.LT.13) THEN
-          IF (KZ(25).EQ.1.AND.(KW.EQ.10.OR.KW.EQ.11)) THEN
-              DISP = 5.0
-          ELSE IF (KZ(25).GT.1.AND.KW.EQ.12) THEN
-              DISP = 5.0
-          ELSE
-              DISP = 0.0
-          END IF
-      END IF
+*       Generate the kick velocity from a flat distribution. 
+         DISP0 = ABS(DISP)
+         IF(VFAC.GT.0.001D0) DISP0 = VFAC*VSTAR
+         IF(KW.EQ.13.AND.ZM.LT.1.28) DISP0 = DISP0*ABS(ECSIG)
 *
-*       Use Henon's method for pairwise components (Douglas Heggie 22/5/97).
-      DO 2 K = 1,2
-          X1 = RAN2(IDUM1)
-          X2 = RAN2(IDUM1)
-*       Generate two velocities from polar coordinates S & THETA.
-          S = DISP*SQRT(-2.0*LOG(1.0 - X1))
-          THETA = TWOPI*X2
-          VK(2*K-1) = S*COS(THETA)
-          VK(2*K) = S*SIN(THETA)
-    2 CONTINUE
-      VKICK = SQRT(VK(1)**2 + VK(2)**2 + VK(3)**2)
+         VKICK = RAN2(IDUM1)*DISP0
+         THETA = RAN2(IDUM1)*TWOPI
+         SPHI = RAN2(IDUM1)
+         X1 = ASIN(SPHI)
+         CPHI = COS(X1)
+         VK(1) = COS(THETA)*CPHI*VKICK
+         VK(2) = SIN(THETA)*CPHI*VKICK
+         VK(3) = SPHI*VKICK
+         VK2 = VKICK*VKICK
+
+      ELSE
+*
+*       Generate the kick velocity using a Maxwellian distribution. 
+         DISP0 = MAX(DISP,0.D0)
+         IF(VFAC.GT.0.001D0) DISP0 = VFAC*VSTAR
+         IF(KW.EQ.10.OR.KW.EQ.11) DISP0 = MAX(WDSIG1,0.D0)
+         IF(KW.EQ.12) DISP0 = MAX(WDSIG2,0.D0)
+         IF(KW.EQ.13.AND.ZM.LT.1.28)THEN
+            IF(ECSIG.LT.-0.01)THEN
+               DISP0 = DISP0*ABS(ECSIG)
+            ELSE
+               DISP0 = MAX(ECSIG,0.D0)
+            ENDIF
+         ENDIF
+         IF(KW.EQ.14.AND.BHFLAG.EQ.0) DISP0 = 0.D0
+
+*     Use Henon's method for pairwise components (Douglas Heggie 22/5/97).
+         DO 2 K = 1,2
+            X1 = RAN2(IDUM1)
+            X2 = RAN2(IDUM1)
+*     Generate two velocities from polar coordinates S & THETA.
+            S = DISP*SQRT(-2.0*LOG(1.0 - X1))
+            THETA = TWOPI*X2
+            VK(2*K-1) = S*COS(THETA)
+            VK(2*K) = S*SIN(THETA)
+ 2       CONTINUE
+
+         IF(DISP0.GT.0.001D0)THEN
+            VK2 = VK(1)**2 + VK(2)**2 + VK(3)**2
+            VKICK = SQRT(VK2)
+         ELSE
+            VK2 = 0.D0
+            VKICK = 0.D0
+         ENDIF
+
+      ENDIF
+
       VK(4) = VKICK
-      IF(KW.EQ.14) VKICK = VKICK*(1.D0-fallback)
+
+* Impose the maximum WD kick velocity. 
+*
+      IF(KW.GE.10.AND.KW.LE.12.AND.VKICK.GT.WDKMAX)THEN
+         VKICK = WDKMAX
+      ENDIF
+
+* Restrict the BH kick velocity by fallback. 
+* This could be done better but in the N-body code we only have 
+* limited information. 
+*
+      IF(KW.EQ.14.AND.BHFLAG.GT.1)THEN
+         VKICK = VKICK*(1.D0-fallback)
+      ENDIF
+
 *
 *       Limit kick velocity to VDIS+10*VSTAR/10*VST for binary/single stars.
 C      IF (IPAIR.GT.0) THEN
@@ -147,9 +262,17 @@ C          VKICK = MIN(VKICK,10.0D0*VSTAR)
 *       Ensure escape of massless star.
       IF (IPAIR.LE.0.AND.BODY(I).EQ.0.0D0) VKICK = 10.0*VSTAR
 C      END IF
-      VKICK = VKICK/VSTAR
 *
-      IF (VKICK.EQ.0.0) THEN
+      IF (VKICK.NE.VK(4)) THEN
+         DO K = 1,3
+            VK(K) = VK(K)*VKICK/VK(4)
+         ENDDO
+         VK2 = VKICK*VKICK
+         VK(4) = VKICK
+      END IF
+
+*       Skip case of zero kick velocity.
+      IF (VKICK.EQ.0.0D0.OR.DISP0.EQ.0.0D0) then
          if(rank.eq.0) then
             write(6,*) 'ZERO VELOCITY KICK: I',I,' NAME',NAME(I),
      &           ' TIME[Myr]',(TIME+TOFF)*TSTAR,' K*0',KSTAR(I),
@@ -158,29 +281,22 @@ C      END IF
          end IF
          GO TO 30
       ENDIF
+
 *
-*       Randomize the velocity components.
-*     A(4) = 0.0
-*     DO 5 K = 1,3
-*         A(K) = 2.0*RAN2(IDUM1) - 1.0
-*         A(4) = A(4) + A(K)**2
-*   5 CONTINUE
 *
-*       Add truncated/full kick velocity and initialize X0DOT.
+*     Add truncated/full kick velocity and initialize X0DOT.
+      VKICK = VKICK/VSTAR
       VI2 = 0.0
       VF2 = 0.0
       CALL JPRED(I,TIME,TIME)
       DO 10 K = 1,3
           VI2 = VI2 + XDOT(K,I)**2
-*         XDOT(K,I) = XDOT(K,I) + VKICK*A(K)/SQRT(A(4))
-          XDOT(K,I) = XDOT(K,I) + VKICK*VK(K)/VK(4)
+          XDOT(K,I) = XDOT(K,I) + VK(K)/VSTAR
           X0DOT(K,I) = XDOT(K,I)
-*     ks MPI communication
-          call ksparmpi(K_store,K_real8,K_X0DOT,k,i,x0dot(k,i))
           VF2 = VF2 + XDOT(K,I)**2
    10 CONTINUE
 *
-*       Modify energy loss due to increased velocity of single particle.
+*     Modify energy loss due to increased velocity of single particle.
       DETMP = - 0.5*BODY(I)*(VF2 - VI2)
       ECDOT = ECDOT + DETMP
 *     ks MPI communication
@@ -198,7 +314,12 @@ C      END IF
               VF2 = VF2 + (XDOT(K,I) - XDOT(K,J))**2
    15     CONTINUE
           HNEW = 0.5*VF2 - (BODY(I) + BODY(J))/RI
-          EB1 = BODY(I)*BODY(J)/(BODY(I) + BODY(J))*HNEW
+*       Exclude colliding WDs.
+          IF (BODY(I) + BODY(J).EQ.0.0D0) THEN
+              EB1 = 0.0
+          ELSE
+              EB1 = BODY(I)*BODY(J)/(BODY(I) + BODY(J))*HNEW
+          END IF
           IF (EB1.LT.0.0) THEN
               EKICK = EKICK - EB1
               EGRAV = EGRAV - EB1

@@ -260,7 +260,7 @@
    78     FORMAT (/,5X,'CLUSTER ORBIT    RG VG JZ ET ',
      &                                 3F7.2,2X,3F7.1,1P,E16.8,E10.2)
       END IF
-      IF (KZ(14).EQ.4) THEN
+      IF (KZ(14).GE.3.AND.(MP.GT.0.0D0)) THEN 
           WRITE (6,79)  TTOT, N, RSCALE, ZMASS, MP, DETOT
    79     FORMAT (/,5X,'GAS EXPULSION    T N <R> M MP DETOT ',
      &                                   F7.1,I7,3F7.3,1P,E10.2)

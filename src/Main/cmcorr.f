@@ -27,7 +27,7 @@
    30 CONTINUE
 *
 *     Include effect of c.m. motion in Plummer potential.
-      IF (KZ(14).EQ.4) THEN
+      IF (KZ(14).GE.3.AND.(MP.GT.0.0D0)) THEN 
 *       Evaluate tidal energy for Plummer potential.
           PHI1 = 0.0
           DO I = IFIRST,NTOT
@@ -107,7 +107,7 @@
    70 CONTINUE
 *
 *       Check differential correction for Plummer potential.
-      IF (KZ(14).EQ.4) THEN
+      IF (KZ(14).GE.3.AND.(MP.GT.0.0D0)) THEN 
 *       Evaluate tidal energy for Plummer potential.
           PHI2 = 0.0
           DO I = IFIRST,NTOT

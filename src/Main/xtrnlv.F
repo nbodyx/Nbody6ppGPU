@@ -84,6 +84,19 @@
               ET = ET + GMG*(1.0/SQRT(RI2) - 1.0/SQRT(RG2))
           END IF
 *
+*       Check contribution from gamma/eta bulge potential.
+          IF (GMB.GT.0.0D0) THEN
+              IF (GAM.NE.2.0D0) THEN
+                  RRG = 1.0 - (1.0 + AR/SQRT(RG2))**(GAM-2.0)
+                  RRI = 1.0 - (1.0 + AR/SQRT(RI2))**(GAM-2.0)
+                  ET = ET + GMB/(AR*(2.0-GAM))*(RRI-RRG)
+              ELSE
+                  RRG = 1.0 + AR/SQRT(RG2)
+                  RRI = 1.0 + AR/SQRT(RI2)
+                  ET = ET + GMB/AR*LOG(RRG/RRI)
+              ENDIF
+          END IF
+
 *       Add optional Miyamoto disk potential.
           IF (DISK.GT.0.0D0) THEN
               R2 = (RG(1) + XI(1))**2 + (RG(2) + XI(2))**2

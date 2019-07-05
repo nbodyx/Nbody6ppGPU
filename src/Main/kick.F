@@ -92,12 +92,39 @@
 *     Current setting:
       VFAC = 0.D0        ! Use DISP 
       DISP = 265.D0      ! Adopt the Maxwellian of Hobbs (MNRAS 360, 974, 2005)
-      ECSIG = -0.25D0    ! Scale EC kicks down by a factor of 4
-      BHFLAG = 2         ! BH kicks are same as for the regular NSs but scaled by fallback. 
+      ECSIG = 3.0D0
 *     WD kicks depend on #25. 
       WDSIG1 = 2.D0      
       WDSIG2 = 2.D0
       WDKMAX = 6.D0
+      BHFLAG = 2
+*******
+*     Chris L. Fryer. Oct 2018.
+*
+* CONVF: convective boost factor larger CO core masses 
+*        in the case of convection-asymmerty-driven
+*        kick mechanism (typical range: 2.0-10.0)
+*
+* MNUEFF: in case of neutrino-driven kick mechanism, the 
+*         effective remnant mass beyond which the neutrino emission does not
+*         enhance significantly as the remnant (baryonic) mass is increased
+*         (typical range: 5.0-10.0 Msun)
+*
+* MNSTYP: typical mass of a neutron star with the input dispersion velocity 'DISP'
+*
+* KMECH: kick mechanism. 1 = standard momentum-conserving,
+*                        2 = convection-asymmetry-driven,
+*                        3 = collapse-asymmerty-driven,
+*                        4 = neutrino driven
+*
+* It is assumed that one of these four mechanisms is the primary driver
+* of SN natal kicks that we observe
+*
+      CONVF = 5.0D0
+      MNUEFF = 7.0D0
+      MNSTYP = 1.4D0
+      KMECH = 1
+*******
 
 *       Save orbital parameters in case of KS binary (called from KSAPO).
       IF (ICASE.EQ.0) THEN
@@ -212,6 +239,10 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
             ELSE
                DISP0 = MAX(ECSIG,0.D0)
             ENDIF
+            WRITE(6,*) "ECS-NS formation",
+     &           " M[M*] M0[M*] K*0 I NAME K* VDISP Time[Myr]: ",
+     &           BODY(I)*ZMBAR, BODY0(I)*ZMBAR, KW, I, NAME(I), 
+     &           KSTAR(I),DISP0, TTOT*TSTAR
          ENDIF
          IF(KW.EQ.14.AND.BHFLAG.EQ.0) DISP0 = 0.D0
 
@@ -270,9 +301,9 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
      &              VKICK = VK(4)*(MIN(ZM,MNUEFF)/ZM)
 ***********************************************
             ENDIF
-            WRITE(6,*) "Heavy-NS/BH formation",
-     &           " (mechanism/fallback control) MASS MASS0 KW I NAM",
-     &           " KS FBFAC FBTOT TIME MCO VKICK KMECH: ",
+            WRITE(6,*) "Heavy-NS/BH formation(fallback)",
+     &           " M[M*] M0[M*] K*0 I NAME",
+     &           " K* FB FBTOT Time[Myr] MCO[M*] VK[km/s] KMECH: ",
      &           BODY(I)*ZMBAR, BODY0(I)*ZMBAR, KW, I, NAME(I), 
      &           KSTAR(I), FBFAC, FBTOT, TTOT*TSTAR, MCO, VKICK, KMECH
          ENDIF

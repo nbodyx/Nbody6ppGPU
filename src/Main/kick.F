@@ -248,20 +248,49 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
 * This could be done better but in the N-body code we only have 
 * limited information. 
 *
-      IF(KW.EQ.14.AND.BHFLAG.GT.1)THEN
-         VKICK = VKICK*(1.D0-fallback)
+*****
+      IF (BHFLAG.GT.1) THEN
+         IF (KW.EQ.13.OR.KW.EQ.14) THEN
+*********Skip ECS-NS *********
+            IF(ECS.EQ.0)THEN
+*********Standard momentum-conserving kick *********
+               VKICK = VK(4)*(1.0D0 - FBFAC)
+*********Covection-asymmetry-driven kick ********
+               IF ((KMECH.EQ.2).AND.(MCO.LE.3.5D0))
+     &              VKICK = VKICK*(MNSTYP/ZM)
+               IF ((KMECH.EQ.2).AND.(MCO.GT.3.5D0))
+     &              VKICK = VKICK*(MNSTYP/ZM)*CONVF
+*********Collapse-asymmetry-driven kick ********
+               IF ((KMECH.EQ.3).AND.(MCO.LE.3.0D0))
+     &              VKICK = VKICK*(MNSTYP/ZM)
+               IF ((KMECH.EQ.3).AND.(MCO.GT.3.0D0))
+     &              VKICK = VKICK*(MNSTYP/ZM)*0.1D0
+*********Nutrino-driven kick *****************
+               IF (KMECH.EQ.4)
+     &              VKICK = VK(4)*(MIN(ZM,MNUEFF)/ZM)
+***********************************************
+            ENDIF
+            WRITE(6,*) "Heavy-NS/BH formation",
+     &           " (mechanism/fallback control) MASS MASS0 KW I NAM",
+     &           " KS FBFAC FBTOT TIME MCO VKICK KMECH: ",
+     &           BODY(I)*ZMBAR, BODY0(I)*ZMBAR, KW, I, NAME(I), 
+     &           KSTAR(I), FBFAC, FBTOT, TTOT*TSTAR, MCO, VKICK, KMECH
+         ENDIF
       ENDIF
-
-*
-*       Limit kick velocity to VDIS+10*VSTAR/10*VST for binary/single stars.
-C      IF (IPAIR.GT.0) THEN
-C          VBF = SQRT(VDIS**2 + 100.0*VSTAR**2)
-C          VKICK = MIN(VKICK,VBF)
-C      ELSE
-C          VKICK = MIN(VKICK,10.0D0*VSTAR)
+      IF (DM.LT.1.0D-10) VKICK = VK(4)   ! Retain VKICK for tiny DM.
+*       Limit kick velocity to VDIS+10*VSTAR/10*VST.
+*       (disabled)
+      IF (IPAIR.GT.0) THEN
+          VBF = SQRT(VDIS**2 + 100.0*VSTAR**2)
+*       Include large kick velocity to ensure escape of disrupted star.
+          IF (KW.LT.10.OR.(KW.LT.13.AND.KZ(25).EQ.0)) VKICK = 1.0*VBF
+*         VKICK = MIN(VKICK,VBF)
+*         VKICK = MAX(VKICK,VDIS+3.0*VSTAR)
+      ELSE
+*         VKICK = MIN(VKICK,10.0D0*VSTAR)
 *       Ensure escape of massless star.
-      IF (IPAIR.LE.0.AND.BODY(I).EQ.0.0D0) VKICK = 10.0*VSTAR
-C      END IF
+          IF (BODY(I).EQ.0.0D0) VKICK = 10.0*VSTAR
+      END IF
 *
       IF (VKICK.NE.VK(4)) THEN
          DO K = 1,3

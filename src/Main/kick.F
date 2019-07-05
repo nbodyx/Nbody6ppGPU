@@ -52,6 +52,8 @@
       LOGICAL IFLAT      
 **     Get fallback from hrdiag.f
 *     Safe for parallel
+      REAL*8 CONVF,MNUEFF,MNSTYP
+      INTEGER KMECH
       real*8 FBFAC,FBTOT,MCO
       integer ECS
       COMMON /FBACK/ fallback,FBTOT,MCO,ECS

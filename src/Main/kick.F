@@ -56,7 +56,7 @@
       INTEGER KMECH
       real*8 FBFAC,FBTOT,MCO
       integer ECS
-      COMMON /FBACK/ fallback,FBTOT,MCO,ECS
+      COMMON /FBACK/ FBFAC,FBTOT,MCO,ECS
 *
 *     --03/07/14 11:30-lwang-ks-parallel--------------------------------*
 ***** Note: Here when icase eq. -147 means for ks communication
@@ -398,7 +398,7 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
           if(rank.eq.0)
      &    WRITE (6,20)  I, NAME(I), (TIME+TOFF)*TSTAR, KSTAR(I), KW, KC,
      &         BODY0(I)*ZMBAR,ZM,SQRT(VI2)*VSTAR, VKICK*VSTAR, 
-     &         SQRT(VF2)*VSTAR, VK(4),fallback
+     &         SQRT(VF2)*VSTAR, VK(4),FBFAC
    20     FORMAT (' VELOCITY KICK: I',I10'  NAME',I10,
      &         '  Time[Myr]',E12.5,'  K*0',I4,
      &         '  K*',I4,'  K*(ICM)',I4'  M0[M*]',F9.4,'  MN[M*]',F9.4,

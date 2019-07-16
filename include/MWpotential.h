@@ -7,7 +7,13 @@
 * 
 *
 *     Tidal force for Milky-Way potential
-      COMMON/MWPOT/ B_AMP, B_ALPHA, B_RC, B_NORM, PI
-      REAL*8 B_AMP, B_ALPHA, B_RC, B_NORM, PI
+      COMMON/MWPOT/ B_AMP, B_ALPHA, B_RC, B_NORM,
+     &     D_AMP, D_A, D_B, D_NORM,
+     &     H_AMP, H_A, H_NORM, F_SCALE
+
+      REAL*8 B_AMP, B_ALPHA, B_RC, B_NORM
+      REAL*8 D_AMP, D_A, D_B, D_NORM  
+      REAL*8 H_AMP, H_A, H_NORM, F_SCALE
+      
       
       

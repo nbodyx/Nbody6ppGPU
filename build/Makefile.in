@@ -134,6 +134,9 @@ nb6++dumpb2a: dump_btoa.F
 nb6++snapshot: libinitial.so libnb6out3.so snapshot.cpp
 	$(CXX) $(CXXFLAGS) ../src/Tools/snapshot.cpp -L./ -lnb6out3 -linitial -o nb6++snapshot
 
+mwpot: ../src/Tools/MWpotential.f ran2.f fpowercut.f asa147.f fmiyamoto.f fnfw.f
+	$(FC) $(FFLAGS) $^ -o mwpot
+
 $(OBJECTS): $(INC)
 
 irr.avx.o: irr.avx.cpp

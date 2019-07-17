@@ -8,6 +8,7 @@
       INCLUDE 'tt.h'
 *     Safe for parallel      
       INCLUDE 'galaxy.h'
+      INCLUDE 'MWpotential.h'
 #ifdef TT
 *** FlorentR - define TTTDEP (not used but necessary to call ttgalaxy)
       INTEGER TTTDEP
@@ -22,15 +23,16 @@
       ET = 0.0D0
 *       Skip external potential during scaling (parameters not defined).
       IF (FIRST.AND.TIME.EQ.0.0D0) THEN
-          FIRST = .FALSE.
-          GO TO 30
+         FIRST = .FALSE.
+         GO TO 30
+      END IF
 *       Treat all cases uniformly (but note Coliolis term in FIRR).
 #ifdef TT
 *** FlorentR - case of tidal tensor
-      ELSE IF ((KZ(14).LE.4.OR.KZ(14).EQ.9).AND.I2.NE.I1) THEN
+      IF ((KZ(14).LE.5.OR.KZ(14).EQ.9).AND.I2.NE.I1) THEN
 *** FRenaud
 #else
-      ELSE IF (KZ(14).LE.4.AND.I2.NE.I1) THEN
+      IF (KZ(14).LE.5.AND.I2.NE.I1) THEN
 #endif
           VIR = 0.0
           DO 5 I = I1,I2
@@ -114,6 +116,19 @@
           END IF
 *       Form the differential potential energy due to tides.
           ET = BODY(I)*ET
+      ELSE IF (KZ(14).EQ.5) THEn
+*     MW potential 
+          DO I = I1,I2
+             ETI = 0.0D0
+             XI = (X(1:3,I) + RG)*R_KPC
+             RXY2 = XI(1)*XI(1) + XI(2)*XI(2)
+             RXY = SQRT(RXY2)
+             RI = SQRT(RXY2 + XI(3)*XI(3))
+             ETI = BODY(I)*(Pot_PowCut(RI,B_AMP,B_ALPHA,B_RC)
+     &            + Pot_Miyamoto(rxy,XI(3),D_AMP, D_A, D_B)
+     &            + Pot_NFW(RI, H_AMP, H_A))
+             ET = ET + ETI
+          END DO
 #ifdef TT
 *** FlorentR - case of tidal tensor
       ELSE IF (KZ(14).EQ.9) THEN

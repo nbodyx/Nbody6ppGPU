@@ -100,11 +100,11 @@ C$$$      END IF
 #ifdef TT
 *** FlorentR - include the case of tidal tensor
 *       Save current values for deriving work done by tides (#14 = 3 or 9).
-       IF (KZ(14).EQ.3.OR.KZ(14).EQ.9) THEN
+       IF (KZ(14).EQ.3.OR.KZ(14).EQ.5.OR.KZ(14).EQ.9) THEN
 *** FRenaud
 #else
 *       Save current values for deriving work done by tides (#14 = 3).
-          IF (KZ(14).EQ.3) THEN
+          IF (KZ(14).EQ.3.OR.KZ(14).EQ.5) THEN
 #endif
               DO 22 K = 1,3
                   FRX(K) = FREG(K)

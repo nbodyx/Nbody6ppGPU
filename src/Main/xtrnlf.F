@@ -139,6 +139,19 @@
               FDR(K) = FDR(K) - YMDOT*ZF2*XI(K)
    50     CONTINUE
       END IF
+
+*     Use MWpotential14 (Bovy 2015)
+      IF (KZ(14).EQ.5.AND.KCASE.GT.0) THEN
+         XG = RG + XI
+         XGDOT = VG + XIDOT
+
+         call fmwpot(RG, VG, FS, FSD)
+         call fmwpot(XG,XGDOT,FM,FMD)
+
+         FREG = FREG + (FM - FS)
+         FDR  = FDR  + (FMD - FSD)
+
+      END IF
 *
       RETURN
 *

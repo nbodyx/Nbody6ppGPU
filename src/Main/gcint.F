@@ -9,6 +9,7 @@
       INCLUDE 'tt.h'
 #endif
       INCLUDE 'galaxy.h'
+      INCLUDE 'MWpotential.h'
       REAL*8  FM(3),FD(3),FS(3),FSD(3)
 *
 *
@@ -26,56 +27,54 @@
           RGVG = RGVG + RG(K)*VG(K)
    10 CONTINUE
 *
+
+      FM = 0.0
+      FD = 0.0
+*       Obtain force and first derivative of point-mass galaxy.
+      IF (KZ(14).EQ.3) THEN
+         IF (GMG.GT.0.0D0) THEN
+            CALL FNUC(RG,VG,FM,FD)
+         END IF
+*
+*       Check bulge force.
+         IF (GMB.GT.0.0D0) THEN
+            CALL FBULGE(RG,VG,FS,FSD)
+            DO 20 K = 1,3
+               FM(K) = FM(K) + FS(K)
+               FD(K) = FD(K) + FSD(K)
+ 20         CONTINUE
+         END IF
+*
+*     Include optional Miyamoto disk component (Book eq. 8.52).
+         IF (DISK.GT.0.0D0) THEN
+            CALL FDISK(RG,VG,FS,FSD)
+            DO 25 K = 1,3
+               FM(K) = FM(K) + FS(K)
+               FD(K) = FD(K) + FSD(K)
+ 25         CONTINUE
+         END IF
+*
+*     Check addition of logarithmic galaxy potential (not linearized).
+         IF (V02.GT.0.0D0) THEN
+            CALL FHALO(RG,VG,FS,FSD)
+            DO 30 K = 1,3
+               FM(K) = FM(K) + FS(K)
+               FD(K) = FD(K) + FSD(K)
+ 30         CONTINUE
+         END IF
+      END IF
+*
+*     MWpotential14
+      IF (KZ(14).EQ.5) THEN
+         call fmwpot(RG, VG, FM ,FD)
+      END IF
+
 #ifdef TT
 *** FlorentR - Compute the force from the user-definition of the pot.
 *      equivalent to the FNUC call below  
       IF( (KZ(14).EQ.9).AND.TTMODE.EQ.0) THEN
          CALL TTFORCE(RG,VG,FM,FD,DT)
-        GO TO 35
       END IF
-*** FRenaud
-#endif
-
-*       Obtain force and first derivative of point-mass galaxy.
-      IF (KZ(14).EQ.3.AND.GMG.GT.0.0D0) THEN
-          CALL FNUC(RG,VG,FM,FD)
-      ELSE
-          DO 15 K = 1,3
-             FM(K) = 0.0
-             FD(K) = 0.0
- 15       CONTINUE
-      END IF
-*
-*       Check bulge force.
-      IF (GMB.GT.0.0D0) THEN
-          CALL FBULGE(RG,VG,FS,FSD)
-          DO 20 K = 1,3
-              FM(K) = FM(K) + FS(K)
-              FD(K) = FD(K) + FSD(K)
-   20     CONTINUE
-      END IF
-*
-*       Include optional Miyamoto disk component (Book eq. 8.52).
-      IF (DISK.GT.0.0D0) THEN
-          CALL FDISK(RG,VG,FS,FSD)
-          DO 25 K = 1,3
-              FM(K) = FM(K) + FS(K)
-              FD(K) = FD(K) + FSD(K)
-   25     CONTINUE
-      END IF
-*
-*       Check addition of logarithmic galaxy potential (not linearized).
-      IF (V02.GT.0.0D0) THEN
-          CALL FHALO(RG,VG,FS,FSD)
-          DO 30 K = 1,3
-              FM(K) = FM(K) + FS(K)
-              FD(K) = FD(K) + FSD(K)
-   30     CONTINUE
-      END IF
-*
-#ifdef TT
-*** FlorentR - add a continue statement
-   35 CONTINUE
 *** FRenaud
 #endif
 *       Set time factors for corrector.

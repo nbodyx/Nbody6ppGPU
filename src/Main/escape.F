@@ -84,10 +84,11 @@
             EI = 0.5*VI2 - POTI
 #ifdef TT
 *** FlorentR - add nbody6tt
-          IF (KZ(14).EQ.4.OR.KZ(14).EQ.3.OR.KZ(14).EQ.9) THEN
+          IF (KZ(14).EQ.4.OR.KZ(14).EQ.3.OR.KZ(14).EQ.5
+     &           .OR.KZ(14).EQ.9) THEN
 *** FRenaud
 #else
-          IF (KZ(14).EQ.4.OR.KZ(14).EQ.3) THEN
+          IF (KZ(14).EQ.4.OR.KZ(14).EQ.3.OR.KZ(14).EQ.5) THEN
 #endif
               EI = EI - MP/SQRT(RI2 + AP2)
               IF (BODY(I).EQ.0.0D0) GO TO 30
@@ -227,7 +228,7 @@ C            PRINT*,' ESCAPE Check POTI PHIDBL=',POTI,PHIDBL(I)
           CALL XTRNLV(I,I)
           ZK = ZK + HT
           RTIDE = (ZMASS/TIDAL(1))**0.3333
-      ELSE IF (KZ(14).EQ.4.OR.KZ(14).EQ.3) THEN
+      ELSE IF (KZ(14).EQ.4.OR.KZ(14).EQ.3.OR.KZ(14).EQ.5) THEN
           RTIDE = RTIDE0*ZMASS**0.3333
 #ifdef TT
       ELSE IF (KZ(14).EQ.9) THEN

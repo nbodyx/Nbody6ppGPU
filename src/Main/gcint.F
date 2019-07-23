@@ -9,7 +9,6 @@
       INCLUDE 'tt.h'
 #endif
       INCLUDE 'galaxy.h'
-      INCLUDE 'MWpotential.h'
       REAL*8  FM(3),FD(3),FS(3),FSD(3)
 *
 *

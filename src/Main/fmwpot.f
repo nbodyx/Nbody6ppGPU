@@ -12,8 +12,12 @@
       RGKPC = RG*R_KPC
       VGPCMYR=VG*V_PcMyr
 
+      FG = 0
+      FGD =0
 *     bulge
-      call F_PowCut(RGKPC,VGPCMYR,FG,FGD)
+      call F_PowCut(RGKPC,VGPCMYR,FS,FSD)
+      FG = FG  + FS
+      FGD= FGD + FSD
 *     disk
       call F_Miyamoto(RGKPC,VGPCMYR,FS,FSD)
       FG = FG  + FS
@@ -23,9 +27,14 @@
       FG = FG  + FS
       FGD= FGD + FSD
 
+*     debug
+*      write(111,*) RGKPC, VGPCMYR, FG, FGD
+
 *     convert to NB unit
       FG = FG/F_PcMyr2
+*      FGD =0.0
       FGD= FGD/FD_PcMyr3
+
 
       RETURN
 

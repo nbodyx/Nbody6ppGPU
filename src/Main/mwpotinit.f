@@ -48,8 +48,8 @@
       R_KPC = RSCALE/1000.0D0   ! kpc
       V_PcMyr = VSCALE*1.02269032D0 ! km/s->pc/Myr
       F_PcMyr2 = RSCALE/(TSCALE*TSCALE) ! pc/Myr^2
-      FD_PcMyr3= F_PcMyr2/TSCALE ! pc/Myr^3
-      P_kpcPcMyr2= F_PcMyr2*R_KPC !kpc*pc/Myr^2
+      FD_PcMyr3= F_PcMyr2/TSCALE*1000.0D0 ! pc/Myr^3
+      P_kpcPcMyr2= F_PcMyr2*R_KPC !pc^2/Myr^2
 
 
       RETURN

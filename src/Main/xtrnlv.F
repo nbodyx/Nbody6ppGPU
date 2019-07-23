@@ -8,13 +8,12 @@
       INCLUDE 'tt.h'
 *     Safe for parallel      
       INCLUDE 'galaxy.h'
-      INCLUDE 'MWpotential.h'
 #ifdef TT
 *** FlorentR - define TTTDEP (not used but necessary to call ttgalaxy)
       INTEGER TTTDEP
 *** FRenaud
 #endif
-      REAL*8 XI(3),XIDOT(3),FIRR(3),FREG(3),FD(3),FDR(3)
+      REAL*8 XI(3),XIDOT(3),FIRR(3),FREG(3),FD(3),FDR(3),TMASS, RGP(3)
       SAVE FIRST
       LOGICAL FIRST
       DATA FIRST /.TRUE./
@@ -116,19 +115,24 @@
           END IF
 *       Form the differential potential energy due to tides.
           ET = BODY(I)*ET
-      ELSE IF (KZ(14).EQ.5) THEn
+      ELSE IF (KZ(14).EQ.5) THEN
 *     MW potential 
-          DO I = I1,I2
-             ETI = 0.0D0
-             XI = (X(1:3,I) + RG)*R_KPC
-             RXY2 = XI(1)*XI(1) + XI(2)*XI(2)
-             RXY = SQRT(RXY2)
-             RI = SQRT(RXY2 + XI(3)*XI(3))
-             ETI = BODY(I)*(Pot_PowCut(RI,B_AMP,B_ALPHA,B_RC)
-     &            + Pot_Miyamoto(rxy,XI(3),D_AMP, D_A, D_B)
-     &            + Pot_NFW(RI, H_AMP, H_A))
-             ET = ET + ETI
-          END DO
+         TMASS = 0.0D0
+*     Predict c.m. position
+         DT = TIME + TOFF - TG
+         DT2 = 0.5*DT
+         DT3 = ONE3*DT
+         RGP = RG + (FGD*DT3 + FG)*DT2 + VG)*DT 
+*     loop individual stars
+         DO I = I1,I2
+            XI = (X(1:3,I) + RGP)
+            call pmwpot(XI,ETI)
+            TMASS = TMASS + BODY(I)
+            ET = ET + BODY(I)*ETI
+         END DO
+*     cluster c.m. potential
+         call pmwpot(RGP, ETI)
+         ET = ET - TMASS*ETI
 #ifdef TT
 *** FlorentR - case of tidal tensor
       ELSE IF (KZ(14).EQ.9) THEN

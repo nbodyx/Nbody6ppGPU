@@ -36,7 +36,7 @@
 **    potential
 
       implicit none
-      REAL*8 r,z,amp,a
+      REAL*8 r,amp,a
 
       Pot_NFW = -amp*log(1.0D0 + r/a)/r
 

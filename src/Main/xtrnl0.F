@@ -311,12 +311,18 @@ C          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0
 *     initial c.m. f and fdot
          call fmwpot(RG, VG, FG, FGD)
 
+*     initial c.m. energy
+         call pmwpot(RG, ETI)
+         EGPOT = ZMASS*ETI
+         EGKIN = 0.5D0*ZMASS*(VG(1)*VG(1)+VG(2)*VG(2)+VG(3)*VG(3))
+         
 *      
          if(rank.eq.0) then
-            write (6,85) RGKPC, VGPCMYR, OMEGA, RTIDE*RBAR
+            write (6,85) RGKPC, VGPCMYR, OMEGA, RTIDE*RBAR,EGPOT,EGKIN
  85         FORMAT (/,12X,'Milky-Way Galaxy potential (Bovy 2015)'
      &           '  RG[kpc] =',1P,3E16.8,'  VG[pc/myr] =',3E16.8,
-     &           '  OMEGA =',E9.1, '  RTIDE[pc] =',E9.2,0P)
+     &           '  OMEGA =',E9.1, '  RTIDE[pc] =',E9.2,
+     &           '  POT = ',E16.8, ' KIN = ',E16.8,0P)
 
          end if
 

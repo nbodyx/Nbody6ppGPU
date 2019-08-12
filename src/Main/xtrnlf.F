@@ -142,14 +142,14 @@
 
 *     Use MWpotential14 (Bovy 2015)
       IF (KZ(14).EQ.5.AND.KCASE.GT.0) THEN
-         DT = TIME + TOFF - TG
-         RGP = ((FGD*DT3 + FG)*DT2 + VG)*DT + RG
-         VGP = (FGD*DT2 + FG)*DT + VG
+C         DT = TIME + TOFF - TG
+C         RGP = ((FGD*DT3 + FG)*DT2 + VG)*DT + RG
+C         VGP = (FGD*DT2 + FG)*DT + VG
          
-         XG = RGP + XI
-         XGDOT = VGP + XIDOT
+         XG = RG + XI
+         XGDOT = VG + XIDOT
 
-         call fmwpot(RGP, VGP, FS, FSD)
+         call fmwpot(RG, VG, FS, FSD)
          call fmwpot(XG,XGDOT,FM,FMD)
 
          FREG = FREG + (FM - FS)

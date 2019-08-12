@@ -118,22 +118,23 @@
       ELSE IF (KZ(14).EQ.5) THEN
 *     MW potential 
          TMASS = 0.0D0
-*     Predict c.m. position
-         DT = TIME + TOFF - TG
-         DT2 = 0.5*DT
-         DT3 = ONE3*DT
-         RGP = RG + ((FGD*DT3 + FG)*DT2 + VG)*DT 
+C*     Predict c.m. position
+C         DT = TIME + TOFF - TG
+C         DT2 = 0.5*DT
+C         DT3 = ONE3*DT
+C         RGP = RG + ((FGD*DT3 + FG)*DT2 + VG)*DT 
 *     loop individual stars
          DO I = I1,I2
-            XI = (X(1:3,I) + RGP)
+            XI = (X(1:3,I) + RG)
             call pmwpot(XI,ETI)
             TMASS = TMASS + BODY(I)
             ET = ET + BODY(I)*ETI
          END DO
 *     cluster c.m. potential
-         call pmwpot(RGP, ETI)
-         ET = ET - TMASS*ETI
-C         write(6,*) 'CM ETI',ETI,TMASS,ET
+C         call pmwpot(RG, ETI)
+C         ET = ET - TMASS*ETI
+C         ET = ET + 0.5D0*TMASS*(VG(1)*VG(1)+VG(2)*VG(2)+VG(3)*VG(3))
+C         write(6,*) 'CM ETI',ETI,TMASS,ET,DT,RG
 #ifdef TT
 *** FlorentR - case of tidal tensor
       ELSE IF (KZ(14).EQ.9) THEN

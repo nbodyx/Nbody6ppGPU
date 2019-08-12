@@ -9,9 +9,12 @@
       INCLUDE 'tt.h'
 #endif
       INCLUDE 'galaxy.h'
-      REAL*8  FM(3),FD(3),FS(3),FSD(3)
+      REAL*8  FM(3),FD(3),FS(3),FSD(3),FD2(3),FD3(3)
 *
-*
+*     Check whether it is necessary to integrate
+      DT = TIME + TOFF - TGNEXT
+      IF (DT.LT.0.0) RETURN
+
 *       Predict coordinates and velocities to order FDOT.
       DT = TIME + TOFF - TG
 *       Note: integration step may exceed STEPX (depends on block-step).
@@ -78,7 +81,10 @@
 #endif
 *       Set time factors for corrector.
       DT13 = ONE3*DT
-      DTSQ12 = ONE12*DT**2  
+      DTSQ = DT**2
+      DTSQ12 = ONE12*DTSQ
+      DT2 = 2.0/DTSQ
+      DT6 = 6.0/(DT*DTSQ)
       TG = TG + DT
 *
 *       Include the Hermite corrector and update F & FDOT.
@@ -91,7 +97,16 @@
           VG(K) = VG(K) + (0.75*AT3 + BT2)*DT13
           FG(K) = FM(K)
           FGD(K) = FD(K)
+          FD2(K) = (3.0*AT3+BT2)*DT2
+          FD3(K) = AT3*DT6
    40 CONTINUE
+
+      TTMP = TSTEP(FG,FGD,FD2,FD3,ETAI)
+      TGNEXT = TG + MIN(TTMP,STEPX)
+
+C      write(6,*) 'GC int: RG ' ,RG,' VG ',VG, 
+C     &     ' DT ',TTMP,' TGNEXT ',TGNEXT, ' TG ',TG
+      
 *
 *       Update angular velocity in case of non-circular orbit.
 *     OM1 = (RG(2)*VG(3) - RG(3)*VG(2))/RG2

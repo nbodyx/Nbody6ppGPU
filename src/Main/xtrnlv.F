@@ -13,7 +13,7 @@
       INTEGER TTTDEP
 *** FRenaud
 #endif
-      REAL*8 XI(3),XIDOT(3),FIRR(3),FREG(3),FD(3),FDR(3),TMASS, RGP(3)
+      REAL*8 XI(3),XIDOT(3),FIRR(3),FREG(3),FD(3),FDR(3),TMASS,RGP(3)
       SAVE FIRST
       LOGICAL FIRST
       DATA FIRST /.TRUE./
@@ -122,7 +122,7 @@
          DT = TIME + TOFF - TG
          DT2 = 0.5*DT
          DT3 = ONE3*DT
-         RGP = RG + (FGD*DT3 + FG)*DT2 + VG)*DT 
+         RGP = RG + ((FGD*DT3 + FG)*DT2 + VG)*DT 
 *     loop individual stars
          DO I = I1,I2
             XI = (X(1:3,I) + RGP)
@@ -133,6 +133,7 @@
 *     cluster c.m. potential
          call pmwpot(RGP, ETI)
          ET = ET - TMASS*ETI
+C         write(6,*) 'CM ETI',ETI,TMASS,ET
 #ifdef TT
 *** FlorentR - case of tidal tensor
       ELSE IF (KZ(14).EQ.9) THEN

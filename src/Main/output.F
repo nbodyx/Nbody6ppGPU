@@ -256,10 +256,10 @@
 #endif
           GZ = RG(1)*VG(2) - RG(2)*VG(1)
           SX = RBAR/1000.0
-          WRITE (6,78)  (RG(K)*SX,K=1,3), (VG(K)*VSTAR,K=1,3),
-     &                  GZ, ETIDE
-   78     FORMAT (/,5X,'CLUSTER ORBIT    RG VG JZ ET ',
-     &         1P,8E24.15,0P)
+          WRITE (6,78)  TTOT*TSTAR,(RG(K)*SX,K=1,3), 
+     &         (VG(K)*VSTAR,K=1,3),GZ, ETIDE
+   78     FORMAT (/,5X,'CLUSTER ORBIT   T RG VG JZ ET ',
+     &         1P,9E24.15,0P)
       END IF
       IF (KZ(14).EQ.4) THEN
           WRITE (6,79)  TTOT, N, RSCALE, ZMASS, MP, DETOT

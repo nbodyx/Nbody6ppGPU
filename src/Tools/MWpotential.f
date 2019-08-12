@@ -7,7 +7,7 @@
       REAL*8 B_M,B_F(3),B_FD(3),B_pot
       REAL*8 D_F(3),D_FD(3),D_pot
       REAL*8 H_F(3),H_FD(3),H_pot
-      REAL*8 F(3),FD(3)
+      REAL*8 F(3),FD(3),F_SCALE
       REAL*8 rmin,rmax,dr,ri,fr,pot
       INTEGER nbin,I,idum
 

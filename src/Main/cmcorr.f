@@ -5,6 +5,7 @@
 *       -----------------------------------------
 *
       INCLUDE 'common6.h'
+      INCLUDE 'galaxy.h'
 *
 *
 *       Initialize centre of mass variables.
@@ -48,10 +49,21 @@
               VI2 = XDOT(K,I)**2
               X(K,I) = X(K,I) - CMR(K)
               XDOT(K,I) = XDOT(K,I) - CMRDOT(K)
-              ERRX = ERRX - TIDAL(K)*BODY(I)*(X(K,I)**2 - XI2)
-              ERRV = ERRV + BODY(I)*(XDOT(K,I)**2 - VI2)
+              IF(KZ(14).NE.5) THEN
+                 ERRX = ERRX - TIDAL(K)*BODY(I)*(X(K,I)**2 - XI2)
+                 ERRV = ERRV + BODY(I)*(XDOT(K,I)**2 - VI2)
+              else
+                 X0(K,I) = X0(K,I) - CMR(K)
+                 X0DOT(K,I) = X0DOT(K,I) - CMRDOT(K)
+              END IF
    35     CONTINUE
    40 CONTINUE
+
+*     correct GC c.m. for galactic potential
+      IF (KZ(14).EQ.5) THEN
+         RG = RG + CMR(1:3)
+         VG = VG + CMRDOT(1:3)
+      END IF
 *
 *       Adjust the total energy to new kinetic energy & tidal potential.
       BE(3) = BE(3) + 0.5*(ERRX + ERRV)
@@ -84,6 +96,7 @@
    60     CONTINUE
       END IF
 *
+      IF (KZ(14).NE.5) THEN
 *       Re-determine X0 & X0DOT consistently with current corrected X & XDOT.
       DO 70 I = IFIRST,NTOT 
           IF (BODY(I).EQ.0.0D0) GO TO 70
@@ -105,6 +118,7 @@
               XDOT(K,I) = X0DOT(K,I)
    65     CONTINUE
    70 CONTINUE
+      END IF
 *
 *       Check differential correction for Plummer potential.
       IF (KZ(14).EQ.4) THEN

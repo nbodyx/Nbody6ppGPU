@@ -340,7 +340,7 @@ C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
       IF (KZ(14).EQ.3.OR.KZ(14).EQ.4.OR.KZ(14).EQ.5.OR.
      &     (KZ(14).EQ.9.AND.TTMODE.EQ.0) ) THEN
 *          IF (KZ(14).EQ.3.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
-          IF (KZ(14).EQ.3.OR.KZ(14).EQ.9) THEN
+          IF (KZ(14).EQ.3.OR.KZ(14).EQ.5.OR.KZ(14).EQ.9) THEN
 *** FRenaud
 #else
 *       Check optional integration of cluster guiding centre.

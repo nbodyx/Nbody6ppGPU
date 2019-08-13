@@ -1,6 +1,8 @@
 Welcome to use Nbody6++, which is the parallel version of Nbody6.
 Please send Email to longwang.astro@gmail.com if you find some problems during using the code.
 
+# Please check doc/Nbody6++_manual.pdf for the detail description of Nbody6++
+
 ---------------------------------------------------------------------
 To install Nbody6++, please use:
 ./configure [options]
@@ -66,6 +68,6 @@ All these options can be used in the same time. For example:
  The solution is to add the configure option "--enable-mcmodel=large"
  In this case, the code performance may slightly decrease compared with "mcmodel=medium/small"
 
+* The stellar evolution package (SSE/BSE) in the current version is based on the new update of Banerjee et al. (2019) (http://arxiv.org/abs/1902.07718)
 ---------------------------------------------------------------------
-Please check doc/Nbody6++_manual.pdf for the detail description of Nbody6++
 

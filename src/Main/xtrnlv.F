@@ -55,11 +55,11 @@
 *       Quit for pure 3D tidal field (case of full N summation).
 #ifdef TT
 *** FlorentR - case of tidal tensor
-          IF (KZ(14).EQ.3.OR.KZ(14).EQ.9) GO TO 40
+          IF (KZ(14).EQ.3.OR.KZ(14).EQ.5.OR.KZ(14).EQ.9) GO TO 40
 *          IF (KZ(14).EQ.3) GO TO 40
 *** FRenaud
 #else
-          IF (KZ(14).EQ.3) GO TO 40
+          IF (KZ(14).EQ.3.OR.KZ(14).EQ.5) GO TO 40
 #endif
       END IF
 *

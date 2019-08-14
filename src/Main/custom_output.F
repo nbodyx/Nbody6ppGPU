@@ -197,13 +197,14 @@ c$$$         END IF
 *
 *     --K.S. binary case--
          IF(I.GT.N.AND.NAME(I).GT.0) THEN
-            N_BINARY = N_BINARY + 1
-            IK = N_BINARY
             IPAIR = I - N
 *     Resolve unperturbed binary
             CALL KSRES_OP(IPAIR,J1,J2,XIREL,VIREL,0)
 *     Name
             if (GAMMA(IPAIR).LT.GALIMIT.AND.H(IPAIR).LT.0) THEN
+               N_BINARY = N_BINARY + 1
+               IK = N_BINARY
+
                NB_NAMC(IK) = NAME(I)
                NB_NAM1(IK) = NAME(J1)
                NB_NAM2(IK) = NAME(J2)

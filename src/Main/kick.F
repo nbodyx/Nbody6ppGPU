@@ -253,7 +253,7 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
             X1 = RAN2(IDUM1)
             X2 = RAN2(IDUM1)
 *     Generate two velocities from polar coordinates S & THETA.
-            S = DISP*SQRT(-2.0*LOG(1.0 - X1))
+            S = DISP0*SQRT(-2.0*LOG(1.0 - X1))
             THETA = TWOPI*X2
             VK(2*K-1) = S*COS(THETA)
             VK(2*K) = S*SIN(THETA)

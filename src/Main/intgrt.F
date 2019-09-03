@@ -1278,7 +1278,7 @@ c$$$         ttmov = ttmov +(tt334-tt333)*60
 
 *     custom output
       call cputim(ttiout1)
-      IF(KZ(46).GT.0.AND.DMOD(TIME,DTOUT).EQ.0) THEN
+      IF(KZ(46).GT.0.AND.DMOD(TTOT,DTOUT).EQ.0) THEN
          call custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS,IMINR)
       END IF
 #ifdef TRACE_STAR

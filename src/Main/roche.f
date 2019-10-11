@@ -1195,7 +1195,7 @@ C         IF(SEP.LE.10.0)THEN
             BODY0(J) = MASS0(K)/ZMBAR
             BODY(J) = MASS(K)/ZMBAR
             SPIN(J) = JSPIN(K)/SPNFAC
-            KWK = KW
+            KWK = KSTAR(J)
             JK = J
             GO TO 68
          ENDIF

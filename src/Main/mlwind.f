@@ -1,3 +1,10 @@
+*       Revised 2019 by Sambaran Banerjee
+*       The prescription for the original mlwind is described in the SSE paper
+*       by Hurley, Pols & Tout (2000).
+*       New prescriptions were added in 2015.
+*       Further updates and corrections made in 2019 as suggested by Sambaran Banerjee
+*       in consultation with Chris Belczynski. See arXiv: 1902.07718.
+
 ***
       real*8 FUNCTION mlwind(kw,lum,r,mt,mc,rl,z)
       implicit none

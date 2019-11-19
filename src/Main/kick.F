@@ -102,6 +102,8 @@
       BHFLAG = 2
 *******
 *     Chris L. Fryer. Oct 2018.
+*     The new implementation of momentum-conserving kick and the alternative kick prescriptions are from
+*     Banerjee, S, Belczynski, C., Fryer, C., et al: arXiv: 1902.07718. Implemented by Sambaran Banerjee.
 *
 * CONVF: convective boost factor larger CO core masses 
 *        in the case of convection-asymmerty-driven

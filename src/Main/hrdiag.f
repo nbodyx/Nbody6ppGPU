@@ -24,6 +24,13 @@
 *       with solar metallicity. Note KW=-1 for preMS evolution.
 *       Use negative aj for preMS.
 *
+*       Revised 2019 by Sambaran Banerjee
+*       The prescription for the original mlwind is described in the SSE paper
+*       by Hurley, Pols & Tout (2000).
+*       New prescriptions were added in 2015.
+*       Further updates and corrections made in 2019 as suggested by Sambaran Banerjee
+*       in consultation with Chris Belczynski. See arXiv: 1902.07718.
+
       implicit none
 *
       integer kw,kwp

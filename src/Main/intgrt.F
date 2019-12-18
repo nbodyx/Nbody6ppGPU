@@ -826,7 +826,7 @@ c$$$      ttbarnb = ttbarnb + (tt999-tt998)*60
 #endif
 *
 
-#ifdef ENCOUNTER_RECORD
+#ifdef ENCOUNTER_MEASURE
 *     measure encounter rate
         IF (KZ(45).EQ.1) THEN
            call encounter_record(NXTLEN,NXTLST)

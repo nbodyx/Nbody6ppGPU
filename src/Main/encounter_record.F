@@ -13,8 +13,12 @@
       INTEGER(4) IUNIT
 
 !$OMP PARALLEL PRIVATE(II,I,J,DX,DV,DXV,IUNIT)
+#ifdef OMP
       IUNIT = omp_get_thread_num()
       IUNIT = IUNIT + 100
+#else
+      IUNIT = 101
+#endif
 !$OMP DO
       DO II = 1, NXTLEN
          I = NXTLST(II)

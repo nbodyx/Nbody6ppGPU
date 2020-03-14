@@ -59,6 +59,7 @@ x64/
 *.ilk
 *.meta
 *.obj
+*.o
 *.pch
 *.pdb
 *.pgc

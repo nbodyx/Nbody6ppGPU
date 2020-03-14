@@ -26,9 +26,6 @@ def dict_tree(names,data,icol):
     
 def dict_one(data,icol):
     dtemp = data
-    #dtemp = collections.OrderedDict()
-    #dtemp['data']=data
-    #dtemp['icol']=icol
     return dtemp
 
 def dict_tree_show(data):
@@ -115,7 +112,7 @@ def status(data, with_SE=True):
     # Angular momentum in global lagr
     dtemp['A'] = dict_tree( (('x','y','z'),ffrac), data[iepbfoff:iaoff].astype('f'),iepbfoff )
 
-    if (seflag):
+    if (with_SE):
         isfoff = 58 + iaoff # 672
         # stellar mass loss
         dtemp['mass'].update(dict_tree( (('SE',),('dM',)), data[iaoff:iaoff+1].astype('f'),iaoff ))            
@@ -179,4 +176,3 @@ def status(data, with_SE=True):
                                          lpars,ffrac), data[isnoff:isloff].astype('f'),isnoff ))
         
     return dtemp
-

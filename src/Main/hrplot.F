@@ -134,8 +134,8 @@
               R2 = LOG10(RM2)
               ZL1 = LOG10(LUM)
               ZL2 = LOG10(LUM2)
-              TE1 = 0.25*(ZL1 - 2.0*R1) + 3.7
-              TE2 = 0.25*(ZL2 - 2.0*R2) + 3.7
+              TE1 = 0.25*(ZL1 - 2.0*R1) + 3.761777
+              TE2 = 0.25*(ZL2 - 2.0*R2) + 3.761777
               if(rank.eq.0)
      &        WRITE (82,5)  TTOT, J1, J2, NAME(J1), NAME(J2), KW, KW2, 
      &            KSTAR(ICM),
@@ -149,8 +149,8 @@
               RI = SQRT(RI)/RC
               R1 = LOG10(RM)
               ZL1 = LOG10(LUM)
-*       Form LOG(Te) using L = 4*pi*R**2*\sigma*T**4 and solar value 3.7.
-              TE = 0.25*(ZL1 - 2.0*R1) + 3.7
+*     Form LOG(Te) using L = 4*pi*R**2*\sigma*T**4 and solar value 3.761777.
+              TE = 0.25*(ZL1 - 2.0*R1) + 3.761777
               if(rank.eq.0)
      &        WRITE (83,10)  TTOT, I, NAME(I), KW, RI, M1, ZL1, R1, TE
    10         FORMAT (1X,1P,E12.5,2I8,I3,5E13.5)

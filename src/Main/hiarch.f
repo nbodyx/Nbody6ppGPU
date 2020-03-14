@@ -232,7 +232,7 @@ C          TK1 = MIN(TK1/TK,99999.0D0)
           TK0(IL) = TK
 *
       ELSE IF (IPHASE.EQ.7) THEN
-          PMIN = SEMI*(1.0D0 - ECC)/RAP
+          PMIN = SEMI*(1.0D0 - ECC)
 C          PMIN = MIN(PMIN/RAP,999.0D0)
           IF (TK0(IL).LE.0.0D0) TK0(IL) = TK
           TK1 = TK/TK0(IL)

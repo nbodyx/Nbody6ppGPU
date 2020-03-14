@@ -197,13 +197,14 @@ c$$$         END IF
 *
 *     --K.S. binary case--
          IF(I.GT.N.AND.NAME(I).GT.0) THEN
-            N_BINARY = N_BINARY + 1
-            IK = N_BINARY
             IPAIR = I - N
 *     Resolve unperturbed binary
             CALL KSRES_OP(IPAIR,J1,J2,XIREL,VIREL,0)
 *     Name
             if (GAMMA(IPAIR).LT.GALIMIT.AND.H(IPAIR).LT.0) THEN
+               N_BINARY = N_BINARY + 1
+               IK = N_BINARY
+
                NB_NAMC(IK) = NAME(I)
                NB_NAM1(IK) = NAME(J1)
                NB_NAM2(IK) = NAME(J2)
@@ -368,8 +369,6 @@ C                  S_FD3(IK) = REAL(FDOT(3,I)*FDSCALE_OUT)
                GO TO 8
             END IF
 *     For normal merger
-            N_MERGER = N_MERGER + 1
-            IK = N_MERGER
             DO K = 1, NMERGE
                IF (NAMEM(K).EQ.NAMEI) THEN
                   IM = K
@@ -413,6 +412,8 @@ C                  S_FD3(IK) = REAL(FDOT(3,I)*FDSCALE_OUT)
                GO TO 8
             END IF
 *     Resolve merger
+            N_MERGER = N_MERGER + 1
+            IK = N_MERGER
             M_XC1(IK) = REAL(X(1,ICM)*RSCALE_OUT) 
             M_XC2(IK) = REAL(X(2,ICM)*RSCALE_OUT) 
             M_XC3(IK) = REAL(X(3,ICM)*RSCALE_OUT) 

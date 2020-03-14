@@ -6,6 +6,8 @@
 *
       INCLUDE 'common6.h'
       INCLUDE 'galaxy.h'
+      INCLUDE 'MWpotential.h'
+      REAL*8 RGKPC(3), VGPCMYR(3)
 *
 *
 #ifdef PARALLEL
@@ -280,6 +282,52 @@ C          IF (RTIDE.EQ.0.0D0) RTIDE = 10.0
        ELSE
           MP = 0.0
       END IF
+
+*     MWpotential14
+      IF (KZ(14).EQ.5) THEN
+
+*     initial potential
+         call mwpotinit(RBAR,VSTAR,TSTAR)
+
+*     reading orbit data (position,velocity of star cluster)
+*     unit: R: kpc, v: pc/Myr
+         if(rank.eq.0) 
+     &        READ (5,*)  (RGKPC(K),K=1,3),(VGPCMYR(K),K=1,3)
+#if MPIINIT
+         CALL MPI_BCAST(RGKPC,3,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+         CALL MPI_BCAST(VGPCMYR,3,MPI_REAL8,0,MPI_COMM_WORLD,ierr)
+#endif 
+*     convert to NB unit
+         RG = RGKPC/R_KPC
+         VG = VGPCMYR/V_PcMyr
+
+*     calculate Rtide
+         R02 = RG(1)**2 + RG(2)**2
+         OMEGA = (RG(1)*VG(2) - RG(2)*VG(1))/R02
+
+*       Form tidal radius from circular angular velocity (assumes apocentre).
+         IF (RTIDE.EQ.0.0D0) RTIDE = (0.5/OMEGA**2)**0.3333
+
+*     initial c.m. f and fdot
+         call fmwpot(RG, VG, FG, FGD)
+
+*     initial c.m. energy
+         call pmwpot(RG, ETI)
+         EGPOT = ZMASS*ETI
+         EGKIN = 0.5D0*ZMASS*(VG(1)*VG(1)+VG(2)*VG(2)+VG(3)*VG(3))
+         
+*      
+         if(rank.eq.0) then
+            write (6,85) RGKPC, VGPCMYR, OMEGA, RTIDE*RBAR,EGPOT,EGKIN
+ 85         FORMAT (/,12X,'Milky-Way Galaxy potential (Bovy 2015)'
+     &           '  RG[kpc] =',1P,3E16.8,'  VG[pc/myr] =',3E16.8,
+     &           '  OMEGA =',E9.1, '  RTIDE[pc] =',E9.2,
+     &           '  POT = ',E16.8, ' KIN = ',E16.8,0P)
+
+         end if
+
+      END IF
+
       RTIDE0 = RTIDE
 *
 *       Define tidal radius in scaled units for linearized field.

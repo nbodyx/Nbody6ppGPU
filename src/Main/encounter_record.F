@@ -1,4 +1,4 @@
-      SUBROUTINE ENCOUNTER_RECORD(NXTLEN,NXTLST)
+      subroutine encounter_record(nxtlen,nxtlst)
 *     label-encounter
 *
 *     close encounter record
@@ -12,10 +12,14 @@
       INTEGER NXTLEN, NXTLST(NMAX)
       INTEGER(4) IUNIT
 
-!$OMP PARALLEL PRIVATE(II,I,J,DX,DV,DXV,IUNIT)
+!$omp parallel private(ii,i,j,dx,dv,dxv,iunit)
+#ifdef OMP
       IUNIT = omp_get_thread_num()
       IUNIT = IUNIT + 100
-!$OMP DO
+#else
+      IUNIT = 101
+#endif
+!$omp do
       DO II = 1, NXTLEN
          I = NXTLST(II)
          IF (LIST(1,I).GT.0) THEN
@@ -31,7 +35,7 @@
 
             IF (IMINR_PRE(I).EQ.J.AND.DXV.GT.0) THEN
                if(rank.eq.0) then
-                  call HYPERBOLIC_RECORD(NAME(I),NAME(J),
+                  call hyperbolic_record(NAME(I),NAME(J),
      &                 BODY(I),BODY(J),X0(1,I),X0DOT(1,I),
      &                 DX,DV,DXV,IUNIT,TIME)
                end if
@@ -41,8 +45,8 @@
             END IF 
          END IF 
       END DO
-!$OMP END DO
-!$OMP END PARALLEL
+!$omp end do
+!$omp end parallel
 
       RETURN
 
@@ -50,7 +54,7 @@
 
 *-----------------------------------------------
 
-      SUBROUTINE ENCOUNTER_INIT
+      subroutine encounter_init
 
       include 'params.h'
       include 'omp_lib.h'
@@ -67,7 +71,7 @@
 *-----------------------------------------------
 
 
-      SUBROUTINE HYPERBOLIC_RECORD(I,J,M1,M2,X1,V1,DX,DV,DXV,OUNIT,TIME)
+      subroutine hyperbolic_record(i,j,m1,m2,x1,v1,dx,dv,dxv,ounit,time)
 
       implicit none
       INTEGER I,J,OUNIT

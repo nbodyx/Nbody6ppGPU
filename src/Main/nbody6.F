@@ -137,7 +137,18 @@
           IF (KSTART.GT.2) THEN
               CALL MODIFY
           END IF
-*
+
+*     initial tidal field
+*     MW potential
+          IF (KZ(14).EQ.5) call mwpotinit(RBAR,VSTAR,TSTAR)
+#ifdef TT
+*** FlorentR - restart with new tensors
+          IF (KZ(14).EQ.9) THEN
+             CALL TTINIT
+          ENDIF
+***   FRenaud
+#endif
+
 *       Open all other files.
           CALL FILE_INIT(0)
 *

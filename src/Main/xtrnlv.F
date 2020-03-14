@@ -13,7 +13,7 @@
       INTEGER TTTDEP
 *** FRenaud
 #endif
-      REAL*8 XI(3),XIDOT(3),FIRR(3),FREG(3),FD(3),FDR(3)
+      REAL*8 XI(3),XIDOT(3),FIRR(3),FREG(3),FD(3),FDR(3),TMASS,RGP(3)
       SAVE FIRST
       LOGICAL FIRST
       DATA FIRST /.TRUE./
@@ -22,15 +22,16 @@
       ET = 0.0D0
 *       Skip external potential during scaling (parameters not defined).
       IF (FIRST.AND.TIME.EQ.0.0D0) THEN
-          FIRST = .FALSE.
-          GO TO 30
+         FIRST = .FALSE.
+         GO TO 30
+      END IF
 *       Treat all cases uniformly (but note Coliolis term in FIRR).
 #ifdef TT
 *** FlorentR - case of tidal tensor
-      ELSE IF ((KZ(14).LE.4.OR.KZ(14).EQ.9).AND.I2.NE.I1) THEN
+      IF ((KZ(14).LE.5.OR.KZ(14).EQ.9).AND.I2.NE.I1) THEN
 *** FRenaud
 #else
-      ELSE IF (KZ(14).LE.4.AND.I2.NE.I1) THEN
+      IF (KZ(14).LE.5.AND.I2.NE.I1) THEN
 #endif
           VIR = 0.0
           DO 5 I = I1,I2
@@ -54,11 +55,11 @@
 *       Quit for pure 3D tidal field (case of full N summation).
 #ifdef TT
 *** FlorentR - case of tidal tensor
-          IF (KZ(14).EQ.3.OR.KZ(14).EQ.9) GO TO 40
+          IF (KZ(14).EQ.3.OR.KZ(14).EQ.5.OR.KZ(14).EQ.9) GO TO 40
 *          IF (KZ(14).EQ.3) GO TO 40
 *** FRenaud
 #else
-          IF (KZ(14).EQ.3) GO TO 40
+          IF (KZ(14).EQ.3.OR.KZ(14).EQ.5) GO TO 40
 #endif
       END IF
 *
@@ -84,6 +85,19 @@
               ET = ET + GMG*(1.0/SQRT(RI2) - 1.0/SQRT(RG2))
           END IF
 *
+*       Check contribution from gamma/eta bulge potential.
+          IF (GMB.GT.0.0D0) THEN
+              IF (GAM.NE.2.0D0) THEN
+                  RRG = 1.0 - (1.0 + AR/SQRT(RG2))**(GAM-2.0)
+                  RRI = 1.0 - (1.0 + AR/SQRT(RI2))**(GAM-2.0)
+                  ET = ET + GMB/(AR*(2.0-GAM))*(RRI-RRG)
+              ELSE
+                  RRG = 1.0 + AR/SQRT(RG2)
+                  RRI = 1.0 + AR/SQRT(RI2)
+                  ET = ET + GMB/AR*LOG(RRG/RRI)
+              ENDIF
+          END IF
+
 *       Add optional Miyamoto disk potential.
           IF (DISK.GT.0.0D0) THEN
               R2 = (RG(1) + XI(1))**2 + (RG(2) + XI(2))**2
@@ -101,6 +115,26 @@
           END IF
 *       Form the differential potential energy due to tides.
           ET = BODY(I)*ET
+      ELSE IF (KZ(14).EQ.5) THEN
+*     MW potential 
+         TMASS = 0.0D0
+C*     Predict c.m. position
+C         DT = TIME + TOFF - TG
+C         DT2 = 0.5*DT
+C         DT3 = ONE3*DT
+C         RGP = RG + ((FGD*DT3 + FG)*DT2 + VG)*DT 
+*     loop individual stars
+         DO I = I1,I2
+            XI = (X(1:3,I) + RG)
+            call pmwpot(XI,ETI)
+            TMASS = TMASS + BODY(I)
+            ET = ET + BODY(I)*ETI
+         END DO
+*     cluster c.m. potential
+C         call pmwpot(RG, ETI)
+C         ET = ET - TMASS*ETI
+C         ET = ET + 0.5D0*TMASS*(VG(1)*VG(1)+VG(2)*VG(2)+VG(3)*VG(3))
+C         write(6,*) 'CM ETI',ETI,TMASS,ET,DT,RG
 #ifdef TT
 *** FlorentR - case of tidal tensor
       ELSE IF (KZ(14).EQ.9) THEN

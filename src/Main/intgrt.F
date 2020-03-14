@@ -337,18 +337,17 @@ C         IF(J.EQ.9951) print*,'L',L,'J',J,'T',TIME
 #ifdef TT
 *** FlorentR - add the case of the tidal tensor
 *      IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
-      IF (KZ(14).EQ.3.OR.KZ(14).EQ.4.OR.
+      IF (KZ(14).EQ.3.OR.KZ(14).EQ.4.OR.KZ(14).EQ.5.OR.
      &     (KZ(14).EQ.9.AND.TTMODE.EQ.0) ) THEN
 *          IF (KZ(14).EQ.3.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
-          IF ((KZ(14).EQ.3.OR.KZ(14).EQ.9).AND.
-     &            DMOD(TIME,STEPX).EQ.0.0D0) THEN
+          IF (KZ(14).EQ.3.OR.KZ(14).EQ.5.OR.KZ(14).EQ.9) THEN
 *** FRenaud
 #else
 *       Check optional integration of cluster guiding centre.
-      IF (KZ(14).EQ.3.OR.KZ(14).EQ.4) THEN
-          IF (KZ(14).EQ.3.AND.DMOD(TIME,STEPX).EQ.0.0D0) THEN
+      IF (KZ(14).EQ.3.OR.KZ(14).EQ.4.OR.KZ(14).EQ.5) THEN
+          IF (KZ(14).EQ.3.OR.KZ(14).EQ.5) THEN
 #endif
-              CALL GCINT
+             CALL GCINT
           END IF
 *       Include mass loss by gas expulsion (Kroupa et al. MN 321, 699).
           IF (MPDOT.GT.0.0D0.AND.TIME + TOFF.GT.TDELAY) THEN
@@ -827,7 +826,7 @@ c$$$      ttbarnb = ttbarnb + (tt999-tt998)*60
 #endif
 *
 
-#ifdef ENCOUNTER_RECORD
+#ifdef ENCOUNTER_MEASURE
 *     measure encounter rate
         IF (KZ(45).EQ.1) THEN
            call encounter_record(NXTLEN,NXTLST)
@@ -1279,7 +1278,7 @@ c$$$         ttmov = ttmov +(tt334-tt333)*60
 
 *     custom output
       call cputim(ttiout1)
-      IF(KZ(46).GT.0.AND.DMOD(TIME,DTOUT).EQ.0) THEN
+      IF(KZ(46).GT.0.AND.DMOD(TTOT,DTOUT).EQ.0) THEN
          call custom_output(NXTLEN,NXTLST,NXTLIMIT,NGHOSTS,IMINR)
       END IF
 #ifdef TRACE_STAR

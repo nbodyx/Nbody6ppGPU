@@ -12,7 +12,7 @@
 *     Safe for parallel
       INCLUDE 'galaxy.h'
       REAL*8  XI(3),XIDOT(3),FIRR(3),FREG(3),FD(3),FDR(3),
-     &        XG(3),XGDOT(3),FM(3),FMD(3),FS(3),FSD(3)
+     &        XG(3),XGDOT(3),FM(3),FMD(3),FS(3),FSD(3),RGP(3),VGP(3)
 *
 *
 *       See whether to include a linearized galactic tidal force (two cases).
@@ -138,6 +138,25 @@
               FDR(K) = FDR(K) - (XIDOT(K) - 3.0*RRDOT*ZF*XI(K))*FMP
               FDR(K) = FDR(K) - YMDOT*ZF2*XI(K)
    50     CONTINUE
+      END IF
+
+*     Use MWpotential14 (Bovy 2015)
+      IF (KZ(14).EQ.5.AND.KCASE.GT.0) THEN
+C         DT = TIME + TOFF - TG
+C         RGP = ((FGD*DT3 + FG)*DT2 + VG)*DT + RG
+C         VGP = (FGD*DT2 + FG)*DT + VG
+         
+         XG = RG + XI
+         XGDOT = VG + XIDOT
+
+         call fmwpot(RG, VG, FS, FSD)
+         call fmwpot(XG,XGDOT,FM,FMD)
+
+         FREG = FREG + (FM - FS)
+         FDR  = FDR  + (FMD - FSD)
+C         FREG = FREG + FM
+C         FDR  = FDR + FMD
+
       END IF
 *
       RETURN

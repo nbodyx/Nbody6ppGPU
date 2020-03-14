@@ -59,7 +59,7 @@
           END IF
 *       Skip on WIDE CHAOS or NEW SPIRAL.
           GO TO 45
-      ELSE IF (KZ(27).EQ.3) THEN
+      ELSE IF (KZ(28).GT.0) THEN
           CALL TIDES3(QPERI,BODY(I1),BODY(I2),VSTAR,H(IPAIR),ECC,DE)
       END IF
 *

@@ -119,13 +119,6 @@
           END IF
 *
       END IF
-#ifdef TT
-*** FlorentR - restart with new tensors
-      IF (KZ(14).EQ.9) THEN
-        CALL TTINIT
-      ENDIF
-*** FRenaud
-#endif
 
 *     Be safety
       IF (KZ(39).GT.0) THEN

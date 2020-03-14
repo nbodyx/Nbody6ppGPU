@@ -5,6 +5,7 @@
 *       -------------
 *
       INCLUDE 'common6.h'
+      INCLUDE 'galaxy.h'
       COMMON/POTDEN/  RHO(NMAX),XNDBL(NMAX),PHIDBL(NMAX)
       logical iscale
 *
@@ -104,13 +105,6 @@ C      END DO
 #endif
 
 *
-*       Sum the kinetic energy (include c.m. bodies but not components).
-      DO 40 I = IFIRST,NTOT
-          ZKIN = ZKIN + BODY(I)*(XDOT(1,I)**2 + XDOT(2,I)**2 +
-     &                                          XDOT(3,I)**2)
-   40 CONTINUE
-      ZKIN = 0.5D0*ZKIN
-*
 *       Obtain the tidal potential energy for linearized external field. 
       IF (KZ(14).EQ.0) THEN
 *       Note: EPL holds accumulated tidal energy if KZ(14) = 3.
@@ -130,6 +124,30 @@ C      END DO
    50         CONTINUE
           END IF
       END IF
+
+*     in galactic tidal field, need accurate ekin, now pmwpot is not used, thus not necessary
+C      IF (KZ(14).GE.3.AND.KZ(14).LE.5) THEN
+C         TMASS = 0.0
+C*     Sum the kinetic energy (include c.m. bodies but not components).
+C         DO I = IFIRST,NTOT
+C            ZKIN = ZKIN + BODY(I)*((XDOT(1,I)+VG(1))**2 +
+C     &           (XDOT(2,I)+VG(2))**2 +
+C     &           (XDOT(3,I)+VG(3))**2)
+C            TMASS = TMASS + BODY(I)
+C         END DO
+C*     remove c.m. kinetic energy
+C         ZKINCM = TMASS*(VG(1)*VG(1)+VG(2)*VG(2)+VG(3)*VG(3))
+C         ZKIN = ZKIN - ZKINCM
+C         ETIDE = ETIDE + 0.5D0*ZKINCM 
+C      ELSE
+      DO I = IFIRST,NTOT
+         ZKIN = ZKIN + BODY(I)*(XDOT(1,I)**2 + XDOT(2,I)**2 +
+     &        XDOT(3,I)**2)
+      END DO
+C      END IF
+
+      ZKIN = 0.5D0*ZKIN
+
 *
 *       Check differential potential energy due to chain subsystem.
       IF (NCH.GT.0) THEN

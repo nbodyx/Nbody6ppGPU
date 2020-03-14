@@ -34,12 +34,17 @@
 *       MS hook and more elaborate CHeB. It now also sets the Giant
 *       Branch parameters relevant to the mass of the star.
 *
+*       Revised 21st January 2011 by A. D. Railton
+*       to include the pre-mainsequence evolution for 0.1-8 solar masses 
+*       with solar metallicity. New timescale (15) added.
+*       KW=-1 for preMS evolution.
+*
 *       ------------------------------------------------------------
 *       Times: 1; BGB              2; He ignition   3; He burning
 *              4; Giant t(inf1)    5; Giant t(inf2) 6; Giant t(Mx)
 *              7; FAGB t(inf1)     8; FAGB t(inf2)  9; FAGB  t(Mx)
 *             10; SAGB t(inf1)    11; SAGB t(inf2) 12; SAGB  t(Mx)
-*             13; TP              14; t(Mcmax)     
+*             13; TP              14; t(Mcmax)     15; PreMS  
 *
 *       LUMS:  1; ZAMS             2; End MS        3; BGB
 *              4; He ignition      5; He burning    6; L(Mx)
@@ -53,10 +58,19 @@
 *
 *
       mass0 = mass
-c      if(mass0.gt.100.d0) mass = 100.d0
+*     if(mass0.gt.100.d0) mass = 100.d0
 *
       if(kw.ge.7.and.kw.le.9) goto 90
       if(kw.ge.10) goto 95
+*
+* Mass should be in the range [0.1,8] (Extrapolate at your own risk!)
+* PreMS timescale
+*
+      if(mass.gt.0.01.and.mass.lt.8.0)then 
+         tscls(15)=43.628d0-(35.835d0*mass**1.5029d-2)*
+     &                             exp(mass*3.9608d-3)
+         tscls(15)=10.d0**tscls(15)/1.0D+06
+      endif
 *
 * MS and BGB times
 *
@@ -203,7 +217,10 @@ c      if(mass0.gt.100.d0) mass = 100.d0
 * Get an idea of when Mc,C = Mc,C,max on the AGB
       tau = tscls(2) + tscls(3)
       mc2 = mcgbtf(tau,GB(8),GB,tscls(7),tscls(8),tscls(9))
-      mcmax = MAX(MAX(mch,0.773d0*mcbagb - 0.35d0),1.05d0*mc2)
+      mcmax = MAX(MAX(mch,0.773d0*mcbagb - 0.35d0),1.02d0*mc2)
+      if(mcbagb.ge.1.6d0.and.mcbagb.le.2.25d0)then
+         mcmax = MAX(MAX(1.372d0,0.773d0*mcbagb - 0.35d0),1.02d0*mc2)
+      endif
 *
       if(mcmax.le.mc1)then
          if(mcmax.le.GB(7))then
@@ -227,10 +244,10 @@ c      if(mass0.gt.100.d0) mass = 100.d0
          endif
       endif
       tscls(14) = MAX(tbagb,tscls(14))
-C      if(mass.ge.100.d0)then
-C         tn = tscls(2)
-C         goto 100
-C      endif
+*     if(mass.ge.100.d0)then
+*        tn = tscls(2)
+*        goto 100
+*     endif
 *
 * Calculate the nuclear timescale - the time of exhausting
 * nuclear fuel without further mass loss.
@@ -352,6 +369,7 @@ C      endif
 *
  95   continue
       tm = 1.0d+10
+      tscls(1) = tm
  96   continue
       tn = 1.0d+10
 *

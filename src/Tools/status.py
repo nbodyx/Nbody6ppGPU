@@ -65,7 +65,7 @@ def status(data, with_SE=True):
     dtemp['rh']   = dict_one(data[8].astype('f'),8)                                 # half-mass radius in pc
     dtemp['rt']   = dict_one(data[9].astype('f'),9)                                 # tidal radius in pc
     dtemp['rden'] = dict_tree((('x','y','z'),),data[10:13].astype('f'),10) # Density center position
-    dtemp['rhod'] = dict_one(data[13].astype('f'),13)                                # Density weighted average density ΣRHO2/ΣRHO 
+    dtemp['rhod'] = dict_one(data[13].astype('f'),13)                                # Density weighted average density
     dtemp['rhom'] = dict_one(data[14].astype('f'),14)                                # Maximum mass density / half mass mean value
     dtemp['mmax'] = dict_one(data[15].astype('f'),15)                                # Maxium stellar mass
 

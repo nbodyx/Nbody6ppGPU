@@ -34,18 +34,19 @@
       implicit none
 *
       integer kw,kwp
-      integer ceflag,tflag,ifflag,nsflag,wdflag 
-      integer psflag,kmech,ecflag
+      integer wdflag,nsflag,ecflag,psflag
+      parameter(wdflag=1,nsflag=3,ecflag=1,psflag=1)
 *
       real*8 mass,aj,mt,tm,tn,tscls(20),lums(10),GB(10),zpars(20)
       real*8 r,lum,mc,rc,menv,renv,k2
       real*8 mch,mlp,tiny
       parameter(mch=1.44d0,mlp=12.d0,tiny=1.0d-14)
-      real*8 neta,bwind,hewind,mxns 
+      real*8 mxns,mxns0,mxns1
+      parameter(mxns0=1.8d0,mxns1=2.5d0)
       real*8 mass0,mt0,mtc
 * 
       real*8 thook,thg,tbagb,tau,tloop,taul,tauh,tau1,tau2,dtau,texp
-      real*8 lx,ly,dell,alpha,beta
+      real*8 lx,ly,dell,alpha,beta,neta
       real*8 rx,ry,delr,rzams,rtms,gamma,rmin,taumin,rg
       parameter(taumin=5.0d-08)
       real*8 mcmax,mcx,mcy,mcbagb,lambda
@@ -67,13 +68,7 @@
       external rzamsf,rtmsf,ralphf,rbetaf,rgammf,rhookf
       external rgbf,rminf,ragbf,rzahbf,rzhef,rhehgf,rhegbf,rpertf
       external mctmsf,mcgbtf,mcgbf,mcheif,mcagbf,lzahbf
-      COMMON /FLAGS/ ceflag,tflag,ifflag,nsflag,wdflag
-      COMMON /FLAGS2/ psflag,kmech,ecflag
-      COMMON /VALUE1/ neta,bwind,hewind,mxns
       COMMON /FBACK/ FBFAC,FBTOT,MCO,ECS
-      DATA neta,bwind,hewind,mxns /0.477,0.0,1.0,2.5/
-      DATA ceflag,tflag,ifflag,nsflag,wdflag /0,1,0,4,1/
-      DATA psflag,kmech,ecflag /1,1,1/
 
 *
 *
@@ -93,6 +88,9 @@
 *       MC      Core mass.
 *       ---------------------------------------------------------------------
 *
+* Set maximum NS mass depending on which NS mass prescription is used. 
+      mxns = mxns0
+      if(nsflag.ge.1) mxns = mxns1
 *
       mass0 = mass
 *     if(mass0.gt.100.d0) mass = 100.d0
@@ -551,11 +549,38 @@
                   mt = 0.d0
                   lum = 1.0d-10
                   r = 1.0d-10
-       elseif(psflag.gt.0.and.mcbagb.ge.45.d0.and.mcbagb.le.65.d0)then
+       elseif(psflag.eq.1.and.mcbagb.ge.45.d0.and.mcbagb.le.65.d0)then
 * PPSN truncation (fallback prescription skipped)
 * Belczynski et al. 2016, A&A, 594, A97
+* psflag=1 strong PPSN condition
                         kw = 14
                         mt = 45.d0
+                        FBTOT = mt
+                        MCO = mc
+                        mt = 0.9d0*mt
+                        mc = mt
+       elseif(psflag.eq.2.and.mcbagb.ge.40.d0.and.mcbagb.le.65.d0)then
+* psflag=2 moderate PPSN condition (Leung et al. 2019)
+                        kw = 14
+                        if(mcbagb.lt.60.d0)
+     &                     mt = 0.65d0*mcbagb + 12.2d0
+                        if(mcbagb.ge.60.d0.and.mcbagb.lt.62.5d0)
+     &                     mt = 51.2d0
+                        if(mcbagb.ge.62.5d0)
+     &                     mt = -14.3d0*mcbagb + 938.0d0
+                        FBTOT = mt
+                        MCO = mc
+                        mt = 0.9d0*mt
+                        mc = mt
+       elseif(psflag.ge.3.and.mcbagb.ge.40.d0.and.mcbagb.le.65.d0)then
+* psflag=3 weak PPSN condition (Leung et al. 2019)
+                        kw = 14
+                        if(mcbagb.lt.60.d0)
+     &                     mt = 0.83d0*mcbagb + 6.0d0
+                        if(mcbagb.ge.60.d0.and.mcbagb.lt.62.5d0)
+     &                     mt = 55.6d0
+                        if(mcbagb.ge.62.5d0)
+     &                     mt = -14.3d0*mcbagb + 938.1d0
                         FBTOT = mt
                         MCO = mc
                         mt = 0.9d0*mt
@@ -778,12 +803,41 @@
                      mt = 0.d0
                      lum = 1.0d-10
                      r = 1.0d-10
-                  elseif(psflag.gt.0.and.
+                  elseif(psflag.eq.1.and.
      &                   mass.ge.45.d0.and.mass.le.65.d0)then
 * PPSN truncation (fallback prescription skipped)
 * Belczynski et al. 2016, A&A, 594, A97
+* psflag=1 strong PPSN condition
                         kw = 14
                         mt = 45.d0
+                        FBTOT = mt
+                        MCO = mc
+                        mt = 0.9d0*mt
+                        mc = mt
+                  elseif(psflag.eq.2.and.
+     &                   mass.ge.40.d0.and.mass.le.65.d0)then
+* psflag=2 moderate PPSN condition (Leung et al. 2019)
+                        kw = 14
+                        if(mass.lt.60.d0)
+     &                     mt = 0.65d0*mass + 12.2d0
+                        if(mass.ge.60.d0.and.mass.lt.62.5d0)
+     &                     mt = 51.2d0
+                        if(mass.ge.62.5d0)
+     &                     mt = -14.3d0*mass + 938.0d0
+                        FBTOT = mt
+                        MCO = mc
+                        mt = 0.9d0*mt
+                        mc = mt
+                  elseif(psflag.ge.3.and.
+     &                   mass.ge.40.d0.and.mass.le.65.d0)then
+* psflag=3 weak PPSN condition (Leung et al. 2019)
+                        kw = 14
+                        if(mass.lt.60.d0)
+     &                     mt = 0.83d0*mass + 6.0d0
+                        if(mass.ge.60.d0.and.mass.lt.62.5d0)
+     &                     mt = 55.6d0
+                        if(mass.ge.62.5d0)
+     &                     mt = -14.3d0*mass + 938.1d0
                         FBTOT = mt
                         MCO = mc
                         mt = 0.9d0*mt

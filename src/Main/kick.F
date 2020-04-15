@@ -306,8 +306,8 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
 ***********************************************
             ENDIF
             WRITE(6,*) "Heavy-NS/BH formation(fallback)",
-     &           " M[M*] M0[M*] K*0 I NAME",
-     &           " K* FB FBTOT Time[Myr] MCO[M*] VK[km/s] KMECH: ",
+     &           " M[M*] M0[M*] K* I NAME",
+     &           " K*0 FB FBTOT Time[Myr] MCO[M*] VK[km/s] KMECH: ",
      &           BODY(I)*ZMBAR, BODY0(I)*ZMBAR, KW, I, NAME(I), 
      &           KSTAR(I), FBFAC, FBTOT, TTOT*TSTAR, MCO, VKICK, KMECH
          ENDIF

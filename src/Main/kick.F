@@ -237,13 +237,15 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
          IF(VFAC.GT.0.001D0) DISP0 = VFAC*VSTAR
          IF(KW.EQ.10.OR.KW.EQ.11) DISP0 = MAX(WDSIG1,0.D0)
          IF(KW.EQ.12) DISP0 = MAX(WDSIG2,0.D0)
-         IF(KW.EQ.13.AND.ZM.LT.1.28)THEN
+
+         IF(ECS.EQ.1)THEN
             IF(ECSIG.LT.-0.01)THEN
                DISP0 = DISP0*ABS(ECSIG)
             ELSE
                DISP0 = MAX(ECSIG,0.D0)
             ENDIF
-            WRITE(6,*) "ECS-NS formation",
+            if(rank.eq.0) then
+            WRITE(6,*) "ECS/AIC NS formation",
      &           " M[M*] M0[M*] K*0 I NAME K* VDISP Time[Myr]: ",
      &           BODY(I)*ZMBAR, BODY0(I)*ZMBAR, KW, I, NAME(I), 
      &           KSTAR(I),DISP0, TTOT*TSTAR
@@ -301,11 +303,12 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
                IF ((KMECH.EQ.3).AND.(MCO.GT.3.0D0))
      &              VKICK = VKICK*(MNSTYP/ZM)*0.1D0
 *********Nutrino-driven kick *****************
-               IF (KMECH.EQ.4)
-     &              VKICK = VK(4)*(MIN(ZM,MNUEFF)/ZM)
+*               IF (KMECH.EQ.4)
+*     &              VKICK = VK(4)*(MIN(ZM,MNUEFF)/ZM)
 ***********************************************
             ENDIF
-            WRITE(6,*) "Heavy-NS/BH formation(fallback)",
+            if(rank.eq.0) then
+            WRITE(6,*) "NS/BH formation (fallback)",
      &           " M[M*] M0[M*] K* I NAME",
      &           " K*0 FB FBTOT Time[Myr] MCO[M*] VK[km/s] KMECH: ",
      &           BODY(I)*ZMBAR, BODY0(I)*ZMBAR, KW, I, NAME(I), 

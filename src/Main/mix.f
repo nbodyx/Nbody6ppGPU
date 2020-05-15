@@ -12,14 +12,20 @@
       REAL*8 TSCLS(20),LUMS(10),GB(10),TMS1,TMS2,TMS3,TN
       REAL*8 M01,M02,M03,M1,M2,M3,AGE1,AGE2,AGE3,MC3,LUM,RM,RCC
       REAL*8 MENV,RENV,K2E
-      REAL*8 MCH,MXNS
-      PARAMETER(MCH=1.44D0,MXNS = 3.0d0)
+      REAL*8 MCH,MXNS,mxns1,mxns0
+      PARAMETER(MCH=1.44D0)
+      integer nsflag
+      parameter(mxns0=1.8d0,mxns1=2.5d0,nsflag=3)
       LOGICAL  FIRST
       SAVE  FIRST
       DATA  FIRST /.TRUE./
       DATA  rg2 /0.1d0/
 *
 *
+* Set maximum NS mass depending on which NS mass prescription is used. 
+      mxns = mxns0
+      if(nsflag.ge.1) mxns = mxns1
+
 *       Define global indices with body #I1 being most evolved.
       IF(KSTAR(J1).GE.KSTAR(J2))THEN
           I1 = J1

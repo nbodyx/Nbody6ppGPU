@@ -114,12 +114,14 @@
       ELSE
 *
 *       Read previously saved COMMON variables from tape/disc on unit 1.
-*       Backup kstart value before call mydump
+*       Backup kstart, tcritp value before call mydump
           KSTART0 = KSTART
+          TCRITP0 =TCRITP
           CALL MYDUMP(0,1)
 *
-*       Reset kstart to input value
+*       Reset kstart, tcritp to input value
           KSTART = KSTART0
+          TCRITP = TCRITP0
 *       
           IF (NDUMP.GE.3) STOP
 *       Safety indicator preventing repeated restarts set in routine CHECK.

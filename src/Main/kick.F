@@ -244,8 +244,8 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
             ELSE
                DISP0 = MAX(ECSIG,0.D0)
             ENDIF
-            if(rank.eq.0) then
-            WRITE(6,*) "ECS/AIC NS formation",
+            if(rank.eq.0)
+     &           WRITE(6,*) "ECS/AIC NS formation",
      &           " M[M*] M0[M*] K*0 I NAME K* VDISP Time[Myr]: ",
      &           BODY(I)*ZMBAR, BODY0(I)*ZMBAR, KW, I, NAME(I), 
      &           KSTAR(I),DISP0, TTOT*TSTAR
@@ -307,8 +307,8 @@ C          VP2 = 2.0*BODY(N+IPAIR)/R(IPAIR)
 *     &              VKICK = VK(4)*(MIN(ZM,MNUEFF)/ZM)
 ***********************************************
             ENDIF
-            if(rank.eq.0) then
-            WRITE(6,*) "NS/BH formation (fallback)",
+            if(rank.eq.0) 
+     &           WRITE(6,*) "NS/BH formation (fallback)",
      &           " M[M*] M0[M*] K* I NAME",
      &           " K*0 FB FBTOT Time[Myr] MCO[M*] VK[km/s] KMECH: ",
      &           BODY(I)*ZMBAR, BODY0(I)*ZMBAR, KW, I, NAME(I), 

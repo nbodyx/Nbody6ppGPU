@@ -116,7 +116,7 @@
               AGE = MAX(TPLOT,TEV0(J2))*TSTAR - EPOCH(J2)
               CALL STAR(KW2,M0,M2,TM,TN,TSCLS,LUMS,GB,ZPARS)
               CALL HRDIAG(M0,AGE,M2,TM,TN,TSCLS,LUMS,GB,ZPARS,
-     &                    RM2,LUM2,KW,MC,RCC,ME,RE,K2)
+     &                    RM2,LUM2,KW2,MC,RCC,ME,RE,K2)
               RI = SQRT(RI)/RC
 *       Specify relevant binary mass.
               IF (BODY(J1).GT.0.0D0) THEN

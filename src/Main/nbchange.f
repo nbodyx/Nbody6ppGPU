@@ -115,7 +115,7 @@ C      write(6,*) 'NEW: N ',NNEW,' LIST ',LISTNEW(1:NNEW)
      &                       'LMAX',LMAX
                         STOP
                      END IF
-                     LIST(NNB+1:NNB+NNEW-K+2,I) = LISTNEW(K:NNEW)
+                     LIST(NNB+1:NNB+NNEW-K+1,I) = LISTNEW(K:NNEW)
                      NNB = NNB + NNEW-K+1
                   END IF 
                END IF

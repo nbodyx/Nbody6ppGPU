@@ -143,7 +143,7 @@
           END IF
           KSTAR(IN) = -KSTAR(IN)
 *     ks MPI communication KSTAR
-          call ksparmpi(K_store,K_int,K_KSTAR,IN,0,KSTAR(IN))
+*          call ksparmpi(K_store,K_int,K_KSTAR,IN,0,KSTAR(IN))
 *
 *     When call expel in cmbody and WD/NS binary form after Binary CE, 
 *     There is big energy error when DM is large. It seems here the DM 

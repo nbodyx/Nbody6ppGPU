@@ -264,7 +264,7 @@ C      DATA EPARS,EKIN,EPOT,EBIN,MM,RH /17*0.0/
       NPR   = N_SINGLE + 2*N_BINARY + 3*N_MERGER
 
 ***   Core radius
-      RC = REAL(RC8)
+      RC = REAL(RC8)*RSCALE_OUT
       RLAGR(NN) = RC
 
 ***** Calculation------------------------

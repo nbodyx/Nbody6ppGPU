@@ -1,19 +1,20 @@
 # Short user manual
 
 Welcome to use NBODY6++GPU, which is a MPI parallel version of NBODY6GPU developed by Sverre Aarseth and Keigo Nitadori, see www.sverre.com.
-The description of the code can be seen in Wang et al. (2015), MNRAS, 450, 4070: https://ui.adsabs.harvard.edu/abs/2015MNRAS.450.4070W/abstract
+The description of the code can be seen in Wang et al. (2015), MNRAS, 450, 4070: https://ui.adsabs.harvard.edu/abs/2015MNRAS.450.4070W/abstract.
+
 Currently, this version of NBODY6++GPU has no further big update, because the main developer (Long Wang) now focuses on the development of the new N-body code PeTar (see https://github.com/lwang-astro/PeTar for detail).
 For users who are interested for using NBODY6++GPU, there is another active version maintained by team of Rainer Spurzem (spurzem@ari.uni-heidelberg.de spurzem@nao.cas.cn). Please contact him and visit https://github.com/nbody6ppgpu/Nbody6PPGPU-beijing/blob/stable/README.md for detail. 
 
 Here is an example of current differences between the code version (May 2023), more changes and differences may occur in the future, if in doubt, ask the authors.
 
-LW: implementation of Milky Way potential following the MWPotential2014 in Galpy (Bovy 2015).
-RS: implementation of spin and mass dependent recoil kicks after GW merger (Arca Sedda et al. 2023 subm. MNRAS)
-LW: implementation of python data reading interface for PeTar analysis tool.
-RS: use of HDF5 output files with python data reading interfaces
-RS: Namelist based input format, allowing also to read all stellar evolution and binary / collision parameters.
-LW and RS: Some bug fixes related to Roche and GR radiation, in both versions slightly different ways.
-LW and RS: implementation of BSE from Banerjee et al. 2019
+- LW: implementation of Milky Way potential following the MWPotential2014 in Galpy (Bovy 2015).
+- RS: implementation of spin and mass dependent recoil kicks after GW merger (Arca Sedda et al. 2023 subm. MNRAS)
+- LW: implementation of python data reading interface for PeTar analysis tool.
+- RS: use of HDF5 output files with python data reading interfaces
+- RS: Namelist based input format, allowing also to read all stellar evolution and binary / collision parameters.
+- LW and RS: Some bug fixes related to Roche and GR radiation, in both versions slightly different ways.
+- LW and RS: implementation of BSE from Banerjee et al. 2019
 
 If you find issues during using the code but not fully answered in the follow tips and manuals in **doc/Nbody6++_manual.pdf**, 
 please use the GitHub issue to ask questions.
